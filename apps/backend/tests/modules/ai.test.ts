@@ -88,7 +88,7 @@ async function buildTestApp() {
 
   // Minimal auth plugin: sets userId on every request
   app.decorate('authenticate', async function (request: FastifyRequest, _reply: FastifyReply) {
-    request.userId = 1
+    (request as any).userId = 1
   })
 
   // SocketIO stub (needed by aiModule — it reads app.io)
