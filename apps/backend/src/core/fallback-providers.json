@@ -1,5 +1,5 @@
 {
-  "google": "https://generativelanguage.googleapis.com/v1beta",
+  "google": "https://generativelanguage.googleapis.com/v1beta/openai",
   "openai": "https://api.openai.com/v1",
   "anthropic": "https://api.anthropic.com/v1",
   "cohere": "https://api.cohere.ai/v1",
