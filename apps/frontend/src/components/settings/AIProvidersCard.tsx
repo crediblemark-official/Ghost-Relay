@@ -65,6 +65,9 @@ export function AIProvidersCard() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/ai/providers/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ai-providers'] }),
+    onError: (err: any) => {
+      alert(err.message || 'Gagal menghapus provider.')
+    }
   })
 
   const handleNameChange = (name: string) => {
@@ -183,7 +186,11 @@ export function AIProvidersCard() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {p.isActive ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-slate-300" />}
-                  <button onClick={() => deleteMutation.mutate(p.id)} className="text-slate-300 hover:text-rose-500 transition-colors">
+                  <button
+                    onClick={() => deleteMutation.mutate(p.id)}
+                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                    title="Hapus Provider"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

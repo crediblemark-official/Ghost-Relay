@@ -7,10 +7,11 @@ function normalizePath(path: string): string {
   return path.startsWith('/api/') ? path : `/api${path}`
 }
 
-function getHeaders(): HeadersInit {
+function getHeaders(hasBody: boolean): HeadersInit {
   const token = useAuthStore.getState().token
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+  const headers: HeadersInit = {}
+  if (hasBody) {
+    headers['Content-Type'] = 'application/json'
   }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
@@ -24,10 +25,10 @@ async function request<T>(
   body?: unknown,
 ): Promise<T> {
   const url = `${BASE_URL}${normalizePath(path)}`
-  const options: RequestInit = { method, headers: getHeaders() }
+  const hasBody = body !== undefined && !(body instanceof FormData)
+  const options: RequestInit = { method, headers: getHeaders(hasBody) }
 
   if (body instanceof FormData) {
-    delete (options.headers as Record<string, string>)['Content-Type']
     options.body = body
   } else if (body) {
     options.body = JSON.stringify(body)
