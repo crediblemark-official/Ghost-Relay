@@ -1,13 +1,13 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Loader2, KeyRound, ChevronDown } from 'lucide-react'
+import { Loader2, KeyRound } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useModelsCatalog } from '@/hooks/useModelsCatalog'
 import { autoDetectModels } from '@/lib/model-utils'
 import { useState } from 'react'
+import { SearchableSelect } from '@/components/ui/SearchableSelect'
 
 const inputCls = 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus-visible:ring-indigo-400'
-const selectCls = 'w-full h-10 appearance-none rounded-md border border-slate-200 bg-slate-50 text-slate-900 px-3 pr-8 text-sm focus:outline-none focus:border-slate-300 focus-visible:ring-indigo-400 cursor-pointer transition-all'
 
 interface AIState {
   provider: string
@@ -128,52 +128,39 @@ export function StepAIProvider({ state, onChange, fetchedModels, onFetchedModels
       <div className="grid grid-cols-2 gap-4 mt-2">
         <div className="space-y-2">
           <label className="text-xs font-medium text-slate-500">Pilih Provider AI</label>
-          <div className="relative">
-            <select
-              value={isCustom ? 'custom' : state.provider}
-              onChange={e => handleProviderChange(e.target.value)}
-              className={selectCls}
-            >
-              <option value="" disabled>Pilih Provider...</option>
-              {(catalog?.providers || []).map(p => (
-                <option key={p.id} value={p.name}>{p.name}</option>
-              ))}
-              <option value="custom">✍️ Custom Provider (Lainnya)</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
-              <ChevronDown className="h-4 w-4" />
-            </div>
-          </div>
+          <SearchableSelect
+            value={isCustom ? 'custom' : state.provider}
+            onChange={handleProviderChange}
+            options={(catalog?.providers || []).map(p => p.name)}
+            placeholder="Pilih atau cari provider..."
+            customOptionLabel="✍️ Custom Provider (Lainnya)"
+            onCustomSelect={() => handleProviderChange('custom')}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-xs font-medium text-slate-500">Model Chat Utama</label>
           {fetchedModels.length > 0 ? (
-            <div className="relative">
-              <select
-                value={customChat ? 'custom' : state.model}
-                onChange={e => {
-                  const val = e.target.value
-                  if (val === 'custom') {
-                    setCustomChat(true)
-                    setCustomChatId('')
-                    onChange({ model: '' })
-                  } else {
-                    setCustomChat(false)
-                    onChange({ model: val })
-                  }
-                }}
-                className={selectCls}
-              >
-                <option value="" disabled>Pilih Model...</option>
-                {fetchedModels.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-                <option value="custom">✍️ Custom Model...</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
-                <ChevronDown className="h-4 w-4" />
-              </div>
-            </div>
+            <SearchableSelect
+              value={customChat ? 'custom' : state.model}
+              onChange={val => {
+                if (val === 'custom') {
+                  setCustomChat(true)
+                  setCustomChatId('')
+                  onChange({ model: '' })
+                } else {
+                  setCustomChat(false)
+                  onChange({ model: val })
+                }
+              }}
+              options={fetchedModels}
+              placeholder="Pilih atau cari model..."
+              customOptionLabel="✍️ Custom Model..."
+              onCustomSelect={() => {
+                setCustomChat(true)
+                setCustomChatId('')
+                onChange({ model: '' })
+              }}
+            />
           ) : (
             <Input
               placeholder="gpt-4o, claude-3-5-sonnet..."
@@ -221,32 +208,27 @@ export function StepAIProvider({ state, onChange, fetchedModels, onFetchedModels
         <div className="space-y-2">
           <label className="text-xs font-medium text-slate-500">Model Embedding</label>
           {fetchedModels.length > 0 ? (
-            <div className="relative">
-              <select
-                value={customEmbedding ? 'custom' : state.embeddingModel}
-                onChange={e => {
-                  const val = e.target.value
-                  if (val === 'custom') {
-                    setCustomEmbedding(true)
-                    setCustomEmbeddingId('')
-                    onChange({ embeddingModel: '' })
-                  } else {
-                    setCustomEmbedding(false)
-                    onChange({ embeddingModel: val })
-                  }
-                }}
-                className={selectCls}
-              >
-                <option value="" disabled>Pilih Model...</option>
-                {fetchedModels.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-                <option value="custom">✍️ Custom Model...</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
-                <ChevronDown className="h-4 w-4" />
-              </div>
-            </div>
+            <SearchableSelect
+              value={customEmbedding ? 'custom' : state.embeddingModel}
+              onChange={val => {
+                if (val === 'custom') {
+                  setCustomEmbedding(true)
+                  setCustomEmbeddingId('')
+                  onChange({ embeddingModel: '' })
+                } else {
+                  setCustomEmbedding(false)
+                  onChange({ embeddingModel: val })
+                }
+              }}
+              options={fetchedModels}
+              placeholder="Pilih atau cari model..."
+              customOptionLabel="✍️ Custom Model..."
+              onCustomSelect={() => {
+                setCustomEmbedding(true)
+                setCustomEmbeddingId('')
+                onChange({ embeddingModel: '' })
+              }}
+            />
           ) : (
             <Input
               placeholder="text-embedding-3-small"
@@ -259,32 +241,27 @@ export function StepAIProvider({ state, onChange, fetchedModels, onFetchedModels
         <div className="space-y-2">
           <label className="text-xs font-medium text-slate-500">Model Audio (Speech-to-Text)</label>
           {fetchedModels.length > 0 ? (
-            <div className="relative">
-              <select
-                value={customAudio ? 'custom' : state.audioModel}
-                onChange={e => {
-                  const val = e.target.value
-                  if (val === 'custom') {
-                    setCustomAudio(true)
-                    setCustomAudioId('')
-                    onChange({ audioModel: '' })
-                  } else {
-                    setCustomAudio(false)
-                    onChange({ audioModel: val })
-                  }
-                }}
-                className={selectCls}
-              >
-                <option value="" disabled>Pilih Model...</option>
-                {fetchedModels.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-                <option value="custom">✍️ Custom Model...</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
-                <ChevronDown className="h-4 w-4" />
-              </div>
-            </div>
+            <SearchableSelect
+              value={customAudio ? 'custom' : state.audioModel}
+              onChange={val => {
+                if (val === 'custom') {
+                  setCustomAudio(true)
+                  setCustomAudioId('')
+                  onChange({ audioModel: '' })
+                } else {
+                  setCustomAudio(false)
+                  onChange({ audioModel: val })
+                }
+              }}
+              options={fetchedModels}
+              placeholder="Pilih atau cari model..."
+              customOptionLabel="✍️ Custom Model..."
+              onCustomSelect={() => {
+                setCustomAudio(true)
+                setCustomAudioId('')
+                onChange({ audioModel: '' })
+              }}
+            />
           ) : (
             <Input
               placeholder="whisper-1"

@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Brain, Globe, Key, Plus, Trash2, CheckCircle, XCircle, RefreshCw, ChevronDown } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useModelsCatalog } from '@/hooks/useModelsCatalog'
+import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import type { AIProvider, AIProviderForm } from '@/types'
 
 const PROVIDER_TYPES = ['chat', 'embedding', 'audio'] as const
@@ -206,22 +207,14 @@ export function AIProvidersCard() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Name</label>
-                <div className="relative">
-                  <select
-                    value={isCustomProvider ? 'custom' : form.name}
-                    onChange={e => handleNameChange(e.target.value)}
-                    className={selectCls}
-                  >
-                    <option value="" disabled>Pilih Provider...</option>
-                    {(catalog?.providers || []).map(p => (
-                      <option key={p.id} value={p.name}>{p.name}</option>
-                    ))}
-                    <option value="custom">✍️ Custom Provider (Lainnya)</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </div>
-                </div>
+                <SearchableSelect
+                  value={isCustomProvider ? 'custom' : form.name}
+                  onChange={handleNameChange}
+                  options={(catalog?.providers || []).map(p => p.name)}
+                  placeholder="Pilih atau cari provider..."
+                  customOptionLabel="✍️ Custom Provider (Lainnya)"
+                  onCustomSelect={() => handleNameChange('custom')}
+                />
               </div>
             </div>
             {isCustomProvider && (
@@ -278,11 +271,10 @@ export function AIProvidersCard() {
               <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Model ID</label>
               <div className="flex gap-2">
                 {modelSuggestions.length > 0 ? (
-                  <div className="relative flex-1">
-                    <select
+                  <div className="flex-1">
+                    <SearchableSelect
                       value={isCustomModel ? 'custom' : form.modelId}
-                      onChange={e => {
-                        const val = e.target.value
+                      onChange={val => {
                         if (val === 'custom') {
                           setIsCustomModel(true)
                           setCustomModelId('')
@@ -292,17 +284,15 @@ export function AIProvidersCard() {
                           setForm(prev => prev ? { ...prev, modelId: val } : null)
                         }
                       }}
-                      className={selectCls}
-                    >
-                      <option value="" disabled>Pilih Model...</option>
-                      {modelSuggestions.map(m => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                      <option value="custom">✍️ Custom Model (Lainnya)</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </div>
+                      options={modelSuggestions}
+                      placeholder="Pilih atau cari model..."
+                      customOptionLabel="✍️ Custom Model (Lainnya)"
+                      onCustomSelect={() => {
+                        setIsCustomModel(true)
+                        setCustomModelId('')
+                        setForm(prev => prev ? { ...prev, modelId: '' } : null)
+                      }}
+                    />
                   </div>
                 ) : (
                   <input
