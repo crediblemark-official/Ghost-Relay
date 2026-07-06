@@ -57,8 +57,11 @@ export async function resolveProviderBaseUrl(
   providerNameOrId?: string,
   modelId?: string,
 ): Promise<string> {
-  const url = (baseUrlFromUser || '').trim().replace(/\/+$/, '')
+  let url = (baseUrlFromUser || '').trim().replace(/\/+$/, '')
   if (url) {
+    if (url.includes('googleapis.com') && !url.includes('/openai')) {
+      url = `${url}/openai`
+    }
     return url
   }
 
