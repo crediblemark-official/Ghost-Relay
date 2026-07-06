@@ -1,27 +1,19 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import OpenAI from 'openai'
 import { db } from '@ghost/database'
 import { decrypt } from './encryption.js'
 import { getAllProviders } from './models-dev.js'
-
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
-const fallbackProvidersPath = join(__dirname, 'fallback-providers.json')
-
-let fallbackUrls: Record<string, string> = {}
-try {
-  fallbackUrls = JSON.parse(readFileSync(fallbackProvidersPath, 'utf8'))
-} catch (err) {
-  console.error('Failed to load fallback-providers.json:', err)
-}
 
 const clientCache = new Map<string, OpenAI>()
 
 export function makeClient(apiKey: string, baseURL: string): OpenAI {
   const key = `${apiKey}:${baseURL}`
   if (!clientCache.has(key)) {
-    clientCache.set(key, new OpenAI({ apiKey, baseURL }))
+    const config: { apiKey: string; baseURL?: string } = { apiKey }
+    const trimmedUrl = (baseURL || '').trim()
+    if (trimmedUrl) {
+      config.baseURL = trimmedUrl
+    }
+    clientCache.set(key, new OpenAI(config))
   }
   return clientCache.get(key)!
 }
@@ -58,7 +50,6 @@ export async function resolveProviderBaseUrl(
   }
 
   const providerKey = (providerNameOrId || '').toLowerCase()
-  const modelKey = (modelId || '').toLowerCase()
 
   // 1. Coba cari provider secara dinamis di catalog models.dev
   try {
@@ -73,12 +64,5 @@ export async function resolveProviderBaseUrl(
     console.error('Error fetching providers catalog:', err)
   }
 
-  // 2. Gunakan fallback dari config file jika tidak ada properti api di catalog
-  for (const [key, fallbackUrl] of Object.entries(fallbackUrls)) {
-    if (providerKey.includes(key) || modelKey.includes(key)) {
-      return fallbackUrl
-    }
-  }
-
-  return 'https://api.openai.com/v1'
+  return ''
 }
