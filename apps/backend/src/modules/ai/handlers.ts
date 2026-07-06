@@ -139,7 +139,16 @@ export async function handleTestProvider(req: FastifyRequest) {
   const baseURL = await resolveProviderBaseUrl(api_base_url, name, model_id)
   try {
     const OpenAI = (await import('openai')).default
-    const client = new OpenAI({ apiKey: api_key ?? '', baseURL })
+    const config: { apiKey: string; baseURL?: string; defaultHeaders?: Record<string, string> } = { apiKey: api_key ?? '' }
+    if (baseURL) {
+      config.baseURL = baseURL
+      if (baseURL.includes('googleapis.com') || baseURL.includes('google')) {
+        config.defaultHeaders = {
+          'x-goog-api-key': api_key ?? '',
+        }
+      }
+    }
+    const client = new OpenAI(config)
     const models = await client.models.list()
     return {
       status: 'ok',

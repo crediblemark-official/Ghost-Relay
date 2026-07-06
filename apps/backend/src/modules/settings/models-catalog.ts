@@ -45,11 +45,14 @@ export async function handleFetchModels(req: FastifyRequest, reply: FastifyReply
       url = url.endsWith('/') ? `${url}models` : `${url}/models`
     }
 
-    const res = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`
-      }
-    })
+    const headers: Record<string, string> = {}
+    if (url.includes('googleapis.com') || url.includes('google')) {
+      headers['x-goog-api-key'] = apiKey
+    } else {
+      headers['Authorization'] = `Bearer ${apiKey}`
+    }
+
+    const res = await fetch(url, { headers })
     if (!res.ok) {
       throw new Error(`Provider returned status ${res.status}`)
     }
