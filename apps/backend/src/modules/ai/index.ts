@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { db } from '@ghost/database'
-import { listAvailableModels } from '../../core/ai.js'
+import { listAvailableModels } from '../../core/ai-models.js'
 import { validate, sendValidationError, ValidationError } from '../../core/validation.js'
 import { encrypt, decrypt } from '../../core/encryption.js'
 import { aiProviderCreateSchema, aiProviderUpdateSchema } from '@ghost/shared'

@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { generateEmbedding } from '../../core/ai.js'
+import { generateEmbedding } from '../../core/ai-embedding.js'
 import { memoryStore } from '../../core/memory-store.js'
 import { validate, sendValidationError, ValidationError } from '../../core/validation.js'
 import { memorySearchSchema } from '@ghost/shared'

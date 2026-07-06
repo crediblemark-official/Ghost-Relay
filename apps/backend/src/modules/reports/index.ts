@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { db } from '@ghost/database'
-import { summarizeText } from '../../core/ai.js'
+import { summarizeText } from '../../core/ai-chat.js'
 
 export async function reportsModule(app: FastifyInstance): Promise<void> {
   app.get('/reports/daily', { preHandler: [app.authenticate] }, async (req) => {

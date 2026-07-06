@@ -61,7 +61,7 @@ vi.mock('@ghost/database', () => ({
   },
 }))
 
-vi.mock('../../core/ai.js', () => ({
+vi.mock('../../core/ai-models.js', () => ({
   listAvailableModels: mockListAvailableModels,
 }))
 

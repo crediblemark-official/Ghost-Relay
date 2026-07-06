@@ -39,14 +39,50 @@ export interface VoiceNote {
 }
 
 export interface PlatformConnection {
-  id: string
-  userId: string
+  id: number
+  userId?: string
   platform: string
-  isActive: boolean
+  is_active: boolean
+  isActive?: boolean
+  platform_user_id: string | null
 }
 
 export interface User {
   id: string
   email: string
   name: string
+}
+
+/** Provider AI yang tersimpan di database */
+export interface AIProvider {
+  id: number
+  userId: number
+  providerType: string
+  name: string
+  apiBaseUrl: string
+  apiKey: string
+  modelId: string
+  isActive: boolean
+}
+
+/** Entry dari katalog models.dev */
+export interface CatalogProvider {
+  id: string
+  name: string
+  api: string
+  models: string[]
+}
+
+/** Hasil autocomplete dari katalog (base URLs & models) */
+export interface ModelsCatalog {
+  providers: CatalogProvider[]
+}
+
+/** Form state untuk tambah AI provider */
+export interface AIProviderForm {
+  providerType: string
+  name: string
+  apiBaseUrl: string
+  apiKey: string
+  modelId: string
 }
