@@ -3,10 +3,8 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Brain, Globe, Key, Plus, Trash2, CheckCircle, XCircle, RefreshCw, ChevronDown, Zap } from 'lucide-react'
+import { Brain, Globe, Key, Plus, Trash2, CheckCircle, XCircle, ChevronDown, Zap } from 'lucide-react'
 import { api } from '@/lib/api'
-import { useModelsCatalog } from '@/hooks/useModelsCatalog'
-import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import type { AIProvider, AIProviderForm } from '@/types'
 
 const PROVIDER_TYPES = ['chat', 'embedding', 'audio'] as const
@@ -21,27 +19,14 @@ const selectCls = 'h-8 w-full appearance-none rounded-md border border-slate-200
 
 export function AIProvidersCard() {
   const queryClient = useQueryClient()
-  const { data: catalog = { providers: [] } } = useModelsCatalog()
 
   const { data: aiProviders = [], isLoading, isError } = useQuery<AIProvider[]>({
     queryKey: ['ai-providers'],
     queryFn: () => api.get('/ai/providers'),
   })
 
-  const { data: availableModels } = useQuery<{ models: { id: string }[] }>({
-    queryKey: ['ai-models'],
-    queryFn: () => api.get('/ai/providers/models'),
-    enabled: aiProviders.length > 0,
-    retry: false,
-  })
-
   const [form, setForm] = useState<AIProviderForm | null>(null)
   const [liveModels, setLiveModels] = useState<string[]>([])
-  const [fetchingLiveModels, setFetchingLiveModels] = useState(false)
-  const [isCustomProvider, setIsCustomProvider] = useState(false)
-  const [customName, setCustomName] = useState('')
-  const [isCustomModel, setIsCustomModel] = useState(false)
-  const [customModelId, setCustomModelId] = useState('')
 
   const createMutation = useMutation({
     mutationFn: (data: AIProviderForm) => api.post('/ai/providers', {
@@ -55,10 +40,6 @@ export function AIProvidersCard() {
       queryClient.invalidateQueries({ queryKey: ['ai-providers'] })
       setForm(null)
       setLiveModels([])
-      setIsCustomProvider(false)
-      setCustomName('')
-      setIsCustomModel(false)
-      setCustomModelId('')
     },
   })
 
@@ -119,56 +100,6 @@ export function AIProvidersCard() {
     }
   }
 
-  const handleNameChange = (name: string) => {
-    setLiveModels([])
-    setIsCustomModel(false)
-    setCustomModelId('')
-    if (name === 'custom') {
-      setIsCustomProvider(true)
-      setCustomName('')
-      setForm(prev => prev ? { ...prev, name: '', apiBaseUrl: '', modelId: '' } : null)
-      return
-    }
-
-    setIsCustomProvider(false)
-    const matched = (catalog?.providers || []).find(
-      p => p.name.toLowerCase() === name.toLowerCase() || p.id.toLowerCase() === name.toLowerCase()
-    )
-    setForm(prev => prev
-      ? { ...prev, name, apiBaseUrl: matched?.api || '', modelId: matched?.models?.[0] || prev.modelId }
-      : null
-    )
-  }
-
-  const fetchLiveModels = async () => {
-    if (!form || !form.apiBaseUrl || !form.apiKey) return
-    setFetchingLiveModels(true)
-    try {
-      const res = await api.post<{ status: string; models?: string[]; detail?: string }>('/ai/providers/test', {
-        api_base_url: form.apiBaseUrl,
-        api_key: form.apiKey,
-      })
-      if (res.status === 'ok' && res.models) {
-        setLiveModels(res.models)
-      } else {
-        alert(res.detail || 'Gagal mengambil daftar model. Periksa API Key dan Base URL.')
-      }
-    } catch (e: any) {
-      alert(e.message || 'Gagal terhubung ke provider.')
-    } finally {
-      setFetchingLiveModels(false)
-    }
-  }
-
-  const modelSuggestions = (() => {
-    if (!form) return []
-    if (liveModels.length > 0) return liveModels
-    const matched = (catalog?.providers || []).find(
-      p => p.name.toLowerCase() === form.name.toLowerCase() || p.id.toLowerCase() === form.name.toLowerCase()
-    )
-    return matched ? matched.models : (availableModels?.models || []).map(m => m.id)
-  })()
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -189,10 +120,6 @@ export function AIProvidersCard() {
           onClick={() => {
             setForm({ providerType: 'chat', name: '', apiBaseUrl: '', apiKey: '', modelId: '' })
             setLiveModels([])
-            setIsCustomProvider(false)
-            setCustomName('')
-            setIsCustomModel(false)
-            setCustomModelId('')
           }}
         >
           <Plus className="h-4 w-4 mr-1 text-indigo-500" /> Add Provider
@@ -278,138 +205,84 @@ export function AIProvidersCard() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Name</label>
-                <SearchableSelect
-                  value={isCustomProvider ? 'custom' : form.name}
-                  onChange={handleNameChange}
-                  options={(catalog?.providers || []).map(p => p.name)}
-                  placeholder="Pilih atau cari provider..."
-                  customOptionLabel="✍️ Custom Provider (Lainnya)"
-                  onCustomSelect={() => handleNameChange('custom')}
-                />
-              </div>
-            </div>
-            {isCustomProvider && (
-              <div className="animate-in slide-in-from-top-1 duration-200">
-                <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Nama Provider Kustom</label>
                 <input
                   type="text"
-                  value={customName}
+                  value={form.name}
                   onChange={e => {
                     const val = e.target.value
-                    setCustomName(val)
-                    setForm(prev => prev ? { ...prev, name: val } : null)
+                    setForm(prev => {
+                      if (!prev) return null
+                      const lowerVal = val.toLowerCase()
+                      let autoUrl = prev.apiBaseUrl
+                      const fallbackKeys = ['google', 'openai', 'anthropic', 'cohere', 'groq', 'deepseek']
+                      const matchedKey = fallbackKeys.find(k => lowerVal.includes(k))
+                      if (matchedKey) {
+                        const localFallbacks: Record<string, string> = {
+                          google: 'https://generativelanguage.googleapis.com/v1beta/openai',
+                          openai: 'https://api.openai.com/v1',
+                          anthropic: 'https://api.anthropic.com/v1',
+                          cohere: 'https://api.cohere.ai/v1',
+                          groq: 'https://api.groq.com/openai/v1',
+                          deepseek: 'https://api.deepseek.com/v1'
+                        }
+                        autoUrl = localFallbacks[matchedKey]
+                      }
+                      return { ...prev, name: val, apiBaseUrl: autoUrl }
+                    })
                   }}
-                  placeholder="Contoh: OpenCode Go, Localhost, dll."
+                  placeholder="Contoh: OpenAI, Google Gemini, dll."
                   className={inputCls}
                 />
               </div>
-            )}
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1.5 block flex items-center gap-1">
                   <Globe className="h-3.5 w-3.5 text-slate-400" /> Base URL
                 </label>
                 <input
-                  type="text" value={form.apiBaseUrl}
+                  type="text"
+                  value={form.apiBaseUrl}
                   onChange={e => setForm(prev => prev ? { ...prev, apiBaseUrl: e.target.value } : null)}
                   placeholder="https://api.openai.com/v1"
-                  className={inputCls} list="settings-base-urls"
-                  readOnly={
-                    form.name !== '' &&
-                    (catalog?.providers || []).some(
-                      p => p.name.toLowerCase() === form.name.toLowerCase() || p.id.toLowerCase() === form.name.toLowerCase()
-                    )
-                  }
+                  className={inputCls}
                 />
-                <datalist id="settings-base-urls">
-                  {(catalog?.providers || []).map(p => (
-                    <option key={p.id} value={p.api} />
-                  ))}
-                </datalist>
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1.5 block flex items-center gap-1">
                   <Key className="h-3.5 w-3.5 text-slate-400" /> API Key
                 </label>
                 <input
-                  type="password" value={form.apiKey}
+                  type="password"
+                  value={form.apiKey}
                   onChange={e => setForm(prev => prev ? { ...prev, apiKey: e.target.value } : null)}
-                  placeholder="sk-..." className={inputCls}
+                  placeholder="sk-..."
+                  className={inputCls}
                 />
               </div>
             </div>
             <div>
               <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Model ID</label>
-              <div className="flex gap-2">
-                {modelSuggestions.length > 0 ? (
-                  <div className="flex-1">
-                    <SearchableSelect
-                      value={isCustomModel ? 'custom' : form.modelId}
-                      onChange={val => {
-                        if (val === 'custom') {
-                          setIsCustomModel(true)
-                          setCustomModelId('')
-                          setForm(prev => prev ? { ...prev, modelId: '' } : null)
-                        } else {
-                          setIsCustomModel(false)
-                          setForm(prev => prev ? { ...prev, modelId: val } : null)
-                        }
-                      }}
-                      options={modelSuggestions}
-                      placeholder="Pilih atau cari model..."
-                      customOptionLabel="✍️ Custom Model (Lainnya)"
-                      onCustomSelect={() => {
-                        setIsCustomModel(true)
-                        setCustomModelId('')
-                        setForm(prev => prev ? { ...prev, modelId: '' } : null)
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <input
-                    type="text" value={form.modelId}
-                    onChange={e => setForm(prev => prev ? { ...prev, modelId: e.target.value } : null)}
-                    placeholder="gpt-4o, claude-3-5-sonnet..."
-                    className={inputCls}
-                  />
-                )}
-                <Button
-                  variant="outline" size="icon"
-                  className="h-10 w-10 border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 shrink-0"
-                  onClick={fetchLiveModels}
-                  disabled={fetchingLiveModels || !form.apiBaseUrl || !form.apiKey}
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${fetchingLiveModels ? 'animate-spin' : ''}`} />
-                </Button>
-              </div>
+              <input
+                type="text"
+                value={form.modelId}
+                onChange={e => setForm(prev => prev ? { ...prev, modelId: e.target.value } : null)}
+                placeholder="Contoh: gpt-4o, gemini-1.5-flash..."
+                className={inputCls}
+                list="live-model-suggestions"
+              />
+              <datalist id="live-model-suggestions">
+                {liveModels.map(m => (
+                  <option key={m} value={m} />
+                ))}
+              </datalist>
             </div>
-
-            {isCustomModel && modelSuggestions.length > 0 && (
-              <div className="animate-in slide-in-from-top-1 duration-200">
-                <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Nama Model Kustom</label>
-                <input
-                  type="text"
-                  value={customModelId}
-                  onChange={e => {
-                    const val = e.target.value
-                    setCustomModelId(val)
-                    setForm(prev => prev ? { ...prev, modelId: val } : null)
-                  }}
-                  placeholder="Ketik model ID (misal: gpt-4-32k)..."
-                  className={inputCls}
-                />
-              </div>
-            )}
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 variant="ghost" size="sm" className="text-slate-500 hover:text-slate-800"
                 onClick={() => {
                   setForm(null)
                   setLiveModels([])
-                  setIsCustomProvider(false)
-                  setCustomName('')
-                  setIsCustomModel(false)
-                  setCustomModelId('')
                 }}
               >
                 Cancel
