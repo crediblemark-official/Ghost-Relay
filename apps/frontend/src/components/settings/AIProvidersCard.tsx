@@ -44,7 +44,13 @@ export function AIProvidersCard() {
   const [customModelId, setCustomModelId] = useState('')
 
   const createMutation = useMutation({
-    mutationFn: (data: AIProviderForm) => api.post('/ai/providers', data),
+    mutationFn: (data: AIProviderForm) => api.post('/ai/providers', {
+      provider_type: data.providerType,
+      name: data.name,
+      api_base_url: data.apiBaseUrl,
+      api_key: data.apiKey,
+      model_id: data.modelId,
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-providers'] })
       setForm(null)
