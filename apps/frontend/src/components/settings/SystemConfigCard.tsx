@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Settings as SettingsIcon, XCircle } from 'lucide-react'
@@ -33,8 +32,8 @@ export function SystemConfigCard() {
   })
 
   return (
-    <Card className="border border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden">
-      <CardHeader className="border-b border-slate-100 px-6 py-4">
+    <div className="space-y-6">
+      <div className="pb-4 border-b border-slate-100">
         <div className="flex items-center gap-2 text-slate-800">
           <SettingsIcon className="h-5 w-5 text-violet-500" />
           <span className="text-lg font-bold">System Config</span>
@@ -42,8 +41,8 @@ export function SystemConfigCard() {
         <p className="text-xs text-slate-500 mt-1">
           Override dynamic server environment variables. Database overrides take precedence over .env values.
         </p>
-      </CardHeader>
-      <CardContent className="p-6">
+      </div>
+      <div className="pt-2">
         {isLoading ? (
           <div className="space-y-2">
             {[0, 1, 2, 3].map(i => (
@@ -96,7 +95,7 @@ export function SystemConfigCard() {
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

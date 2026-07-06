@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -113,35 +112,36 @@ export function AIProvidersCard() {
   })()
 
   return (
-    <Card className="border border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden">
-      <CardHeader className="border-b border-slate-100 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-bold flex items-center text-slate-800">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <h3 className="text-lg font-bold flex items-center text-slate-800">
             <Brain className="h-5 w-5 inline mr-2 text-indigo-500" />
             AI Providers
-          </CardTitle>
-          <Button
-            variant="outline" size="sm"
-            className="h-8 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-            onClick={() => {
-              setForm({ providerType: 'chat', name: '', apiBaseUrl: '', apiKey: '', modelId: '' })
-              setLiveModels([])
-              setIsCustomProvider(false)
-              setCustomName('')
-              setIsCustomModel(false)
-              setCustomModelId('')
-            }}
-          >
-            <Plus className="h-4 w-4 mr-1 text-indigo-500" /> Add Provider
-          </Button>
+          </h3>
+          <p className="text-xs text-slate-500 mt-1">
+            Configure LLM providers from the dynamic{' '}
+            <a href="https://models.dev" target="_blank" className="underline text-indigo-500 hover:text-indigo-600" rel="noreferrer">models.dev</a>
+            {' '}catalog.
+          </p>
         </div>
-        <p className="text-xs text-slate-500 mt-1">
-          Configure LLM providers from the dynamic{' '}
-          <a href="https://models.dev" target="_blank" className="underline text-indigo-500 hover:text-indigo-600" rel="noreferrer">models.dev</a>
-          {' '}catalog.
-        </p>
-      </CardHeader>
-      <CardContent className="p-6">
+        <Button
+          variant="outline" size="sm"
+          className="h-8 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          onClick={() => {
+            setForm({ providerType: 'chat', name: '', apiBaseUrl: '', apiKey: '', modelId: '' })
+            setLiveModels([])
+            setIsCustomProvider(false)
+            setCustomName('')
+            setIsCustomModel(false)
+            setCustomModelId('')
+          }}
+        >
+          <Plus className="h-4 w-4 mr-1 text-indigo-500" /> Add Provider
+        </Button>
+      </div>
+
+      <div className="pt-2">
         {isLoading ? (
           <div className="space-y-3">
             {[0, 1].map(i => (
@@ -353,7 +353,7 @@ export function AIProvidersCard() {
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -217,41 +216,41 @@ export function PlatformsCard() {
   }
 
   return (
-    <Card className="border border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden">
-      <CardHeader className="border-b border-slate-100 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-bold flex items-center text-slate-800">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <h3 className="text-lg font-bold flex items-center text-slate-800">
             <Globe className="h-5 w-5 inline mr-2 text-cyan-500" />
             Connected Platforms
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline" size="sm"
-              className="h-8 border-slate-200 text-slate-600 hover:bg-slate-50"
-              disabled={migrateMutation.isPending}
-              onClick={async () => {
-                try {
-                  const result = await migrateMutation.mutateAsync()
-                  alert(result.message)
-                } catch (e: any) {
-                  alert(e.response?.data?.detail || e.message || 'Gagal melakukan migrasi.')
-                }
-              }}
-            >
-              <RefreshCw className={`h-3.5 w-3.5 mr-1 text-cyan-500 ${migrateMutation.isPending ? 'animate-spin' : ''}`} />
-              {migrateMutation.isPending ? 'Migrating...' : 'Migrate'}
-            </Button>
-            <Button
-              variant="outline" size="sm"
-              className="h-8 border-slate-200 text-slate-600 hover:bg-slate-50"
-              onClick={() => setShowForm(!showForm)}
-            >
-              <Plus className="h-4 w-4 mr-1 text-cyan-500" /> Add
-            </Button>
-          </div>
+          </h3>
         </div>
-      </CardHeader>
-      <CardContent className="p-6">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline" size="sm"
+            className="h-8 border-slate-200 text-slate-600 hover:bg-slate-50"
+            disabled={migrateMutation.isPending}
+            onClick={async () => {
+              try {
+                const result = await migrateMutation.mutateAsync()
+                alert(result.message)
+              } catch (e: any) {
+                alert(e.response?.data?.detail || e.message || 'Gagal melakukan migrasi.')
+              }
+            }}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 mr-1 text-cyan-500 ${migrateMutation.isPending ? 'animate-spin' : ''}`} />
+            {migrateMutation.isPending ? 'Migrating...' : 'Migrate'}
+          </Button>
+          <Button
+            variant="outline" size="sm"
+            className="h-8 border-slate-200 text-slate-600 hover:bg-slate-50"
+            onClick={() => setShowForm(!showForm)}
+          >
+            <Plus className="h-4 w-4 mr-1 text-cyan-500" /> Add
+          </Button>
+        </div>
+      </div>
+      <div className="pt-2">
         {isLoading ? (
           <div className="space-y-3">
             {[0, 1, 2].map(i => (
@@ -363,7 +362,7 @@ export function PlatformsCard() {
         )}
 
         {webhookUrls && <WebhookUrls urls={webhookUrls} />}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
