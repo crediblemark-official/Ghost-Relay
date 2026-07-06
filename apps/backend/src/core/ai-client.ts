@@ -21,7 +21,7 @@ const clientCache = new Map<string, OpenAI>()
 export function makeClient(apiKey: string, baseURL: string): OpenAI {
   const key = `${apiKey}:${baseURL}`
   if (!clientCache.has(key)) {
-    const config: { apiKey: string; baseURL?: string } = { apiKey }
+    const config: { apiKey: string; baseURL?: string; timeout: number } = { apiKey, timeout: 10000 }
     const trimmedUrl = (baseURL || '').trim()
     if (trimmedUrl) {
       config.baseURL = trimmedUrl
