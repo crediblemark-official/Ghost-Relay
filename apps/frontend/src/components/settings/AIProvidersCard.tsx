@@ -76,14 +76,14 @@ export function AIProvidersCard() {
   const testProviderConnection = async (p: AIProvider) => {
     setTestingProviderId(p.id)
     try {
-      const res = await api.post<{ status: string; models?: string[]; detail?: string }>('/ai/providers/test', {
+      const res = await api.post<{ status: string; models?: string[]; modelsCount?: number; detail?: string }>('/ai/providers/test', {
         api_base_url: p.apiBaseUrl,
         api_key: p.apiKey,
         name: p.name,
         model_id: p.modelId,
       })
       if (res.status === 'ok') {
-        alert(`Koneksi sukses! Berhasil terhubung ke provider "${p.name}". Ditemukan ${res.models?.length || 0} model.`)
+        alert(`Koneksi sukses! Berhasil terhubung ke provider "${p.name}". Ditemukan ${res.modelsCount ?? res.models?.length ?? 0} model.`)
       } else {
         alert(`Koneksi gagal: ${res.detail || 'Kredensial tidak valid.'}`)
       }
@@ -98,14 +98,14 @@ export function AIProvidersCard() {
     if (!form || !form.apiBaseUrl || !form.apiKey) return
     setTestingForm(true)
     try {
-      const res = await api.post<{ status: string; models?: string[]; detail?: string }>('/ai/providers/test', {
+      const res = await api.post<{ status: string; models?: string[]; modelsCount?: number; detail?: string }>('/ai/providers/test', {
         api_base_url: form.apiBaseUrl,
         api_key: form.apiKey,
         name: form.name,
         model_id: form.modelId,
       })
       if (res.status === 'ok') {
-        alert(`Koneksi sukses! Berhasil terhubung ke provider "${form.name}". Ditemukan ${res.models?.length || 0} model.`)
+        alert(`Koneksi sukses! Berhasil terhubung ke provider "${form.name}". Ditemukan ${res.modelsCount ?? res.models?.length ?? 0} model.`)
         if (res.models && res.models.length > 0) {
           setLiveModels(res.models)
         }
