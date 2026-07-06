@@ -37,6 +37,8 @@ export function AIProvidersCard() {
   const [form, setForm] = useState<AIProviderForm | null>(null)
   const [liveModels, setLiveModels] = useState<string[]>([])
   const [fetchingLiveModels, setFetchingLiveModels] = useState(false)
+  const [isCustomProvider, setIsCustomProvider] = useState(false)
+  const [customName, setCustomName] = useState('')
 
   const createMutation = useMutation({
     mutationFn: (data: AIProviderForm) => api.post('/ai/providers', data),
@@ -44,6 +46,8 @@ export function AIProvidersCard() {
       queryClient.invalidateQueries({ queryKey: ['ai-providers'] })
       setForm(null)
       setLiveModels([])
+      setIsCustomProvider(false)
+      setCustomName('')
     },
   })
 
@@ -53,10 +57,18 @@ export function AIProvidersCard() {
   })
 
   const handleNameChange = (name: string) => {
+    setLiveModels([])
+    if (name === 'custom') {
+      setIsCustomProvider(true)
+      setCustomName('')
+      setForm(prev => prev ? { ...prev, name: '', apiBaseUrl: '', modelId: '' } : null)
+      return
+    }
+
+    setIsCustomProvider(false)
     const matched = (catalog?.providers || []).find(
       p => p.name.toLowerCase() === name.toLowerCase() || p.id.toLowerCase() === name.toLowerCase()
     )
-    setLiveModels([])
     setForm(prev => prev
       ? { ...prev, name, apiBaseUrl: matched?.api || prev.apiBaseUrl, modelId: matched?.models?.[0] || prev.modelId }
       : null
@@ -178,17 +190,35 @@ export function AIProvidersCard() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Name</label>
-                <input
-                  type="text" value={form.name}
+                <select
+                  value={isCustomProvider ? 'custom' : form.name}
                   onChange={e => handleNameChange(e.target.value)}
-                  placeholder="OpenAI, Anthropic, OpenRouter..."
-                  className={inputCls} list="settings-providers"
-                />
-                <datalist id="settings-providers">
-                  {(catalog?.providers || []).map(p => <option key={p.id} value={p.name} />)}
-                </datalist>
+                  className={inputCls}
+                >
+                  <option value="" disabled>Pilih Provider...</option>
+                  {(catalog?.providers || []).map(p => (
+                    <option key={p.id} value={p.name}>{p.name}</option>
+                  ))}
+                  <option value="custom">✍️ Custom Provider (Lainnya)</option>
+                </select>
               </div>
             </div>
+            {isCustomProvider && (
+              <div className="animate-in slide-in-from-top-1 duration-200">
+                <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Nama Provider Kustom</label>
+                <input
+                  type="text"
+                  value={customName}
+                  onChange={e => {
+                    const val = e.target.value
+                    setCustomName(val)
+                    setForm(prev => prev ? { ...prev, name: val } : null)
+                  }}
+                  placeholder="Contoh: OpenCode Go, Localhost, dll."
+                  className={inputCls}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1.5 block flex items-center gap-1">

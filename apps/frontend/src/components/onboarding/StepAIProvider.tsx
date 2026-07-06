@@ -28,8 +28,25 @@ export function StepAIProvider({ state, onChange, fetchedModels, onFetchedModels
   const { data: catalog = { providers: [] } } = useModelsCatalog()
   const [fetching, setFetching] = useState(false)
   const [fetchError, setFetchError] = useState('')
+  const [isCustom, setIsCustom] = useState(false)
+  const [customName, setCustomName] = useState('')
 
   const handleProviderChange = (name: string) => {
+    if (name === 'custom') {
+      setIsCustom(true)
+      setCustomName('')
+      onChange({
+        provider: '',
+        baseUrl: '',
+        model: '',
+        embeddingModel: '',
+        audioModel: '',
+      })
+      onFetchedModels([])
+      return
+    }
+
+    setIsCustom(false)
     const matched = (catalog?.providers || []).find(
       p => p.name.toLowerCase() === name.toLowerCase() || p.id.toLowerCase() === name.toLowerCase()
     )
@@ -92,17 +109,18 @@ export function StepAIProvider({ state, onChange, fetchedModels, onFetchedModels
 
       <div className="grid grid-cols-2 gap-4 mt-2">
         <div className="space-y-2">
-          <label className="text-xs font-medium text-slate-500">Pilih / Ketik Provider AI</label>
-          <Input
-            list="ob-providers"
-            placeholder="OpenAI, Anthropic, OpenRouter..."
-            value={state.provider}
+          <label className="text-xs font-medium text-slate-500">Pilih Provider AI</label>
+          <select
+            value={isCustom ? 'custom' : state.provider}
             onChange={e => handleProviderChange(e.target.value)}
-            className={inputCls}
-          />
-          <datalist id="ob-providers">
-            {(catalog?.providers || []).map(p => <option key={p.id} value={p.name} />)}
-          </datalist>
+            className="w-full h-10 rounded-md border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus-visible:ring-indigo-400 px-3 text-sm focus:outline-none"
+          >
+            <option value="" disabled>Pilih Provider...</option>
+            {(catalog?.providers || []).map(p => (
+              <option key={p.id} value={p.name}>{p.name}</option>
+            ))}
+            <option value="custom">✍️ Custom Provider (Lainnya)</option>
+          </select>
         </div>
         <div className="space-y-2">
           <label className="text-xs font-medium text-slate-500">Model Chat Utama</label>
@@ -118,6 +136,22 @@ export function StepAIProvider({ state, onChange, fetchedModels, onFetchedModels
           </datalist>
         </div>
       </div>
+
+      {isCustom && (
+        <div className="space-y-2 animate-in slide-in-from-top-1 duration-200">
+          <label className="text-xs font-medium text-slate-500">Nama Provider Kustom</label>
+          <Input
+            placeholder="Contoh: OpenCode Go, Localhost, dll."
+            value={customName}
+            onChange={e => {
+              const val = e.target.value
+              setCustomName(val)
+              onChange({ provider: val })
+            }}
+            className={inputCls}
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
