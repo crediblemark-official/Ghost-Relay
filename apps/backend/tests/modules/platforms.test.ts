@@ -29,27 +29,28 @@ const {
 // ── module-level mocks ─────────────────────────────────────────
 vi.mock('@ghost/database', () => ({
   db: {
-    query: {
-      platformConnections: {
-        findMany: mockFindMany,
-        findFirst: mockFindFirst,
+    platformConnection: {
+      findMany: mockFindMany,
+      findFirst: mockFindFirst,
+      create: async (args: any) => {
+        const chain = mockInsertChain()
+        const valuesFn = chain.values
+        const returningFn = valuesFn(args.data).returning
+        const res = await returningFn()
+        return res[0] || res
       },
-    },
-    insert: mockInsertChain,
-    update: mockUpdateChain,
-    delete: vi.fn(() => ({ where: vi.fn() })),
-  },
-  platformConnections: {
-    id: { name: 'id' },
-    userId: { name: 'user_id' },
-    platform: { name: 'platform' },
-    credentialsEncrypted: { name: 'credentials_encrypted' },
-    platformUserId: { name: 'platform_user_id' },
-    isActive: { name: 'is_active' },
-  },
+      update: async (args: any) => {
+        const chain = mockUpdateChain()
+        const setFn = chain.set
+        const returningFn = setFn(args.data).where().returning
+        const res = await returningFn()
+        return res[0] || res
+      }
+    }
+  }
 }))
 
-vi.mock('../../core/encryption.js', () => {
+vi.mock('../../src/core/encryption.js', () => {
   const mockEncrypt = vi.fn((s: string) => `encrypted:${s}`)
   const mockDecrypt = vi.fn((s: string) =>
     s.startsWith('encrypted:') ? s.slice('encrypted:'.length) : s,
@@ -57,13 +58,13 @@ vi.mock('../../core/encryption.js', () => {
   return { encrypt: mockEncrypt, decrypt: mockDecrypt }
 })
 
-vi.mock('../../core/platform-service.js', () => ({
+vi.mock('../../src/core/platform-service.js', () => ({
   platformService: {
     testConnection: mockTestConnection,
   },
 }))
 
-vi.mock('../../core/migrate-platform-user-id.js', () => ({
+vi.mock('../../src/core/migrate-platform-user-id.js', () => ({
   migratePlatformUserId: mockMigratePlatformUserId,
 }))
 
@@ -76,7 +77,7 @@ async function buildTestApp() {
     request.userId = 1
   })
 
-  const { platformsModule } = await import('./index.js')
+  const { platformsModule } = await import('../../src/modules/platforms/index.js')
   await app.register(platformsModule)
 
   await app.ready()

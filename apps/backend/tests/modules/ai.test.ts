@@ -38,34 +38,36 @@ const {
 // ── module-level mocks ─────────────────────────────────────────
 vi.mock('@ghost/database', () => ({
   db: {
-    query: {
-      aiProviders: {
-        findMany: mockFindMany,
-        findFirst: mockFindFirst,
+    aIProvider: {
+      findMany: mockFindMany,
+      findFirst: mockFindFirst,
+      create: async (args: any) => {
+        const chain = mockInsertChain()
+        const valuesFn = chain.values
+        const returningFn = valuesFn(args.data).returning
+        const res = await returningFn()
+        return res[0] || res
       },
-    },
-    insert: mockInsertChain,
-    update: mockUpdateChain,
-    delete: mockDeleteChain,
-  },
-  aiProviders: {
-    id: { name: 'id' },
-    userId: { name: 'user_id' },
-    providerType: { name: 'provider_type' },
-    name: { name: 'name' },
-    apiBaseUrl: { name: 'api_base_url' },
-    apiKey: { name: 'api_key' },
-    modelId: { name: 'model_id' },
-    isActive: { name: 'is_active' },
-    createdAt: { name: 'created_at' },
-  },
+      update: async (args: any) => {
+        const chain = mockUpdateChain()
+        const setFn = chain.set
+        const returningFn = setFn(args.data).where().returning
+        const res = await returningFn()
+        return res[0] || res
+      },
+      delete: async (args: any) => {
+        const chain = mockDeleteChain()
+        await chain.where()
+      }
+    }
+  }
 }))
 
-vi.mock('../../core/ai-models.js', () => ({
+vi.mock('../../src/core/ai-models.js', () => ({
   listAvailableModels: mockListAvailableModels,
 }))
 
-vi.mock('../../core/encryption.js', () => {
+vi.mock('../../src/core/encryption.js', () => {
   const mockEncrypt = vi.fn((s: string) => `encrypted:${s}`)
   const mockDecrypt = vi.fn((s: string) =>
     s.startsWith('encrypted:') ? s.slice('encrypted:'.length) : s
@@ -73,7 +75,7 @@ vi.mock('../../core/encryption.js', () => {
   return { encrypt: mockEncrypt, decrypt: mockDecrypt }
 })
 
-vi.mock('../../core/models-dev.js', () => ({
+vi.mock('../../src/core/models-dev.js', () => ({
   searchModels: mockSearchModels,
   getModelFamilies: mockGetModelFamilies,
   searchProviders: mockSearchProviders,
@@ -99,7 +101,7 @@ async function buildTestApp() {
     instance.decorate('emitToUser', vi.fn())
   }))
 
-  const { aiModule } = await import('./index.js')
+  const { aiModule } = await import('../../src/modules/ai/index.js')
   await app.register(aiModule)
 
   await app.ready()
