@@ -143,9 +143,8 @@ export function KnowledgeVault({ collapsed }: { collapsed?: boolean }) {
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-foreground tracking-tight text-sm">Knowledge Vault</h2>
-              <span className="text-[10px] text-muted-foreground">max 50 MB</span>
+            <div className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/60">
+              Vault
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -225,15 +224,18 @@ export function KnowledgeVault({ collapsed }: { collapsed?: boolean }) {
         onDrop={handleDrop}
       >
         <div
-          className={'p-3 min-h-full transition-colors' + (dragOver ? ' bg-primary/10 border-2 border-dashed border-primary rounded' : '')}
-        >
-          {dragOver && (
-            <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-              <Upload className="h-5 w-5 mr-2" /> Lepaskan file di sini
-            </div>
+          className={cn(
+            'p-3 min-h-full transition-colors flex flex-col',
+            (Object.keys(folders).length === 0 || dragOver) && 'justify-center',
+            dragOver && 'bg-primary/5'
           )}
-
-          {isLoading ? (
+        >
+          {dragOver ? (
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-primary bg-primary/5 rounded-xl p-8 text-center space-y-2 animate-pulse min-h-[220px] mx-2">
+              <Upload className="h-8 w-8 text-primary" />
+              <p className="text-xs font-semibold text-primary">Lepaskan file di sini untuk mengunggah</p>
+            </div>
+          ) : isLoading ? (
             <div className="p-3 space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i}>
@@ -302,10 +304,33 @@ export function KnowledgeVault({ collapsed }: { collapsed?: boolean }) {
                 </div>
               )}
             </div>
-          ) : Object.keys(folders).length === 0 && !dragOver ? (
-            <p className="text-sm text-muted-foreground p-4 text-center">
-              Belum ada file. Upload file atau tunggu file dari chat otomatis terindeks.
-            </p>
+          ) : Object.keys(folders).length === 0 ? (
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/80 rounded-xl p-6 text-center space-y-4 bg-card/40 mx-2 select-none min-h-[220px]">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <Upload className="h-5 w-5" />
+              </div>
+              <div className="space-y-1 px-2">
+                <p className="text-xs font-semibold text-foreground">Unggah Dokumen Anda</p>
+                <p className="text-[11px] text-muted-foreground leading-normal">Tarik & lepas file di sini untuk mengunggah otomatis</p>
+              </div>
+              <div className="flex flex-col gap-2 w-full pt-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-8 rounded-lg bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-[0.98] transition-all"
+                  style={{ boxShadow: '0 0 12px oklch(0.6 0.22 264 / 20%)' }}
+                >
+                  <Upload className="h-3.5 w-3.5" /> Pilih File
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSearch(true)}
+                  className="w-full h-8 rounded-lg border border-border bg-background text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-accent transition-all"
+                >
+                  <Search className="h-3.5 w-3.5" /> Cari File
+                </button>
+              </div>
+            </div>
           ) : (
             Object.entries(folders).map(([folderName, folderFiles]) => (
               <div key={folderName} className="mb-4">

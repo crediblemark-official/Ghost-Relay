@@ -82,21 +82,7 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed }: ChannelLi
       "hidden w-60 flex-col border-r border-border bg-sidebar md:flex transition-all duration-300 overflow-hidden shrink-0",
       collapsed && "w-0 border-r-0 md:w-0"
     )}>
-      {/* Sidebar Header — "Semua Pesan" */}
-      <div className="flex h-14 items-center border-b border-border px-3">
-        <button
-          onClick={() => onSelect?.('all')}
-          className={cn(
-            'sidebar-active-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-all duration-150',
-            activeId === 'all'
-              ? 'bg-primary/8 text-primary font-semibold'
-              : 'text-muted-foreground hover:bg-sidebar-accent/70 hover:text-foreground'
-          )}
-        >
-          <Layers className={cn("h-4 w-4 shrink-0", activeId === 'all' ? 'text-primary' : 'text-muted-foreground')} />
-          <span className="truncate">Semua Pesan</span>
-        </button>
-      </div>
+
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
