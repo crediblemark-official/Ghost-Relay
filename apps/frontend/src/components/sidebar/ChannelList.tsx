@@ -101,7 +101,7 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari obrolan..."
-              className="h-8 w-full pl-8 pr-7 rounded-lg border border-border bg-background text-xs text-foreground outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50"
+              className="h-8 w-full pl-8 pr-7 rounded-lg border border-border bg-background text-xs outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50"
             />
             {search && (
               <button
@@ -163,8 +163,8 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
                     className={cn(
                       'sidebar-active-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150',
                       isActive
-                        ? 'bg-primary/8 text-primary font-semibold'
-                        : 'text-muted-foreground hover:bg-sidebar-accent/70 hover:text-foreground'
+                        ? 'bg-primary/8 text-foreground font-semibold'
+                        : 'text-foreground/85 hover:bg-sidebar-accent/70 hover:text-foreground'
                     )}
                   >
                     {/* Status dot */}
@@ -204,11 +204,11 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
               className={cn(
                 'sidebar-active-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-all duration-150',
                 activeId === 'web'
-                  ? 'bg-primary/8 text-primary font-semibold'
-                  : 'text-muted-foreground hover:bg-sidebar-accent/70 hover:text-foreground'
+                  ? 'bg-primary/8 text-foreground font-semibold'
+                  : 'text-foreground/85 hover:bg-sidebar-accent/70 hover:text-foreground'
               )}
             >
-              <Bot className={cn("h-4 w-4 shrink-0", activeId === 'web' ? 'text-primary' : 'text-muted-foreground')} />
+              <Bot className={cn("h-4 w-4 shrink-0", activeId === 'web' ? 'text-primary' : 'text-foreground/70')} />
               <span className="flex-1 truncate">AI Assistant</span>
               {/* Online indicator */}
               <span
@@ -230,11 +230,11 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
                     {/* Garis kiri penanda riwayat */}
                     <div className="h-3 w-px bg-border/80 shrink-0 group-hover:bg-primary/30 transition-colors" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-muted-foreground/70 truncate leading-tight group-hover:text-muted-foreground transition-colors">
+                      <p className="text-[11px] text-foreground/80 truncate leading-tight group-hover:text-foreground transition-colors">
                         {msg.content}
                       </p>
                     </div>
-                    <span className="text-[9px] text-muted-foreground/40 shrink-0">
+                    <span className="text-[9px] text-foreground/45 shrink-0">
                       {formatTimeShort(msg.timestamp)}
                     </span>
                   </button>
