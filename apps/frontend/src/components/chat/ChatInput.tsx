@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Plus, Mic, AudioWaveform, Loader2, Square, ArrowUp } from 'lucide-react'
+import { Plus, Mic, AudioWaveform, Square, ArrowUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   PromptInputActionMenu,
@@ -19,7 +19,6 @@ interface ChatInputProps {
 export function ChatInput({
   onSend,
   onVoiceRecord,
-  isRecording = false,
   streamingStatus,
   onStopStreaming,
 }: ChatInputProps) {

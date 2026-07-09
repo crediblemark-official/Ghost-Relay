@@ -13,6 +13,7 @@ function GoodChild() {
 
 function BadChild() {
   throw new Error('Test crash!')
+  return null
 }
 
 describe('ErrorBoundary', () => {

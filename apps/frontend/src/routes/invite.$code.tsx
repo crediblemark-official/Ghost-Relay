@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Users, Sparkles, Check, Loader2, ExternalLink } from 'lucide-react'
+import { Users, Sparkles, Loader2, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface InviteInfo {

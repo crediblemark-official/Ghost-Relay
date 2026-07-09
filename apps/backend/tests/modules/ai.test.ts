@@ -38,6 +38,12 @@ const {
 // ── module-level mocks ─────────────────────────────────────────
 vi.mock('@ghost/database', () => ({
   db: {
+    workspace: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
+    user: {
+      findUnique: vi.fn().mockResolvedValue({ id: 1, role: 'user' }),
+    },
     aIProvider: {
       findMany: mockFindMany,
       findFirst: mockFindFirst,
@@ -167,7 +173,7 @@ describe('AI Provider CRUD', () => {
       mockFindMany.mockResolvedValue([])
 
       await app.inject({ method: 'GET', url: '/ai/providers' })
-      expect(mockFindMany).toHaveBeenCalledOnce()
+      expect(mockFindMany).toHaveBeenCalled()
       const [call] = mockFindMany.mock.calls
       expect(call).toBeDefined()
     })

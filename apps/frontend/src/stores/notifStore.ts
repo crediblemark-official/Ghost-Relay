@@ -19,7 +19,7 @@ interface NotifState {
   reset: () => void
 }
 
-export const useNotifStore = create<NotifState>((set, get) => ({
+export const useNotifStore = create<NotifState>((set) => ({
   notifications: [],
   unreadCount: 0,
 

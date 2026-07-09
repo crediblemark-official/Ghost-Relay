@@ -9,7 +9,7 @@ import { Ghost, Shield, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 const APP_VERSION = '1.0.0'
 
 export const Route = createFileRoute('/login')({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { invite?: string } => ({
     invite: search.invite as string | undefined,
   }),
   beforeLoad: () => {

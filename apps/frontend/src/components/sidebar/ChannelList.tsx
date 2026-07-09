@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, Bot, Layers, Search, Plus, X } from 'lucide-react'
+import { AlertCircle, Bot, Search, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { Skeleton } from '@/components/ui/skeleton'

@@ -55,6 +55,10 @@ export async function handleCreateProvider(req: FastifyRequest, reply: FastifyRe
   }
   const { provider_type, name, api_base_url, api_key, model_id, is_active = true, scope = 'personal' } = body
   const encryptedKey = encrypt(api_key ?? '')
+  let apiBaseUrl = (api_base_url || '').trim().replace(/\/+$/, '')
+  if (apiBaseUrl === 'https://api.openai.com') {
+    apiBaseUrl = 'https://api.openai.com/v1'
+  }
 
   // resolve workspaceId jika scope = 'workspace'
   let workspaceId: string | null = null
@@ -75,7 +79,7 @@ export async function handleCreateProvider(req: FastifyRequest, reply: FastifyRe
         userId: req.userId,
         providerType: provider_type,
         name,
-        apiBaseUrl: api_base_url || '',
+        apiBaseUrl: apiBaseUrl,
         apiKey: encryptedKey,
         modelId: model_id,
         isActive: is_active,
@@ -117,7 +121,11 @@ export async function handleUpdateProvider(req: FastifyRequest, reply: FastifyRe
   }
   
   if (body.api_base_url !== undefined) {
-    updateData.apiBaseUrl = String(body.api_base_url) || ''
+    let apiBaseUrl = String(body.api_base_url).trim().replace(/\/+$/, '')
+    if (apiBaseUrl === 'https://api.openai.com') {
+      apiBaseUrl = 'https://api.openai.com/v1'
+    }
+    updateData.apiBaseUrl = apiBaseUrl
   }
   if (body.scope !== undefined) {
     updateData.scope = body.scope

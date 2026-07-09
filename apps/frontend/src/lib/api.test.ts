@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { toast } from 'sonner'
 
 // ── mocks ──────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ describe('api.ts — silent flag', () => {
     // Mock window.location before importing
     const originalLocation = window.location
     delete (window as any).location
-    window.location = { ...originalLocation, href: '' }
+    window.location = { ...originalLocation, href: '' } as any
 
     const mod = await import('./api')
     api = mod.api
