@@ -1,25 +1,38 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bell, BellRing, CheckCheck, ArrowLeft, Loader2, AlertCircle, Inbox, Filter } from 'lucide-react'
+import { Bell, CheckCheck, ArrowLeft, Loader2, AlertCircle, Inbox } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { api } from '@/lib/api'
 import type { Notification } from '@/types'
 
 const NOTIF_TYPES = [
-  { value: '', label: 'Semua', icon: '🔔' },
-  { value: 'direct', label: 'Pesan', icon: '💬' },
-  { value: 'broadcast', label: 'Pengumuman', icon: '📢' },
-  { value: 'task', label: 'Tugas', icon: '📋' },
+  { value: '', label: 'All', count: true },
+  { value: 'direct', label: 'Messages' },
+  { value: 'broadcast', label: 'Broadcast' },
+  { value: 'task', label: 'Tasks' },
 ] as const
 
-function getNotifIcon(type: string): string {
-  switch (type) {
-    case 'broadcast': return '📢'
-    case 'task': return '📋'
-    default: return '💬'
-  }
+// Warna per-tipe notifikasi — konsisten enterprise
+const TYPE_STYLES: Record<string, { pill: string; dot: string }> = {
+  broadcast: {
+    pill: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+    dot: 'bg-amber-500',
+  },
+  task: {
+    pill: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
+    dot: 'bg-sky-500',
+  },
+  direct: {
+    pill: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+    dot: 'bg-emerald-500',
+  },
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  broadcast: 'Broadcast',
+  task: 'Task',
+  direct: 'Message',
 }
 
 function formatDate(dateStr: string): string {
@@ -28,18 +41,16 @@ function formatDate(dateStr: string): string {
     const now = Date.now()
     const diff = now - d.getTime()
     const mins = Math.floor(diff / 60000)
-    if (mins < 1) return 'Baru saja'
-    if (mins < 60) return `${mins}m yang lalu`
+    if (mins < 1) return 'Just now'
+    if (mins < 60) return `${mins}m ago`
     const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}j yang lalu`
+    if (hours < 24) return `${hours}h ago`
     const days = Math.floor(hours / 24)
-    if (days < 7) return `${days}h yang lalu`
+    if (days < 7) return `${days}d ago`
     return d.toLocaleDateString('id-ID', {
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
     })
   } catch {
     return ''
@@ -92,25 +103,25 @@ function NotificationsPage() {
   }, [queryClient])
 
   return (
-    <div className="flex flex-1 flex-col bg-background">
-      {/* Header */}
-      <div className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
+    <div className="flex flex-1 flex-col bg-background text-foreground">
+      {/* ===== Header ===== */}
+      <div className="flex h-14 items-center justify-between border-b border-border bg-card/90 backdrop-blur-sm px-5">
         <div className="flex items-center gap-3">
           <Link
             to="/chat"
-            className="rounded-lg p-1.5 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </Link>
-          <h1 className="font-semibold text-foreground flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
-            Notifikasi
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-primary" />
+            <h1 className="text-[14px] font-semibold text-foreground">Notifications</h1>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="text-xs font-normal">
-                {unreadCount} belum dibaca
-              </Badge>
+              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary/10 text-primary px-1.5 text-[10px] font-semibold pulse-glow">
+                {unreadCount}
+              </span>
             )}
-          </h1>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
@@ -119,180 +130,170 @@ function NotificationsPage() {
               size="sm"
               onClick={handleMarkAllRead}
               disabled={markingAll}
-              className="text-xs gap-1.5"
+              className="text-[11px] gap-1.5 h-7 px-3"
             >
               {markingAll ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
-                <CheckCheck className="h-3.5 w-3.5" />
+                <CheckCheck className="h-3 w-3" />
               )}
-              Tandai semua dibaca
+              Mark all read
             </Button>
           )}
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 px-6 py-3 border-b border-border bg-card/50">
-        <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-        <div className="flex gap-1 flex-wrap">
-          {NOTIF_TYPES.map((t) => (
+      {/* ===== Filter Tabs ===== */}
+      <div className="flex items-center gap-1.5 px-5 py-2.5 border-b border-border bg-card/50">
+        {NOTIF_TYPES.map((t) => {
+          const isActive = filterType === t.value
+          const unread = t.value === ''
+            ? unreadCount
+            : notifications.filter((n) => n.type === t.value && !n.readAt).length
+
+          return (
             <button
               key={t.value}
               onClick={() => setFilterType(t.value)}
-              className={`text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${
-                filterType === t.value
-                  ? 'bg-primary text-primary-foreground font-medium'
+              className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg transition-all font-medium ${
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               }`}
             >
-              <span>{t.icon}</span>
               <span>{t.label}</span>
-              {t.value === '' ? (
-                <span className={`text-[10px] ml-0.5 ${filterType === '' ? 'opacity-80' : 'text-muted-foreground'}`}>
-                  {unreadCount}
+              {unread > 0 && (
+                <span className={`text-[9px] px-1 py-0 rounded-full min-w-[14px] text-center ${
+                  isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
+                }`}>
+                  {unread}
                 </span>
-              ) : (
-                (() => {
-                  const count = notifications.filter((n) => n.type === t.value && !n.readAt).length
-                  return count > 0 ? (
-                    <span className={`text-[10px] ml-0.5 ${filterType === t.value ? 'opacity-80' : 'text-muted-foreground'}`}>
-                      {count}
-                    </span>
-                  ) : null
-                })()
               )}
             </button>
-          ))}
-        </div>
+          )
+        })}
       </div>
 
-      {/* Content */}
+      {/* ===== Content ===== */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-3 text-muted-foreground">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="text-sm">Memuat notifikasi...</span>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="text-xs">Loading notifications...</span>
             </div>
           </div>
         ) : isError ? (
           <div className="flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-3 text-muted-foreground">
-              <AlertCircle className="h-8 w-8" />
-              <span className="text-sm">Gagal memuat notifikasi</span>
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+              </div>
+              <span className="text-sm text-muted-foreground">Failed to load notifications</span>
             </div>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-3 text-muted-foreground">
-              <Inbox className="h-12 w-12 opacity-30" />
-              <span className="text-sm font-medium">
-                {filterType ? 'Tidak ada notifikasi tipe ini' : 'Belum ada notifikasi'}
-              </span>
-              <p className="text-xs text-muted-foreground/60">
-                Notifikasi dari AI dan anggota tim akan muncul di sini
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <Inbox className="h-10 w-10 opacity-20" />
+              <p className="text-sm font-medium mt-1">
+                {filterType ? 'No notifications of this type' : 'No notifications yet'}
+              </p>
+              <p className="text-[11px] text-muted-foreground/60 text-center max-w-48">
+                AI and team member notifications will appear here
               </p>
             </div>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {filtered.map((n) => (
-              <div
-                key={n.id}
-                className={`flex items-start gap-3 px-6 py-4 transition-colors hover:bg-accent/30 ${
-                  !n.readAt ? 'bg-accent/10' : ''
-                }`}
-              >
-                {/* Unread indicator */}
-                <div className="mt-1.5 shrink-0">
-                  <div
-                    className={`h-2.5 w-2.5 rounded-full ${
-                      !n.readAt ? 'bg-primary' : 'bg-border'
-                    }`}
-                  />
-                </div>
+            {filtered.map((n) => {
+              const typeStyle = TYPE_STYLES[n.type] || TYPE_STYLES['direct']
+              const typeLabel = TYPE_LABELS[n.type] || n.type
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-base leading-none" role="img" aria-label={n.type}>
-                          {getNotifIcon(n.type)}
-                        </span>
-                        <span className="text-sm font-semibold text-foreground truncate">
-                          {n.title}
-                        </span>
-                        {n.sender && (
-                          <span className="text-xs text-muted-foreground shrink-0">
-                            dari <span className="font-medium">{n.sender.name}</span>
+              return (
+                <div
+                  key={n.id}
+                  className={`flex items-start gap-3.5 px-5 py-4 transition-colors hover:bg-accent/20 ${
+                    !n.readAt ? 'bg-primary/3' : ''
+                  }`}
+                >
+                  {/* Unread indicator */}
+                  <div className="mt-2 shrink-0">
+                    <div
+                      className={`h-2 w-2 rounded-full transition-all ${
+                        !n.readAt ? `${typeStyle.dot} pulse-glow` : 'bg-border'
+                      }`}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        {/* Title + sender */}
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${typeStyle.pill}`}>
+                            {typeLabel}
                           </span>
+                          <span className="text-[13px] font-semibold text-foreground truncate">
+                            {n.title}
+                          </span>
+                          {n.sender && (
+                            <span className="text-[11px] text-muted-foreground shrink-0">
+                              from <span className="font-medium text-foreground/70">{n.sender.name}</span>
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Message body */}
+                        {n.message && (
+                          <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-wrap mt-1">
+                            {n.message}
+                          </p>
                         )}
-                      </div>
-                      {n.message && (
-                        <p className="text-sm text-muted-foreground mt-1 leading-relaxed whitespace-pre-wrap">
-                          {n.message}
+
+                        {/* Time */}
+                        <p className="text-[10px] text-muted-foreground/40 mt-2">
+                          {formatDate(n.createdAt)}
+                          {n.readAt && (
+                            <span className="ml-2 text-primary/40">
+                              · Read {formatDate(n.readAt)}
+                            </span>
+                          )}
                         </p>
-                      )}
-                      <p className="text-xs text-muted-foreground/50 mt-1.5">
-                        {formatDate(n.createdAt)}
-                        {n.readAt && (
-                          <span className="ml-3 text-primary/60">
-                            ✓ Dibaca {formatDate(n.readAt)}
-                          </span>
-                        )}
-                      </p>
-                    </div>
+                      </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      {n.type && (
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] capitalize ${
-                            n.type === 'broadcast'
-                              ? 'border-amber-200 text-amber-600 bg-amber-50/50'
-                              : n.type === 'task'
-                              ? 'border-blue-200 text-blue-600 bg-blue-50/50'
-                              : 'border-green-200 text-green-600 bg-green-50/50'
-                          }`}
-                        >
-                          {n.type === 'broadcast' ? '📢 Pengumuman' : n.type === 'task' ? '📋 Tugas' : '💬 Pesan'}
-                        </Badge>
-                      )}
+                      {/* Mark read button */}
                       {!n.readAt && (
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
+                        <button
                           onClick={() => handleMarkRead(n.id)}
                           disabled={markingIds.has(n.id)}
-                          className="shrink-0 text-muted-foreground hover:text-foreground"
-                          title="Tandai dibaca"
+                          className="shrink-0 flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 mt-0.5"
+                          title="Mark as read"
                         >
                           {markingIds.has(n.id) ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
-                            <CheckCheck className="h-3.5 w-3.5" />
+                            <CheckCheck className="h-3 w-3" />
                           )}
-                        </Button>
+                        </button>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* Footer stats */}
+      {/* ===== Footer Stats ===== */}
       {filtered.length > 0 && !isLoading && (
-        <div className="border-t border-border bg-card px-6 py-2">
-          <p className="text-xs text-muted-foreground text-center">
-            Menampilkan {filtered.length} notifikasi
-            {filterType ? ` (tipe: ${filterType})` : ''}
-            {filteredUnreadCount > 0 && ` · ${filteredUnreadCount} belum dibaca`}
+        <div className="border-t border-border bg-card/50 px-5 py-2">
+          <p className="text-[10px] text-muted-foreground/50 text-center">
+            {filtered.length} notification{filtered.length !== 1 ? 's' : ''}
+            {filterType && ` · filtered by ${filterType}`}
+            {filteredUnreadCount > 0 && ` · ${filteredUnreadCount} unread`}
           </p>
         </div>
       )}

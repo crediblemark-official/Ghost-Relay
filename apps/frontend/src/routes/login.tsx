@@ -4,9 +4,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/lib/api'
 import { authClient } from '@/lib/auth-client'
 import { toast } from 'sonner'
-import { Ghost, Shield } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Ghost, Shield, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 
 const APP_VERSION = '1.0.0'
 
@@ -34,6 +32,7 @@ function LoginPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [ownerRevealed, setOwnerRevealed] = useState(false)
   const longPressTimer = useRef<ReturnType<typeof setTimeout>>()
 
@@ -124,7 +123,6 @@ function LoginPage() {
               }
               sessionStorage.removeItem('pending_invite')
             } catch (err) {
-              // Invite gagal — sessionStorage tetap disimpan agar user bisa coba lagi
               toast.error('Gagal menerima undangan. Setelah login, buka tautan undangan lagi untuk mencoba ulang.')
             }
           }
@@ -150,7 +148,6 @@ function LoginPage() {
             name: data.user.name,
             role: data.user.role,
           })
-          // Accept invite jika ada kode undangan
           if (invite) {
             try {
               const result = await api.post<{ status: string; workspaceName?: string }>('/settings/invite/accept', { code: invite }, { silent: true })
@@ -161,7 +158,6 @@ function LoginPage() {
               }
               sessionStorage.removeItem('pending_invite')
             } catch (err) {
-              // Invite gagal — sessionStorage tetap disimpan agar user bisa coba lagi
               toast.error('Gagal menerima undangan. Setelah menyelesaikan onboarding, buka tautan undangan lagi untuk mencoba ulang.')
             }
           }
@@ -175,129 +171,206 @@ function LoginPage() {
     }
   }
 
+  const titleMap = {
+    login: 'Sign in to your workspace',
+    register: 'Create your account',
+    forgot: 'Reset your password',
+    owner: 'Owner Access',
+  }
+
+  const subtitleMap = {
+    login: 'Enter your credentials to continue',
+    register: 'Join your team on Ghost Relay',
+    forgot: "We'll send a reset link to your email",
+    owner: 'Platform administrator access only',
+  }
+
   return (
-    <div className="flex h-screen items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Ghost className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">Ghost Relay</span>
-          </div>
-          <CardTitle className="text-center">
-            {mode === 'owner' ? 'Owner Access' : mode === 'login' ? 'Sign In' : 'Create Account'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === 'register' && (
-              <div>
-                <label className="text-sm font-medium mb-1 block">Name</label>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
+      {/* Grid background */}
+      <div className="absolute inset-0 grid-bg opacity-60" />
+
+      {/* Gradient orbs */}
+      <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+      <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-primary/8 blur-3xl" />
+
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-sm mx-4">
+        {/* Glass card */}
+        <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+
+          {/* Card top accent line */}
+          <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+
+          <div className="px-8 py-8">
+            {/* Logo */}
+            <div className="flex flex-col items-center mb-8">
+              <div
+                className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20 cursor-pointer select-none"
+                onMouseDown={handleLongPressStart}
+                onMouseUp={handleLongPressEnd}
+                onMouseLeave={handleLongPressEnd}
+                onTouchStart={handleLongPressStart}
+                onTouchEnd={handleLongPressEnd}
+                style={{ boxShadow: '0 0 24px oklch(0.6 0.22 264 / 15%)' }}
+              >
+                <Ghost className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-[15px] font-bold text-foreground text-center">
+                {titleMap[mode]}
+              </h1>
+              <p className="text-xs text-muted-foreground mt-1 text-center">
+                {subtitleMap[mode]}
+              </p>
+              {mode === 'owner' && (
+                <div className="mt-2 flex items-center gap-1.5 text-amber-500 text-xs font-medium">
+                  <Shield className="h-3.5 w-3.5" />
+                  Owner mode
+                </div>
+              )}
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === 'register' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground/80">Full Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your full name"
+                    className="h-9 w-full rounded-lg border border-input bg-background/60 px-3 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground/80">Email</label>
                 <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="h-9 w-full rounded-lg border border-input bg-background/60 px-3 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                   required
                 />
               </div>
-            )}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring"
-                required
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            {success && <p className="text-sm text-emerald-600">{success}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading
-                ? 'Please wait...'
-                : mode === 'login'
-                  ? 'Sign In'
-                  : mode === 'register'
-                    ? 'Create Account'
-                    : mode === 'owner'
-                      ? 'Owner Sign In'
-                      : 'Send Reset Link'}
-            </Button>
-            {mode === 'login' && (
+
+              {mode !== 'forgot' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground/80">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="h-9 w-full rounded-lg border border-input bg-background/60 px-3 pr-9 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Error / Success */}
+              {error && (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-2.5 text-xs text-destructive fade-slide-in">
+                  <span className="shrink-0 mt-0.5">⚠</span>
+                  {error}
+                </div>
+              )}
+              {success && (
+                <div className="flex items-start gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/8 px-3 py-2.5 text-xs text-emerald-600 fade-slide-in">
+                  <span className="shrink-0 mt-0.5">✓</span>
+                  {success}
+                </div>
+              )}
+
+              {/* Submit Button */}
               <button
-                type="button"
-                onClick={() => { setMode('forgot'); setError(''); setSuccess('') }}
-                className="text-xs text-muted-foreground hover:text-primary w-full text-center"
+                type="submit"
+                disabled={loading}
+                className="relative w-full h-9 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-60 overflow-hidden"
+                style={{ boxShadow: '0 0 20px oklch(0.6 0.22 264 / 30%)' }}
               >
-                Forgot password?
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    {mode === 'login' ? 'Sign In'
+                      : mode === 'register' ? 'Create Account'
+                      : mode === 'owner' ? 'Owner Sign In'
+                      : 'Send Reset Link'}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </>
+                )}
               </button>
-            )}
-          </form>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            {mode === 'login' ? (
-              <>
-                No account?{' '}
+
+              {/* Forgot password link */}
+              {mode === 'login' && (
                 <button
-                  onClick={() => { setMode('register'); setOwnerRevealed(false) }}
-                  className="text-primary hover:underline"
+                  type="button"
+                  onClick={() => { setMode('forgot'); setError(''); setSuccess('') }}
+                  className="text-[11px] text-muted-foreground hover:text-primary w-full text-center transition-colors"
                 >
-                  Create one
+                  Forgot your password?
                 </button>
-              </>
-            ) : mode === 'register' ? (
-              <>
-                Already have an account?{' '}
+              )}
+            </form>
+
+            {/* Mode switcher */}
+            <p className="mt-5 text-center text-xs text-muted-foreground">
+              {mode === 'login' ? (
+                <>
+                  No account?{' '}
+                  <button
+                    onClick={() => { setMode('register'); setOwnerRevealed(false) }}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Create one
+                  </button>
+                </>
+              ) : mode === 'register' ? (
+                <>
+                  Already have an account?{' '}
+                  <button
+                    onClick={() => { setMode('login'); setOwnerRevealed(false) }}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Sign in
+                  </button>
+                </>
+              ) : (
                 <button
                   onClick={() => { setMode('login'); setOwnerRevealed(false) }}
-                  className="text-primary hover:underline"
+                  className="text-primary hover:underline font-medium"
                 >
-                  Sign in
+                  ← Back to sign in
                 </button>
-              </>
-            ) : mode === 'owner' ? (
-              <button
-                onClick={() => { setMode('login'); setOwnerRevealed(false) }}
-                className="text-primary hover:underline text-sm"
-              >
-                Back to sign in
-              </button>
-            ) : (
-              <button
-                onClick={() => { setMode('login'); setOwnerRevealed(false) }}
-                className="text-primary hover:underline text-sm"
-              >
-                Back to sign in
-              </button>
-            )}
-          </p>
-          <p
-            className="mt-4 text-center text-[10px] text-muted-foreground select-none"
-            onMouseDown={handleLongPressStart}
-            onMouseUp={handleLongPressEnd}
-            onMouseLeave={handleLongPressEnd}
-            onTouchStart={handleLongPressStart}
-            onTouchEnd={handleLongPressEnd}
-          >
-            v{APP_VERSION}
-            {mode === 'owner' && (
-              <span className="ml-2 inline-flex items-center gap-1 text-amber-600">
-                <Shield className="h-3 w-3" /> Owner
-              </span>
-            )}
-          </p>
-        </CardContent>
-      </Card>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Version */}
+        <p className="mt-4 text-center text-[10px] text-muted-foreground/40 select-none">
+          Ghost Relay v{APP_VERSION}
+          {mode === 'owner' && (
+            <span className="ml-2 inline-flex items-center gap-1 text-amber-500/60">
+              <Shield className="h-2.5 w-2.5" /> Owner
+            </span>
+          )}
+        </p>
+      </div>
     </div>
   )
 }

@@ -48,7 +48,7 @@ export function Navigation() {
     setNotifOpen((prev) => !prev)
   }, [notifOpen, fetchList])
 
-  // Close dropdown on click outside
+  // Tutup dropdown saat klik di luar
   useEffect(() => {
     if (!notifOpen) return
     const handler = (e: MouseEvent) => {
@@ -64,46 +64,73 @@ export function Navigation() {
   if (!user) return null
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
-      <Link to="/chat" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <Ghost className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold text-foreground">{workspaceName}</span>
+    <header className="flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-sm px-5 z-40 shrink-0">
+      {/* Logo + Workspace */}
+      <Link to="/chat" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity group">
+        <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 group-hover:ring-primary/40 transition-all">
+          <Ghost className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex flex-col leading-none">
+          <span className="text-[13px] font-semibold text-foreground tracking-tight">
+            {workspaceName}
+          </span>
+          <span className="text-[10px] text-muted-foreground font-normal tracking-wider uppercase">
+            Enterprise
+          </span>
+        </div>
       </Link>
-      <div className="flex items-center gap-1">
+
+      {/* Nav Actions */}
+      <div className="flex items-center gap-0.5">
         {/* Notification Bell */}
         <div className="relative" data-notif-dropdown>
-          <Button variant="ghost" size="icon" onClick={toggleNotif} className="relative">
+          <button
+            onClick={toggleNotif}
+            className="relative flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            title="Notifikasi"
+          >
             {notifCount > 0 ? (
               <>
-                <BellRing className="h-5 w-5 text-primary" />
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground leading-none">
+                <BellRing className="h-4 w-4 text-primary" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground leading-none pulse-glow">
                   {notifCount > 99 ? '99+' : notifCount}
                 </span>
               </>
             ) : (
-              <Bell className="h-5 w-5" />
+              <Bell className="h-4 w-4" />
             )}
-          </Button>
+          </button>
 
-          {/* Dropdown */}
+          {/* Notification Dropdown */}
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-1 z-50 w-80 rounded-lg border border-border bg-popover shadow-lg ring-1 ring-foreground/10 overflow-hidden">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-                <span className="text-sm font-semibold text-foreground">Notifikasi</span>
+            <div className="absolute right-0 top-full mt-2 z-50 w-80 rounded-xl border border-border bg-popover shadow-2xl overflow-hidden fade-slide-in">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs font-semibold text-foreground">Notifikasi</span>
+                  {notifCount > 0 && (
+                    <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                      {notifCount}
+                    </span>
+                  )}
+                </div>
                 {notifCount > 0 && (
                   <button
                     onClick={markAllRead}
-                    className="text-xs text-primary hover:underline"
+                    className="text-[10px] text-primary hover:underline font-medium"
                   >
-                    Tandai semua dibaca
+                    Tandai dibaca
                   </button>
                 )}
               </div>
-              <div className="max-h-[360px] overflow-y-auto">
+
+              {/* List */}
+              <div className="max-h-[340px] overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    Belum ada notifikasi
+                  <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    <Bell className="h-7 w-7 mx-auto mb-2 opacity-20" />
+                    <p className="text-xs">Belum ada notifikasi</p>
                   </div>
                 ) : (
                   notifications.slice(0, 5).map((n) => (
@@ -114,13 +141,14 @@ export function Navigation() {
                         if (n.link) navigate({ to: n.link })
                         setNotifOpen(false)
                       }}
-                      className={`w-full text-left px-3 py-2.5 border-b border-border/50 hover:bg-accent/50 transition-colors ${
-                        !n.readAt ? 'bg-accent/20' : ''
+                      className={`w-full text-left px-4 py-3 border-b border-border/50 hover:bg-accent/40 transition-colors ${
+                        !n.readAt ? 'bg-primary/5' : ''
                       }`}
                     >
-                      <div className="flex items-start gap-2">
-                        <div className={`mt-0.5 shrink-0 h-2 w-2 rounded-full ${
-                          !n.readAt ? 'bg-primary' : 'bg-transparent'
+                      <div className="flex items-start gap-2.5">
+                        {/* Unread dot */}
+                        <div className={`mt-1 shrink-0 h-1.5 w-1.5 rounded-full ${
+                          !n.readAt ? 'bg-primary pulse-glow' : 'bg-transparent'
                         }`} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-foreground truncate">
@@ -128,11 +156,11 @@ export function Navigation() {
                             {n.title}
                           </p>
                           {n.message && (
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
                               {n.message}
                             </p>
                           )}
-                          <p className="text-[10px] text-muted-foreground/60 mt-1">
+                          <p className="text-[10px] text-muted-foreground/50 mt-1">
                             {formatTimeAgo(n.createdAt)}
                           </p>
                         </div>
@@ -141,46 +169,70 @@ export function Navigation() {
                   ))
                 )}
               </div>
-              {/* Lihat semua link */}
+
+              {/* Footer — lihat semua */}
               <Link
                 to="/notifications"
                 onClick={() => setNotifOpen(false)}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs text-primary hover:bg-accent/50 transition-colors border-t border-border"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-[11px] text-primary hover:bg-primary/5 transition-colors border-t border-border font-medium"
               >
-                <ExternalLink className="h-3.5 w-3.5" />
+                <ExternalLink className="h-3 w-3" />
                 Lihat semua notifikasi
               </Link>
             </div>
           )}
         </div>
 
+        {/* Divider */}
+        <div className="mx-1 h-4 w-px bg-border" />
+
+        {/* Admin shield (owner only) */}
         {user.role === 'owner' && (
           <Link to="/admin">
-            <Button variant="ghost" size="icon">
-              <Shield className="h-5 w-5 text-amber-500" />
-            </Button>
+            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-amber-500/70 hover:text-amber-500 hover:bg-amber-500/10 transition-colors" title="Admin">
+              <Shield className="h-4 w-4" />
+            </button>
           </Link>
         )}
+
+        {/* Settings */}
         <Link to="/settings">
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-          </Button>
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" title="Settings">
+            <Settings className="h-4 w-4" />
+          </button>
         </Link>
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+
+        {/* Divider */}
+        <div className="mx-1 h-4 w-px bg-border" />
+
+        {/* User Avatar */}
         <Link to="/profile">
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Avatar className="h-7 w-7">
-              <AvatarFallback className="text-xs">
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-accent transition-colors group" title={user.name}>
+            <Avatar className="h-6 w-6 ring-1 ring-border group-hover:ring-primary/40 transition-all">
+              <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
                 {user.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-          </Button>
+          </button>
         </Link>
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
-          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </Button>
-        <Button variant="ghost" size="icon" onClick={handleLogout}>
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          title="Sign out"
+        >
           <LogOut className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
     </header>
   )

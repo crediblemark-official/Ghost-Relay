@@ -48,73 +48,81 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ============================================================
+   LIGHT MODE — Enterprise Clean
+   Referensi: Vercel, Linear (light)
+   ============================================================ */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --background: oklch(0.978 0.002 247);     /* #f6f7f9 — off-white bukan pure white */
+    --foreground: oklch(0.14 0.018 260);       /* near-black dengan tint biru */
+    --card: oklch(1 0 0);                      /* white card */
+    --card-foreground: oklch(0.14 0.018 260);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.14 0.018 260);
+    --primary: oklch(0.525 0.22 264);          /* indigo-600 */
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.94 0.008 264);        /* indigo-50 */
+    --secondary-foreground: oklch(0.4 0.12 264);
+    --muted: oklch(0.94 0.005 264);
+    --muted-foreground: oklch(0.48 0.03 264);
+    --accent: oklch(0.94 0.008 264);
+    --accent-foreground: oklch(0.3 0.12 264);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --border: oklch(0.88 0.008 264);           /* subtle indigo-tinted border */
+    --input: oklch(0.91 0.006 264);
+    --ring: oklch(0.525 0.22 264 / 40%);
+    --chart-1: oklch(0.525 0.22 264);
+    --chart-2: oklch(0.6 0.18 300);
+    --chart-3: oklch(0.65 0.15 220);
+    --chart-4: oklch(0.7 0.12 180);
+    --chart-5: oklch(0.75 0.1 140);
+    --radius: 0.5rem;
+    --sidebar: oklch(0.965 0.004 264);         /* sidebar sedikit lebih gelap dari background */
+    --sidebar-foreground: oklch(0.14 0.018 260);
+    --sidebar-primary: oklch(0.525 0.22 264);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.91 0.012 264);
+    --sidebar-accent-foreground: oklch(0.3 0.12 264);
+    --sidebar-border: oklch(0.88 0.008 264);
+    --sidebar-ring: oklch(0.525 0.22 264 / 40%);
 }
 
+/* ============================================================
+   DARK MODE — Enterprise Premium
+   Referensi: Linear dark, Resend, Raycast
+   ============================================================ */
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --background: oklch(0.105 0.015 264);      /* #0b0d14 — near-black dengan tint biru */
+    --foreground: oklch(0.91 0.01 264);        /* #e4e6f0 — off-white bukan pure white */
+    --card: oklch(0.135 0.016 264);            /* #111520 — card sedikit lebih terang */
+    --card-foreground: oklch(0.91 0.01 264);
+    --popover: oklch(0.148 0.018 264);         /* #141926 */
+    --popover-foreground: oklch(0.91 0.01 264);
+    --primary: oklch(0.6 0.22 264);            /* indigo-400 — lebih terang di dark */
+    --primary-foreground: oklch(0.1 0.015 264);
+    --secondary: oklch(0.18 0.022 264);
+    --secondary-foreground: oklch(0.82 0.01 264);
+    --muted: oklch(0.165 0.018 264);
+    --muted-foreground: oklch(0.55 0.02 264);
+    --accent: oklch(0.18 0.022 264);
+    --accent-foreground: oklch(0.88 0.01 264);
+    --destructive: oklch(0.65 0.2 22);
+    --border: oklch(1 0 0 / 7%);              /* border sangat tipis — enterprise look */
+    --input: oklch(1 0 0 / 8%);
+    --ring: oklch(0.6 0.22 264 / 35%);
+    --chart-1: oklch(0.6 0.22 264);
+    --chart-2: oklch(0.65 0.18 300);
+    --chart-3: oklch(0.7 0.15 220);
+    --chart-4: oklch(0.72 0.12 180);
+    --chart-5: oklch(0.75 0.1 140);
+    --sidebar: oklch(0.118 0.016 264);         /* #0d1020 */
+    --sidebar-foreground: oklch(0.88 0.01 264);
+    --sidebar-primary: oklch(0.6 0.22 264);
+    --sidebar-primary-foreground: oklch(0.1 0.015 264);
+    --sidebar-accent: oklch(0.175 0.022 264);
+    --sidebar-accent-foreground: oklch(0.88 0.01 264);
+    --sidebar-border: oklch(1 0 0 / 6%);
+    --sidebar-ring: oklch(0.6 0.22 264 / 35%);
 }
 
 @layer base {
@@ -123,6 +131,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans;
@@ -130,18 +141,118 @@
 
   /* Custom Premium Scrollbar */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.3); /* Slate-400 dengan opacity rendah */
+    background: oklch(0.6 0.22 264 / 20%);
     border-radius: 99px;
     transition: background-color 0.2s;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.6);
+    background: oklch(0.6 0.22 264 / 45%);
   }
+}
+
+/* ============================================================
+   ENTERPRISE UTILITY CLASSES
+   ============================================================ */
+
+/* Glass morphism — dipakai untuk card premium, dropdown, modal */
+.glass {
+  background: oklch(1 0 0 / 4%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 8%);
+}
+.dark .glass {
+  background: oklch(1 0 0 / 3.5%);
+  border-color: oklch(1 0 0 / 7%);
+}
+
+/* Glow effect untuk primary element */
+.glow-primary {
+  box-shadow: 0 0 20px oklch(0.6 0.22 264 / 25%);
+}
+.glow-primary-sm {
+  box-shadow: 0 0 12px oklch(0.6 0.22 264 / 20%);
+}
+
+/* Left border accent untuk active sidebar items */
+.sidebar-active-item {
+  position: relative;
+}
+.sidebar-active-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 2px;
+  background: oklch(0.6 0.22 264);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px oklch(0.6 0.22 264 / 60%);
+}
+
+/* Enterprise grid background untuk login/auth pages */
+.grid-bg {
+  background-image:
+    linear-gradient(oklch(0.6 0.22 264 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.6 0.22 264 / 4%) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Gradient text indigo-violet */
+.gradient-text {
+  background: linear-gradient(135deg, oklch(0.62 0.22 264), oklch(0.65 0.2 305));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer animation untuk loading/button premium */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.6 0.22 264) 0%,
+    oklch(0.68 0.18 300) 40%,
+    oklch(0.6 0.22 264) 80%
+  );
+  background-size: 200% auto;
+  animation: shimmer 2.5s linear infinite;
+}
+
+/* Pulse glow untuk notif badge */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 4px oklch(0.6 0.22 264 / 50%); }
+  50% { box-shadow: 0 0 12px oklch(0.6 0.22 264 / 80%); }
+}
+.pulse-glow {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Fade slide-in untuk content transitions */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-slide-in {
+  animation: fadeSlideIn 0.2s ease-out forwards;
+}
+
+/* Surface elevated — untuk cards di atas background */
+.surface-1 {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.surface-2 {
+  background: var(--muted);
+  border: 1px solid var(--border);
 }

@@ -13,7 +13,7 @@ import { useAiChat } from '@/hooks/useAiChat'
 import { VoiceRecorder } from '@/components/chat/VoiceRecorder'
 import { MemorySearch } from '@/components/chat/MemorySearch'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Trash2 } from 'lucide-react'
+import { Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Trash2, Search, Sparkles } from 'lucide-react'
 import type { Message } from '@/types'
 
 export const Route = createFileRoute('/chat')({
@@ -27,6 +27,7 @@ function ChatPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const {
     data,
     isLoading,
@@ -94,7 +95,6 @@ function ChatPage() {
         setTimeout(() => {
           el.classList.remove('ring-2', 'ring-primary/40')
         }, 2000)
-        // Bersihkan hash setelah scroll
         window.history.replaceState(null, '', '/chat')
       }, 400)
     }
@@ -158,85 +158,146 @@ function ChatPage() {
     setShowRecorder(false)
   }
 
+  // Label channel aktif
+  const channelLabel =
+    activeChannel === 'all'
+      ? 'Semua Pesan'
+      : activeChannel === 'web'
+        ? 'AI Assistant'
+        : activeChannel.charAt(0).toUpperCase() + activeChannel.slice(1)
+
   return (
     <>
       <ChannelList activeId={activeChannel} onSelect={setActiveChannel} collapsed={leftCollapsed} />
-      <div className="flex flex-1 flex-col">
-        <div className="flex h-14 items-center justify-between border-b border-border bg-card px-4 gap-4">
-          <div className="flex items-center gap-3">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* ===== Chat Header ===== */}
+        <div className="flex h-14 items-center justify-between border-b border-border bg-card/90 backdrop-blur-sm px-4 gap-3 shrink-0">
+          {/* Left side */}
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setLeftCollapsed(!leftCollapsed)}
-              className="rounded-lg p-1.5 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              title={leftCollapsed ? "Buka Sidebar Kiri" : "Tutup Sidebar Kiri"}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              title={leftCollapsed ? 'Buka Sidebar' : 'Tutup Sidebar'}
             >
-              {leftCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+              {leftCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </button>
-            <h1 className="font-semibold text-foreground shrink-0">Main Chat</h1>
-          </div>            <div className="flex items-center gap-2 flex-1 max-w-md justify-end">
-              <div className="flex-1 max-w-sm">
-                <input
-                  type="text"
-                  placeholder="Cari pesan..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 w-full rounded-md border border-input bg-background px-3 text-xs outline-none focus-visible:border-ring"
-                />
-              </div>
-              <MemorySearch />
-              <button
-                onClick={handleClearChat}
-                disabled={clearingChat || messages.length === 0}
-                className="rounded-lg p-1.5 hover:bg-accent text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30"
-                title="Hapus semua pesan"
-              >
-                {clearingChat ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-              </button>
+            <div className="flex flex-col leading-none">
+              <h1 className="text-[13px] font-semibold text-foreground">{channelLabel}</h1>
+              {aiChat.isStreaming && (
+                <span className="text-[10px] text-primary flex items-center gap-1">
+                  <Sparkles className="h-2.5 w-2.5" />
+                  AI sedang merespons...
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Right side */}
+          <div className="flex items-center gap-1.5">
+            {/* Search toggle */}
+            <div className="flex items-center gap-1.5">
+              {showSearch ? (
+                <div className="flex items-center gap-1.5 fade-slide-in">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="Cari pesan..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Escape' && setShowSearch(false)}
+                      className="h-7 w-52 rounded-lg border border-input bg-background pl-7 pr-3 text-xs outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                  <button
+                    onClick={() => { setShowSearch(false); setSearchQuery('') }}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  title="Cari pesan"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            <MemorySearch />
+
+            {/* Clear chat */}
+            <button
+              onClick={handleClearChat}
+              disabled={clearingChat || messages.length === 0}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30"
+              title="Hapus semua pesan"
+            >
+              {clearingChat ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </button>
+
+            <div className="h-4 w-px bg-border mx-0.5" />
+
             <button
               onClick={() => setRightCollapsed(!rightCollapsed)}
-              className="rounded-lg p-1.5 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              title={rightCollapsed ? "Buka Sidebar Kanan" : "Tutup Sidebar Kanan"}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              title={rightCollapsed ? 'Buka Knowledge Vault' : 'Tutup Knowledge Vault'}
             >
-              {rightCollapsed ? <PanelRightOpen className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
+              {rightCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
             </button>
           </div>
         </div>
+
+        {/* ===== Chat Body ===== */}
         {isLoading ? (
-          <div className="flex flex-1 flex-col gap-3 p-4">
+          <div className="flex flex-1 flex-col gap-4 p-5">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className={`flex gap-3 ${i % 2 === 0 ? '' : 'flex-row-reverse'}`}>
-                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                <div className="flex flex-col gap-2 flex-1 max-w-[70%]">
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className={`h-16 w-full ${i % 2 === 0 ? '' : 'ml-auto'}`} />
+                <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+                <div className="flex flex-col gap-1.5 flex-1 max-w-[65%]">
+                  <Skeleton className="h-2.5 w-16" />
+                  <Skeleton className={`h-14 w-full rounded-xl ${i % 2 === 0 ? '' : 'ml-auto'}`} />
                 </div>
               </div>
             ))}
           </div>
         ) : isError ? (
-          <div className="flex flex-1 items-center justify-center text-destructive">
-            Gagal memuat pesan. Periksa koneksi server.
+          <div className="flex flex-1 items-center justify-center">
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <span className="text-destructive text-lg">⚠</span>
+              </div>
+              <p className="text-sm font-medium text-destructive">Gagal memuat pesan</p>
+              <p className="text-xs text-muted-foreground">Periksa koneksi server</p>
+            </div>
           </div>
         ) : (
           <div className="flex flex-1 flex-col overflow-y-auto">
             <div ref={sentinelRef} className="h-4" />
             {isFetchingNextPage && (
               <div className="flex justify-center py-2">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
               </div>
             )}
             <ChatList messages={displayMessages} />
           </div>
         )}
+
+        {/* ===== Input Area ===== */}
         {showRecorder ? (
-          <div className="flex items-center justify-center gap-4 border-t border-border bg-card p-4">
+          <div className="flex items-center justify-center gap-4 border-t border-border bg-card/90 backdrop-blur-sm p-4">
             <VoiceRecorder onComplete={handleVoice} />
             <button
               onClick={() => setShowRecorder(false)}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-xs text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-accent transition-colors"
             >
               Batal
             </button>
