@@ -80,7 +80,7 @@ export function TeamList({ collapsed, searchQuery = '' }: { collapsed?: boolean;
           filteredMembers.map(m => (
             <div
               key={m.id}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground/85 hover:text-foreground hover:bg-accent/50 transition-colors"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent/50 transition-colors"
             >
               <div className="relative shrink-0">
                 <Avatar className="h-6 w-6">

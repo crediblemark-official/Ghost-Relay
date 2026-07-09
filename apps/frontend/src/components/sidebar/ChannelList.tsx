@@ -131,7 +131,7 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
         {/* === Saluran Tim === */}
         <div className="space-y-1">
           <div className="px-2 pb-1">
-            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase">
+            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
               Saluran
             </p>
           </div>
@@ -149,7 +149,7 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
                 <span className="text-xs">Gagal memuat saluran</span>
               </div>
             ) : filteredConnections.length === 0 ? (
-              <div className="px-3 py-2 text-[11px] text-muted-foreground/60 italic leading-relaxed">
+              <div className="px-3 py-2 text-[11px] text-muted-foreground italic leading-relaxed">
                 {search ? 'Saluran tidak ditemukan' : 'Belum ada saluran aktif. Hubungkan di Pengaturan.'}
               </div>
             ) : (
@@ -164,7 +164,7 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
                       'sidebar-active-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150',
                       isActive
                         ? 'bg-primary/8 text-foreground font-semibold'
-                        : 'text-foreground/85 hover:bg-sidebar-accent/70 hover:text-foreground'
+                        : 'text-foreground hover:bg-sidebar-accent/70 hover:text-foreground'
                     )}
                   >
                     {/* Status dot */}
@@ -205,10 +205,10 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
                 'sidebar-active-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-all duration-150',
                 activeId === 'web'
                   ? 'bg-primary/8 text-foreground font-semibold'
-                  : 'text-foreground/85 hover:bg-sidebar-accent/70 hover:text-foreground'
+                  : 'text-foreground hover:bg-sidebar-accent/70 hover:text-foreground'
               )}
             >
-              <Bot className={cn("h-4 w-4 shrink-0", activeId === 'web' ? 'text-primary' : 'text-foreground/70')} />
+              <Bot className={cn("h-4 w-4 shrink-0", activeId === 'web' ? 'text-primary' : 'text-foreground')} />
               <span className="flex-1 truncate">AI Assistant</span>
               {/* Online indicator */}
               <span
@@ -230,11 +230,11 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
                     {/* Garis kiri penanda riwayat */}
                     <div className="h-3 w-px bg-border/80 shrink-0 group-hover:bg-primary/30 transition-colors" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-foreground/80 truncate leading-tight group-hover:text-foreground transition-colors">
+                      <p className="text-[11px] text-foreground truncate leading-tight group-hover:text-foreground transition-colors">
                         {msg.content}
                       </p>
                     </div>
-                    <span className="text-[9px] text-foreground/45 shrink-0">
+                    <span className="text-[9px] text-muted-foreground shrink-0">
                       {formatTimeShort(msg.timestamp)}
                     </span>
                   </button>
