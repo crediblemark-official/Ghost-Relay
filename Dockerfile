@@ -1,7 +1,7 @@
 # ---- Stage 1: Install deps using Bun ----
 FROM oven/bun:1-alpine AS deps
 WORKDIR /app
-COPY package.json bun.lock pnpm-workspace.yaml turbo.json ./
+COPY package.json bun.lock turbo.json ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/config/package.json ./packages/config/
 COPY packages/database/package.json ./packages/database/

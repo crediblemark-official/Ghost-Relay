@@ -34,7 +34,7 @@
 | **Chat Platform** | Chat SDK (`@chat-adapter/*`: Slack, Telegram, WhatsApp) |
 | **Auth** | Better Auth + JWT |
 | **Encryption** | AES-256-GCM untuk credentials |
-| **Package Manager** | pnpm (workspace monorepo) + Turborepo |
+| **Package Manager** | Bun (workspace monorepo) + Turborepo |
 | **Runtime** | Bun (package manager), Node.js (runtime) |
 
 ---
@@ -71,8 +71,7 @@ ghost-team/
 ### Prasyarat
 
 - **Node.js** 22+
-- **pnpm** 9+ (`npm install -g pnpm`)
-- **Bun** 1.3+ (opsional, untuk package manager)
+- **Bun** 1.1+ (sebagai runtime & package manager — instal via `curl -fsSL https://bun.sh/install | bash`)
 - **PostgreSQL** 16 (atau via Docker)
 - **Docker** + Docker Compose (opsional)
 
@@ -83,10 +82,10 @@ git clone <repo>
 cd ghost-team
 
 # Install semua dependencies (workspace)
-pnpm install
+bun install
 
 # Generate Prisma client
-pnpm db:generate
+bun run db:generate
 ```
 
 ### 2. Setup Environment
@@ -110,15 +109,15 @@ docker compose up -d db
 ### 3. Database Migration
 
 ```bash
-pnpm db:push     # Push schema ke database
+bun run db:push     # Push schema ke database
 # atau
-pnpm db:migrate  # Migrasi dengan history
+bun run db:migrate  # Migrasi dengan history
 ```
 
 ### 4. Jalankan Development
 
 ```bash
-pnpm dev
+bun dev
 ```
 
 Ini akan menjalankan:
@@ -129,10 +128,10 @@ Atau secara terpisah:
 
 ```bash
 # Terminal 1 — Backend
-pnpm --filter @ghost/backend dev
+bun --filter @ghost/backend run dev
 
 # Terminal 2 — Frontend
-pnpm --filter frontend dev
+bun --filter frontend run dev
 ```
 
 ### 5. Login
@@ -214,14 +213,14 @@ Kami telah menyediakan panduan langkah-demi-langkah lengkap beserta script otoma
 
 ```bash
 # Backend tests
-pnpm --filter @ghost/backend test
+bun --filter @ghost/backend run test
 
 # Type checking
-pnpm --filter @ghost/backend typecheck
-pnpm --filter frontend typecheck
+bun --filter @ghost/backend run typecheck
+bun --filter frontend run typecheck
 
 # Linting
-pnpm lint
+bun run lint
 ```
 
 ---

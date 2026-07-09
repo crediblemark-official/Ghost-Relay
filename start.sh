@@ -10,11 +10,11 @@ if [ "$ENV" = "development" ]; then
   echo ""
 
   # Start backend
-  pnpm --filter @ghost/backend dev &
+  bun --filter @ghost/backend run dev &
   BACKEND_PID=$!
 
   # Start frontend
-  pnpm --filter frontend dev &
+  bun --filter frontend run dev &
   FRONTEND_PID=$!
 
   # Trap Ctrl+C and clean up
@@ -23,5 +23,5 @@ if [ "$ENV" = "development" ]; then
   wait
 else
   echo "Starting in production mode..."
-  pnpm --filter @ghost/backend start
+  bun --filter @ghost/backend run start
 fi
