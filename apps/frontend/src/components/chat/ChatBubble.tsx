@@ -15,7 +15,6 @@ interface ChannelMeta {
   color: string
 }
 
-// Warna per-platform — konsisten dengan ChannelList
 const PLATFORM_BADGE: Record<string, string> = {
   whatsapp: 'border-emerald-500/20 bg-emerald-500/8 text-emerald-500',
   telegram: 'border-sky-500/20 bg-sky-500/8 text-sky-500',
@@ -51,7 +50,6 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   const isAssistant = message.senderId === 'ai-assistant'
   const isVoiceNote = message.messageType === 'voice_note'
   const isProcessing = isVoiceNote && (message.content || '').toLowerCase().includes('processing')
-  const isVoiceProcessed = message.messageType === 'voice_processed'
 
   const handleDelete = async () => {
     if (!window.confirm('Hapus pesan ini?')) return
@@ -68,91 +66,90 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   }
 
   return (
-    <div className="group relative">
-      {/* Delete button — muncul saat hover */}
-      <button
-        onClick={handleDelete}
-        disabled={deleting}
-        className="absolute -left-7 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-150 flex h-6 w-6 items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground/50 hover:text-destructive disabled:opacity-30"
-        title="Hapus pesan"
-      >
-        {deleting ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
-        ) : (
-          <Trash2 className="h-3 w-3" />
-        )}
-      </button>
+    <div className={cn('group relative flex flex-col gap-0.5', isOutgoing ? 'items-end' : 'items-start')}>
 
-      <Message
-        from={isOutgoing ? 'user' : 'assistant'}
-        className={cn(isVoiceNote && 'opacity-80')}
-      >
-        {/* Platform badge + sender name untuk pesan incoming dari platform */}
-        {!isOutgoing && !isAssistant && (
-          <div className="flex items-center gap-1.5 px-0.5 mb-1">
-            <span className="text-[11px] font-semibold text-foreground/80">
-              {message.senderName}
-            </span>
-            <Badge
-              variant="outline"
-              className={cn('text-[9px] font-bold px-1.5 py-0 h-4 rounded uppercase tracking-wide', platformBadgeClass)}
-            >
-              {platformLabel}
-            </Badge>
-          </div>
-        )}
-
-        {/* AI assistant label */}
-        {isAssistant && (
-          <div className="flex items-center gap-1.5 px-0.5 mb-1">
-            <div className="flex h-4 w-4 items-center justify-center rounded bg-primary/10">
-              <Sparkles className="h-2.5 w-2.5 text-primary" />
-            </div>
-            <span className="text-[11px] font-semibold text-primary">
-              {message.senderName}
-            </span>
-          </div>
-        )}
-
-        <MessageContent>
-          {isProcessing ? (
-            <span className="italic text-muted-foreground text-sm flex items-center gap-2">
-              <Loader2 className="h-3 w-3 animate-spin shrink-0" />
-              {message.content}
-            </span>
-          ) : isVoiceProcessed ? (
-            <div className="whitespace-pre-wrap text-sm leading-relaxed">
-              {message.content}
-            </div>
-          ) : (
-            <MessageResponse>{message.content}</MessageResponse>
-          )}
-
-          {/* RAG Source badges */}
-          {isAssistant && message.ragSources && message.ragSources.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-primary/10">
-              <span className="text-[9px] text-muted-foreground/60 w-full font-medium uppercase tracking-wider">Sumber</span>
-              {message.ragSources.map((src) => (
-                <Badge
-                  key={src}
-                  variant="outline"
-                  className="text-[9px] px-1.5 py-0 h-4 border-primary/20 bg-primary/5 text-primary/70 font-normal"
-                >
-                  {src}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          {/* Timestamp */}
-          <span className="text-[10px] text-muted-foreground/40 self-end mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            {new Date(message.timestamp).toLocaleTimeString('id-ID', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+      {/* Sender label — hanya untuk incoming dari platform */}
+      {!isOutgoing && !isAssistant && (
+        <div className="flex items-center gap-1.5 px-1 mb-0.5">
+          <span className="text-[11px] font-semibold text-foreground/70">
+            {message.senderName}
           </span>
-        </MessageContent>
-      </Message>
+          <Badge
+            variant="outline"
+            className={cn('text-[9px] font-bold px-1.5 py-0 h-4 rounded uppercase tracking-wide', platformBadgeClass)}
+          >
+            {platformLabel}
+          </Badge>
+        </div>
+      )}
+
+      {/* AI sender label */}
+      {isAssistant && (
+        <div className="flex items-center gap-1.5 px-1 mb-0.5">
+          <div className="flex h-4 w-4 items-center justify-center rounded bg-primary/10">
+            <Sparkles className="h-2.5 w-2.5 text-primary" />
+          </div>
+          <span className="text-[11px] font-semibold text-primary">
+            {message.senderName}
+          </span>
+        </div>
+      )}
+
+      {/* Bubble row: delete + bubble */}
+      <div className={cn('flex items-end gap-2 max-w-full', isOutgoing && 'flex-row-reverse')}>
+        <Message from={isOutgoing ? 'user' : 'assistant'}>
+          <MessageContent>
+            {isProcessing ? (
+              <span className="italic text-sm flex items-center gap-2 opacity-70">
+                <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+                {message.content}
+              </span>
+            ) : (
+              <MessageResponse>{message.content}</MessageResponse>
+            )}
+
+            {/* RAG Source badges */}
+            {isAssistant && message.ragSources && message.ragSources.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-primary/10">
+                <span className="text-[9px] w-full font-medium uppercase tracking-wider opacity-40">Sumber</span>
+                {message.ragSources.map((src) => (
+                  <Badge
+                    key={src}
+                    variant="outline"
+                    className="text-[9px] px-1.5 py-0 h-4 border-primary/20 bg-primary/5 text-primary/70 font-normal"
+                  >
+                    {src}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </MessageContent>
+        </Message>
+
+        {/* Delete button — muncul hover */}
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="opacity-0 group-hover:opacity-100 transition-opacity flex h-5 w-5 items-center justify-center rounded text-muted-foreground/40 hover:text-destructive disabled:opacity-30 shrink-0"
+          title="Hapus pesan"
+        >
+          {deleting ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Trash2 className="h-3 w-3" />
+          )}
+        </button>
+      </div>
+
+      {/* Timestamp */}
+      <span className={cn(
+        'text-[10px] text-muted-foreground/35 px-1 opacity-0 group-hover:opacity-100 transition-opacity',
+      )}>
+        {new Date(message.timestamp).toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })}
+      </span>
     </div>
   )
 }
