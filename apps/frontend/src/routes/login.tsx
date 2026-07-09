@@ -33,8 +33,7 @@ function LoginPage() {
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [ownerRevealed, setOwnerRevealed] = useState(false)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout>>()
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const handleLongPressStart = useCallback(() => {
     longPressTimer.current = setTimeout(() => {
@@ -56,7 +55,8 @@ function LoginPage() {
     setLoading(true)
     try {
       if (mode === 'forgot') {
-        const { error: err } = await authClient.forgetPassword({ email })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: err } = await (authClient as any).forgetPassword({ email })
         if (err) throw new Error(err.message || 'Failed to send reset link')
         setSuccess('Cek console server untuk link reset password (development mode).')
         setLoading(false)
@@ -79,7 +79,7 @@ function LoginPage() {
             id: String(data.user.id),
             email: data.user.email,
             name: data.user.name,
-            role: data.user.role,
+            role: (data.user as any).role,
           })
           // Verifikasi owner via backend
           const check = await api.get<{ role: string }>('/admin/check')
@@ -111,7 +111,7 @@ function LoginPage() {
             id: String(data.user.id),
             email: data.user.email,
             name: data.user.name,
-            role: data.user.role,
+            role: (data.user as any).role,
           })
           if (invite) {
             try {
@@ -146,7 +146,7 @@ function LoginPage() {
             id: String(data.user.id),
             email: data.user.email,
             name: data.user.name,
-            role: data.user.role,
+            role: (data.user as any).role,
           })
           if (invite) {
             try {

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Ghost, Settings, LogOut, Moon, Sun, Shield, Bell, BellRing, ExternalLink } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
 import { useUIStore } from '@/stores/uiStore'

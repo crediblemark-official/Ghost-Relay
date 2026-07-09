@@ -12,15 +12,21 @@ export const Route = createFileRoute('/admin')({
 function AdminPage() {
   const user = useAuthStore(s => s.user)
 
-  const { data: workspaces, isLoading: wsLoading } = useQuery({
+  const { data: workspaces, isLoading: wsLoading } = useQuery<{
+    id: string
+    name: string
+    owner: { name: string; email: string }
+    memberCount: number
+    createdAt: string
+  }[]>({
     queryKey: ['admin-workspaces'],
-    queryFn: () => api.get('/admin/workspaces').then(r => r.workspaces),
+    queryFn: () => api.get<{ workspaces: { id: string; name: string; owner: { name: string; email: string }; memberCount: number; createdAt: string }[] }>('/admin/workspaces').then(r => r.workspaces),
     retry: false,
   })
 
-  const { data: users, isLoading: usersLoading } = useQuery({
+  const { data: users, isLoading: usersLoading } = useQuery<{ id: string; name: string; email: string }[]>({
     queryKey: ['admin-users'],
-    queryFn: () => api.get('/admin/users').then(r => r.users),
+    queryFn: () => api.get<{ users: { id: string; name: string; email: string }[] }>('/admin/users').then(r => r.users),
     retry: false,
   })
 
