@@ -15,7 +15,7 @@ FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app /app
 COPY . .
-RUN bun --filter @ghost/database run db:generate
+RUN bun run db:generate
 RUN bun x turbo build --filter=@ghost/backend
 
 # ---- Stage 3: Build frontend ----
