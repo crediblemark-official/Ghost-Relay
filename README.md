@@ -144,8 +144,9 @@ Seeder otomatis membuat admin saat pertama kali database kosong:
 
 ---
 
-## 🐳 Docker (Production)
+## 🐳 Docker (Production) & Cloud Deployment
 
+Untuk menjalankan secara lokal dalam mode production:
 ```bash
 # Build & jalankan semua service (PostgreSQL + app)
 docker compose up -d
@@ -154,10 +155,13 @@ docker compose up -d
 ```
 
 Untuk development dengan Redis:
-
 ```bash
 docker compose -f docker-compose.full.yml up -d
 ```
+
+### ☁️ Deployment ke Alibaba Cloud ECS
+Kami telah menyediakan panduan langkah-demi-langkah lengkap beserta script otomasi untuk mendeploy aplikasi ini ke **Alibaba Cloud ECS**. Silakan baca:
+👉 **[Panduan Deployment Alibaba Cloud (DEPLOYMENT.md)](DEPLOYMENT.md)**
 
 ---
 
@@ -233,4 +237,5 @@ pnpm lint
 
 ## 📝 Lisensi
 
-Private — Hackathon Project
+Proyek ini dilisensikan di bawah [Lisensi MIT](LICENSE). Anda bebas menggunakan, memodifikasi, dan mendistribusikan kode ini untuk kebutuhan hackathon maupun keperluan lainnya.
+
