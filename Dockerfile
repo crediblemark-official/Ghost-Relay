@@ -3,9 +3,11 @@ FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 COPY package.json bun.lock turbo.json ./
 COPY apps/backend/package.json ./apps/backend/
+COPY apps/frontend/package.json ./apps/frontend/
 COPY packages/config/package.json ./packages/config/
 COPY packages/database/package.json ./packages/database/
 COPY packages/shared/package.json ./packages/shared/
+
 RUN bun install --frozen-lockfile
 
 # ---- Stage 2: Build backend ----
