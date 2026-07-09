@@ -35,7 +35,6 @@ export function KnowledgeVault({ collapsed }: { collapsed?: boolean }) {
   const [dragOver, setDragOver] = useState(false)
   const [previewFile, setPreviewFile] = useState<FileType | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [showSearch, setShowSearch] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -62,8 +61,10 @@ export function KnowledgeVault({ collapsed }: { collapsed?: boolean }) {
 
   const clearSearch = useCallback(() => {
     setSearchQuery('')
-    setShowSearch(false)
-    if (searchInputRef.current) searchInputRef.current.value = ''
+    if (searchInputRef.current) {
+      searchInputRef.current.value = ''
+      searchInputRef.current.focus()
+    }
   }, [])
 
   const doUpload = async (file: File) => {
@@ -120,66 +121,59 @@ export function KnowledgeVault({ collapsed }: { collapsed?: boolean }) {
       "flex w-72 flex-col border-l border-border bg-card transition-all duration-300 overflow-hidden shrink-0",
       collapsed && "w-0 border-l-0"
     )}>
-      <div className="flex h-14 items-center justify-between border-b border-border px-4">
-        {showSearch ? (
-          <div className="flex items-center gap-2 w-full">
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Cari file via semantic..."
-              className="h-7 flex-1 rounded-md border border-input bg-background px-2 text-xs outline-none focus-visible:border-ring"
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') clearSearch()
-              }}
-              autoFocus
-            />
+      {/* Sticky Search & Upload Bar */}
+      <div className="p-3 pb-2 flex items-center gap-2 border-b border-border bg-card">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Cari file..."
+            className="h-8 w-full pl-8 pr-3 rounded-lg border border-border bg-background text-xs outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50"
+          />
+          {searchQuery && (
             <button
               onClick={clearSearch}
-              className="text-muted-foreground hover:text-foreground"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3 w-3" />
             </button>
-          </div>
-        ) : (
-          <>
-            <div className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/60">
-              Vault
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setShowSearch(true)}
-                className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                title="Semantic search"
-              >
-                <Search className="h-3.5 w-3.5" />
-              </button>
-              <label className="cursor-pointer">
-                {uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <Upload className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  disabled={uploading}
-                  accept=".pdf,.doc,.docx,.txt,.csv,.md,.png,.jpg,.jpeg,.gif,.webp,.mp3,.wav,.ogg,.mp4,.webm"
-                />
-              </label>
-            </div>
-          </>
-        )}
-        {uploadError && (
-          <div className="flex items-center gap-1.5 border-b border-border px-4 py-1.5 text-[11px] text-rose-600 bg-rose-50/50">
-            <TriangleAlert className="h-3 w-3 shrink-0" />
-            <span>{uploadError}</span>
-            <button className="ml-auto" onClick={() => setUploadError('')}><X className="h-3 w-3" /></button>
-          </div>
-        )}
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-all active:scale-95 disabled:opacity-50"
+          title="Unggah file"
+        >
+          {uploading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+          ) : (
+            <Upload className="h-3.5 w-3.5" />
+          )}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileChange}
+          disabled={uploading}
+          accept=".pdf,.doc,.docx,.txt,.csv,.md,.png,.jpg,.jpeg,.gif,.webp,.mp3,.wav,.ogg,.mp4,.webm"
+        />
       </div>
+
+      {uploadError && (
+        <div className="mx-3 mt-2 flex items-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-1.5 text-[11px] text-destructive fade-slide-in">
+          <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate flex-1">{uploadError}</span>
+          <button onClick={() => setUploadError('')} className="text-destructive/60 hover:text-destructive">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
 
       {previewFile && (
         <div className="border-b border-border p-3">
@@ -324,7 +318,7 @@ export function KnowledgeVault({ collapsed }: { collapsed?: boolean }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowSearch(true)}
+                  onClick={() => searchInputRef.current?.focus()}
                   className="w-full h-8 rounded-lg border border-border bg-background text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-accent transition-all"
                 >
                   <Search className="h-3.5 w-3.5" /> Cari File
