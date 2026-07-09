@@ -15,10 +15,15 @@ interface Member {
   joinedAt: string
 }
 
-export function TeamList({ collapsed }: { collapsed?: boolean }) {
+export function TeamList({ collapsed, searchQuery = '' }: { collapsed?: boolean; searchQuery?: string }) {
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [onlineIds, setOnlineIds] = useState<Set<string>>(new Set())
+
+  const filteredMembers = members.filter(m =>
+    m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.email.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   useEffect(() => {
     api.get<{ workspaceName: string; members: Member[]; myRole: string }>('/settings/workspace/members', { silent: true })
@@ -67,12 +72,12 @@ export function TeamList({ collapsed }: { collapsed?: boolean }) {
               <Skeleton className="h-4 w-24" />
             </div>
           ))
-        ) : members.length === 0 ? (
+        ) : filteredMembers.length === 0 ? (
           <div className="px-3 py-2 text-xs text-muted-foreground italic">
-            Undang rekan tim via tautan invite
+            Anggota tidak ditemukan
           </div>
         ) : (
-          members.map(m => (
+          filteredMembers.map(m => (
             <div
               key={m.id}
               className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent/50 transition-colors"

@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, Bot, Layers } from 'lucide-react'
+import { AlertCircle, Bot, Layers, Search, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -16,6 +17,7 @@ interface ChannelListProps {
   activeId?: string
   onSelect?: (id: string) => void
   collapsed?: boolean
+  onNewSession?: () => void
 }
 
 // Warna platform yang konsisten
@@ -53,7 +55,8 @@ function formatTimeShort(date: Date | string): string {
   }
 }
 
-export function ChannelList({ activeId = 'all', onSelect, collapsed }: ChannelListProps) {
+export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSession }: ChannelListProps) {
+  const [search, setSearch] = useState('')
   const { data: connections = [], isLoading, isError } = useQuery<PlatformConnection[]>({
     queryKey: ['platforms'],
     queryFn: () => api.get('/settings/platforms', { silent: true }),
@@ -76,13 +79,51 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed }: ChannelLi
     .slice(0, 5)
 
   const activeConnections = connections.filter((c: PlatformConnection) => c.isActive)
+  const filteredConnections = activeConnections.filter(c =>
+    (c.platformUserId || getPlatformLabel(c.platform)).toLowerCase().includes(search.toLowerCase())
+  )
+  const filteredAiHistory = aiHistory.filter(m =>
+    m.content.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <aside className={cn(
       "hidden w-60 flex-col border-r border-border bg-sidebar md:flex transition-all duration-300 overflow-hidden shrink-0",
       collapsed && "w-0 border-r-0 md:w-0"
     )}>
-
+      {/* Sticky Search & New Session Bar */}
+      {!collapsed && (
+        <div className="p-3 pb-2 flex items-center gap-2 border-b border-border bg-sidebar shrink-0">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari obrolan..."
+              className="h-8 w-full pl-8 pr-7 rounded-lg border border-border bg-background text-xs outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          {onNewSession && (
+            <button
+              type="button"
+              onClick={onNewSession}
+              className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-all active:scale-95"
+              title="Obrolan Baru"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
@@ -107,13 +148,12 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed }: ChannelLi
                 <AlertCircle className="h-3.5 w-3.5" />
                 <span className="text-xs">Gagal memuat saluran</span>
               </div>
-            ) : activeConnections.length === 0 ? (
+            ) : filteredConnections.length === 0 ? (
               <div className="px-3 py-2 text-[11px] text-muted-foreground/60 italic leading-relaxed">
-                Belum ada saluran aktif.<br />
-                Hubungkan di Pengaturan.
+                {search ? 'Saluran tidak ditemukan' : 'Belum ada saluran aktif. Hubungkan di Pengaturan.'}
               </div>
             ) : (
-              activeConnections.map((conn: PlatformConnection) => {
+              filteredConnections.map((conn: PlatformConnection) => {
                 const colors = PLATFORM_COLORS[conn.platform.toLowerCase()] || DEFAULT_PLATFORM
                 const isActive = activeId === conn.platform
                 return (
@@ -150,14 +190,13 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed }: ChannelLi
         <div className="h-px bg-border/60 mx-1" />
 
         {/* === Anggota Tim === */}
-        <TeamList collapsed={collapsed} />
+        <TeamList collapsed={collapsed} searchQuery={search} />
 
         {/* Divider */}
         <div className="h-px bg-border/60 mx-1" />
 
         {/* === Asisten AI + History === */}
         <div className="space-y-1">
-
           <div className="space-y-0.5">
             {/* Tombol utama AI */}
             <button
@@ -179,9 +218,9 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed }: ChannelLi
             </button>
 
             {/* Riwayat percakapan AI */}
-            {aiHistory.length > 0 && (
+            {filteredAiHistory.length > 0 && (
               <div className="pl-2 mt-1 space-y-0.5">
-                {aiHistory.map((msg) => (
+                {filteredAiHistory.map((msg) => (
                   <button
                     key={msg.id}
                     onClick={() => onSelect?.('web')}

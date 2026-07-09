@@ -168,7 +168,7 @@ function ChatPage() {
 
   return (
     <>
-      <ChannelList activeId={activeChannel} onSelect={setActiveChannel} collapsed={leftCollapsed} />
+      <ChannelList activeId={activeChannel} onSelect={setActiveChannel} collapsed={leftCollapsed} onNewSession={handleClearChat} />
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* ===== Chat Header ===== */}
         <div className="flex h-14 items-center justify-between border-b border-border bg-card/90 backdrop-blur-sm px-4 gap-3 shrink-0">
