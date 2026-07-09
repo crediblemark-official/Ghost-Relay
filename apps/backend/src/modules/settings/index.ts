@@ -7,6 +7,7 @@ import {
   handleGetInviteInfo, handleAcceptInvite, handleListMembers,
 } from './invite.js'
 import { getSetting, setSetting } from '../../core/db-settings.js'
+import { db } from '@ghost/database'
 
 export async function settingsModule(app: FastifyInstance): Promise<void> {
   app.get('/settings/env', { preHandler: [app.authenticate] }, handleGetEnv)
@@ -22,8 +23,14 @@ export async function settingsModule(app: FastifyInstance): Promise<void> {
   app.get('/settings/invite/:code', handleGetInviteInfo)
   app.post('/settings/invite/accept', { preHandler: [app.authenticate] }, handleAcceptInvite)
 
-  app.get('/settings/workspace', { preHandler: [app.authenticate] }, async () => {
-    const name = await getSetting('workspace_name', 'Ghost Relay')
+  app.get('/settings/workspace', { preHandler: [app.authenticate] }, async (req) => {
+    let ws = await db.workspace.findUnique({ where: { ownerId: req.userId } })
+    if (!ws) {
+      ws = await db.workspace.findFirst({
+        where: { members: { some: { userId: req.userId } } },
+      })
+    }
+    const name = ws?.name || await getSetting('workspace_name', 'Ghost Relay') || 'Ghost Relay'
     return { name }
   })
   app.get('/settings/workspace/members', { preHandler: [app.authenticate] }, handleListMembers)
