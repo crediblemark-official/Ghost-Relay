@@ -12,18 +12,25 @@ import {
   Sparkles,
   Zap,
   Lock,
-  Check
+  Check,
+  Server,
+  Activity,
+  Layers
 } from 'lucide-react'
 
 export function LandingPage() {
   const [typedQuery, setTypedQuery] = useState('')
-  const [activeStep, setActiveStep] = useState(1)
+  const [activeTab, setActiveTab] = useState<'voice' | 'vault' | 'gateway' | 'security'>('voice')
   const [simulatedTasks, setSimulatedTasks] = useState([
     { id: 1, text: 'Ubah skema database tabel user_settings', team: 'Backend', done: false },
     { id: 2, text: 'Sesuaikan padding & responsive layout LP', team: 'Frontend', done: true },
   ])
+  
+  // Simulator State
+  const [simulatorScenario, setSimulatorScenario] = useState<'vn' | 'query' | null>(null)
+  const [simulatorStep, setSimulatorStep] = useState(0)
 
-  // Simple typing simulation for RAG Search bento card
+  // RAG Search typing simulation
   useEffect(() => {
     const text = 'Kunci API staging server tim'
     let index = 0
@@ -37,44 +44,25 @@ export function LandingPage() {
     return () => clearInterval(interval)
   }, [])
 
+  // Flow Simulator Steps Effect
+  useEffect(() => {
+    if (!simulatorScenario) return
+    setSimulatorStep(1)
+    
+    const t1 = setTimeout(() => setSimulatorStep(2), 1500)
+    const t2 = setTimeout(() => setSimulatorStep(3), 3200)
+    
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [simulatorScenario])
+
   const toggleTask = (id: number) => {
     setSimulatedTasks(tasks => 
       tasks.map(t => t.id === id ? { ...t, done: !t.done } : t)
     )
   }
-
-  const features = [
-    {
-      icon: <Mic className="h-5 w-5 text-purple-600" />,
-      title: "Dekomposisi Voice Note",
-      desc: "Ghost Relay otomatis mengonversi catatan suara panjang dari grup chat menjadi transkrip ringkas dan memecah instruksi menjadi kartu tugas divisi."
-    },
-    {
-      icon: <MessageSquare className="h-5 w-5 text-indigo-600" />,
-      title: "Gateway Chat Terintegrasi",
-      desc: "Hubungkan WhatsApp, Telegram, dan Slack sebagai gateway input asisten AI untuk memproses ide, file, dan tugas tim secara asinkron."
-    },
-    {
-      icon: <Zap className="h-5 w-5 text-pink-600" />,
-      title: "Auto-Reply Cerdas (RAG)",
-      desc: "Menjawab pertanyaan berulang klien di saluran chat secara otomatis menggunakan basis pengetahuan dari percakapan lama."
-    },
-    {
-      icon: <FileText className="h-5 w-5 text-emerald-600" />,
-      title: "Basis Data Dokumen",
-      desc: "Semua berkas invoice, mockup, dan dokumen penting di grup chat terindeks rapi di dasbor tanpa perlu scroll riwayat pesan."
-    },
-    {
-      icon: <Sparkles className="h-5 w-5 text-amber-600" />,
-      title: "Perintah Suara Dasbor",
-      desc: "Gunakan fitur rekam suara dari dasbor kerja Anda untuk mendistribusikan instruksi penting ke berbagai grup komunikasi eksternal."
-    },
-    {
-      icon: <Shield className="h-5 w-5 text-cyan-600" />,
-      title: "Enkripsi Kredensial",
-      desc: "Keamanan data token API platform Anda terjamin penuh menggunakan standar enkripsi simetris AES-256-GCM."
-    }
-  ]
 
   return (
     <div className="min-h-screen text-[#0f172a] selection:bg-purple-100 selection:text-purple-900 overflow-x-hidden font-body bg-[#fafbfc]">
@@ -84,17 +72,18 @@ export function LandingPage() {
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
         .font-heading { font-family: 'Outfit', sans-serif; }
         .font-body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 0.9; }
+        }
+        .pulse-glow { animation: pulseGlow 2s infinite ease-in-out; }
       `}</style>
 
-      {/* Elegant Sunset Glow Gradient Background Wrapper */}
+      {/* Sunset Glow Background Gradient */}
       <div className="absolute top-0 inset-x-0 h-[650px] bg-gradient-to-b from-[#ffffff] via-[#fffbf7] via-[#fff5f6] via-[#faf6ff] to-[#f8fafc] -z-20" />
       
       {/* Fine Blueprint Lines Overlay */}
       <div className="absolute top-0 inset-x-0 h-[650px] bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_75%_55%_at_50%_0%,#000_65%,transparent_100%)] pointer-events-none -z-10 opacity-40" />
-
-      {/* Decorative Orbs with Blur */}
-      <div className="absolute top-[100px] left-1/4 w-[450px] h-[450px] bg-orange-100/30 rounded-full blur-[100px] pointer-events-none -z-10 animate-pulse duration-[7s]" />
-      <div className="absolute top-[220px] right-1/4 w-[400px] h-[400px] bg-pink-100/30 rounded-full blur-[90px] pointer-events-none -z-10 animate-pulse duration-[5s]" />
 
       {/* Header / Navbar */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/60 backdrop-blur-md">
@@ -109,9 +98,8 @@ export function LandingPage() {
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold text-slate-500 uppercase tracking-wider font-heading">
-            <a href="#features" className="hover:text-purple-600 transition-colors">Fitur</a>
-            <a href="#bento" className="hover:text-purple-600 transition-colors">Pusat Kerja</a>
-            <a href="#workflow" className="hover:text-purple-600 transition-colors">Aliran</a>
+            <a href="#features-hub" className="hover:text-purple-600 transition-colors">Fitur Kerja</a>
+            <a href="#simulator" className="hover:text-purple-600 transition-colors">Simulatur Aliran</a>
             <a href="#security" className="hover:text-purple-600 transition-colors">Keamanan</a>
           </nav>
 
@@ -161,7 +149,7 @@ export function LandingPage() {
           {/* White Pill with gradient border */}
           <div className="relative p-[1.2px] rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 w-full sm:w-auto hover:opacity-95 active:scale-95 transition-all">
             <a 
-              href="#features" 
+              href="#features-hub" 
               className="block w-full sm:w-auto px-8 py-3.5 bg-white text-slate-900 rounded-full font-bold transition-all text-xs text-center"
             >
               Pelajari Fitur
@@ -170,7 +158,7 @@ export function LandingPage() {
         </div>
 
         {/* Product Showcase: Clean Collaborative Inbox UI (Cut off at the bottom) */}
-        <div className="relative max-w-4xl mx-auto rounded-t-2xl border-t border-x border-slate-200/80 bg-white shadow-2xl overflow-hidden mt-16 h-[340px]">
+        <div className="relative max-w-4xl mx-auto rounded-t-2xl border-t border-x border-slate-200/80 bg-white shadow-2xl overflow-hidden mt-16 h-[320px]">
           
           {/* Mock Dashboard Window Header */}
           <div className="flex items-center justify-between bg-slate-50 px-5 py-3.5 border-b border-slate-200/60">
@@ -268,7 +256,7 @@ export function LandingPage() {
                     <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${
                       t.done ? 'bg-purple-600 border-purple-600 text-white' : 'border-purple-300'
                     }`}>
-                      {t.done && <Check className="h-2.5 w-2.5 animate-scale-in" />}
+                      {t.done && <Check className="h-2.5 w-2.5" />}
                     </div>
                     <div>
                       <span className="text-[8px] font-bold uppercase text-purple-600 tracking-wider block mb-0.5">TIM {t.team}</span>
@@ -288,215 +276,367 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Features Grid Details */}
-      <section id="features" className="py-24 border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-20 space-y-3">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 font-heading">
-              SISTEM ASINKRON YANG BEBAS DISTRAKSI
-            </h2>
-            <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-body">
-              Fokus penuh pada baris kode Anda tanpa terganggu mendengarkan berkas suara berulang.
-            </p>
-          </div>
+      {/* Section 1: The Core Enterprise Feature Hub (Tabbed High-Density Control Center) */}
+      <section id="features-hub" className="py-24 border-t border-slate-200 bg-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* Left Column: Tab Controls & High-Density Feature Copy */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-purple-600 uppercase tracking-widest block font-heading">ENTERPRISE_CONTROL_CENTER</span>
+              <h2 className="text-3xl font-black text-slate-900 font-heading uppercase">
+                Fitur Utama Pengelolaan
+              </h2>
+              <p className="text-slate-500 text-xs sm:text-sm font-sans leading-relaxed">
+                Pilih tab kontrol di bawah untuk memverifikasi modul pemrosesan data asinkron kami.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((f, i) => (
+            {/* Vertical Custom Tabs */}
+            <div className="space-y-3 pt-4">
+              
+              {/* Tab 1: Voice Engine */}
               <div 
-                key={i}
-                className="p-8 rounded-3xl border border-slate-200/70 bg-[#fafbfc]/50 hover:bg-[#fafbfc] hover:shadow-xl hover:shadow-slate-100 hover:border-slate-300 transition-all duration-300"
+                onClick={() => setActiveTab('voice')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer text-left space-y-1 ${
+                  activeTab === 'voice' ? 'bg-purple-50/50 border-purple-200 shadow-sm' : 'border-slate-100 hover:bg-slate-50/50'
+                }`}
               >
-                <div className="h-11 w-11 bg-purple-50 rounded-xl border border-purple-100 flex items-center justify-center mb-6">
-                  {f.icon}
+                <div className="flex items-center gap-2">
+                  <Mic className={`h-4 w-4 ${activeTab === 'voice' ? 'text-purple-600' : 'text-slate-400'}`} />
+                  <span className="text-xs font-bold uppercase tracking-wider font-heading">01. Dekomposisi Suara</span>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 mb-2 font-heading">{f.title}</h3>
-                <p className="text-slate-500 text-xs sm:text-sm leading-relaxed font-body">{f.desc}</p>
+                <p className="text-slate-500 text-[11px] font-sans">
+                  Transkripsi voice note otomatis via ASR Whisper dan dekomposisi to-do list per divisi.
+                </p>
               </div>
-            ))}
+
+              {/* Tab 2: Document Vault */}
+              <div 
+                onClick={() => setActiveTab('vault')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer text-left space-y-1 ${
+                  activeTab === 'vault' ? 'bg-purple-50/50 border-purple-200 shadow-sm' : 'border-slate-100 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className={`h-4 w-4 ${activeTab === 'vault' ? 'text-purple-600' : 'text-slate-400'}`} />
+                  <span className="text-xs font-bold uppercase tracking-wider font-heading">02. Knowledge Vault & RAG</span>
+                </div>
+                <p className="text-slate-500 text-[11px] font-sans">
+                  Pencarian semantik berkas PDF/mockup dan penjawab otomatis pesan berulang.
+                </p>
+              </div>
+
+              {/* Tab 3: API Gateway */}
+              <div 
+                onClick={() => setActiveTab('gateway')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer text-left space-y-1 ${
+                  activeTab === 'gateway' ? 'bg-purple-50/50 border-purple-200 shadow-sm' : 'border-slate-100 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Server className={`h-4 w-4 ${activeTab === 'gateway' ? 'text-purple-600' : 'text-slate-400'}`} />
+                  <span className="text-xs font-bold uppercase tracking-wider font-heading">03. API & Webhook Integrator</span>
+                </div>
+                <p className="text-slate-500 text-[11px] font-sans">
+                  Modul gateway WhatsApp (Baileys), bot Telegram, dan Slack App dalam satu portal.
+                </p>
+              </div>
+
+              {/* Tab 4: Compliance & Encryption */}
+              <div 
+                onClick={() => setActiveTab('security')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer text-left space-y-1 ${
+                  activeTab === 'security' ? 'bg-purple-50/50 border-purple-200 shadow-sm' : 'border-slate-100 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Shield className={`h-4 w-4 ${activeTab === 'security' ? 'text-purple-600' : 'text-slate-400'}`} />
+                  <span className="text-xs font-bold uppercase tracking-wider font-heading">04. Kriptografi & Kepatuhan</span>
+                </div>
+                <p className="text-slate-500 text-[11px] font-sans">
+                  Perlindungan simetris AES-256-GCM dan verifikasi tanda tangan HMAC webhook.
+                </p>
+              </div>
+
+            </div>
           </div>
+
+          {/* Right Column: Dynamic Preview Screen */}
+          <div className="lg:col-span-7 rounded-2xl border border-slate-200 bg-slate-50/30 p-6 min-h-[380px] flex items-center justify-center">
+            
+            {/* View 1: Voice Engine Preview */}
+            {activeTab === 'voice' && (
+              <div className="w-full bg-white rounded-xl border border-slate-200/80 shadow-md p-6 space-y-4 animate-fade-in text-left">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <span className="text-[10px] text-purple-600 font-bold uppercase tracking-wider">Voice Transcriber Active</span>
+                  <Activity className="h-4 w-4 text-purple-600 animate-pulse" />
+                </div>
+
+                <div className="space-y-2 bg-[#fafafa] p-3 rounded-lg border border-slate-100">
+                  <span className="text-[9px] text-slate-400 font-bold block uppercase">Catatan Suara Masuk (Telegram)</span>
+                  <div className="flex items-center gap-2 py-1 bg-white px-2.5 rounded border border-slate-200">
+                    <Play className="h-3 w-3 text-purple-600" />
+                    <div className="h-1 flex-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full w-4/5 bg-purple-600 pulse-glow" />
+                    </div>
+                    <span className="text-[10px] text-slate-400">0:14</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-purple-50/30 rounded-lg border border-purple-100/50 space-y-2 text-xs text-slate-700 leading-relaxed font-sans">
+                  <strong>Transkripsi:</strong> "Frontend tolong perbaiki responsive di landingpage bagian bento, backend tambah schema database user."
+                  <div className="pt-2 border-t border-purple-100/50 flex gap-2">
+                    <span className="text-[9px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded font-bold">FRONTEND</span>
+                    <span className="text-[9px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">BACKEND</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* View 2: Vault & RAG Search */}
+            {activeTab === 'vault' && (
+              <div className="w-full bg-white rounded-xl border border-slate-200/80 shadow-md p-6 space-y-4 animate-fade-in text-left">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Knowledge Vault</span>
+                  <span className="text-[9px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Vector DB</span>
+                </div>
+
+                {/* Simulated search */}
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between text-xs font-sans">
+                  <div className="flex items-center gap-2.5 text-slate-500 w-full">
+                    <Search className="h-4 w-4 text-emerald-600" />
+                    <span className="text-slate-800 font-medium">{typedQuery}<span className="animate-ping">|</span></span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-emerald-50/20 rounded-lg border border-emerald-100/60 space-y-2">
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-700">
+                    <span>Dokumen Terkait: server-config.txt</span>
+                    <span className="text-emerald-600">Skor: 98.4%</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-sans leading-normal">
+                    "Konfigurasi staging IP di-set ke 172.30.155.229. DB berjalan di port 5433."
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* View 3: API Gateway Integrations */}
+            {activeTab === 'gateway' && (
+              <div className="w-full bg-white rounded-xl border border-slate-200/80 shadow-md p-6 space-y-4 animate-fade-in text-left">
+                <div className="pb-2 border-b border-slate-100 flex justify-between items-center">
+                  <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">API Connection Manager</span>
+                  <span className="text-[9px] text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full font-bold">API GATEWAY</span>
+                </div>
+
+                <div className="space-y-2.5 font-sans">
+                  <div className="flex items-center justify-between p-2 bg-[#fafafa] rounded-lg border border-slate-100">
+                    <span className="text-xs font-bold text-slate-800">WhatsApp (Baileys Service)</span>
+                    <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-bold">ONLINE</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-[#fafafa] rounded-lg border border-slate-100">
+                    <span className="text-xs font-bold text-slate-800">Telegram Bot API</span>
+                    <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-bold">ONLINE</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-[#fafafa] rounded-lg border border-slate-100">
+                    <span className="text-xs font-bold text-slate-800">Slack App Webhook</span>
+                    <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-bold">ONLINE</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* View 4: Cryptography compliance */}
+            {activeTab === 'security' && (
+              <div className="w-full bg-white rounded-xl border border-slate-200/80 shadow-md p-6 space-y-4 animate-fade-in text-left">
+                <div className="pb-2 border-b border-slate-100 flex justify-between items-center">
+                  <span className="text-[10px] text-pink-600 font-bold uppercase tracking-wider">Encryption Audit Log</span>
+                  <Lock className="h-4 w-4 text-pink-600" />
+                </div>
+
+                <div className="p-3 bg-slate-900 rounded-lg text-slate-300 font-mono text-[9px] leading-relaxed space-y-1">
+                  <div className="text-slate-500">// AUDIT LOG VERIFICATION</div>
+                  <div>[14:10:22] - Initialized AES-256-GCM cipher</div>
+                  <div>[14:10:23] - Decrypted token using encryption key... <span className="text-emerald-400">SUCCESS</span></div>
+                  <div>[14:10:25] - Webhook received from WhatsApp gateway</div>
+                  <div>[14:10:25] - Verifying signature (HMAC-SHA256)... <span className="text-emerald-400">VALID</span></div>
+                </div>
+              </div>
+            )}
+
+          </div>
+
         </div>
       </section>
 
-      {/* Bento Grid Layout Section */}
-      <section id="bento" className="py-24 bg-[#fafbfc] border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-20 space-y-3">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 font-heading">
-              PUSAT MANAJEMEN VAULT DOKUMEN
+      {/* Section 2: "Stealth Mode" Flow Simulator (The "Special Taste" Interactivity) */}
+      <section id="simulator" className="py-24 border-t border-slate-200 bg-slate-50/50">
+        <div className="max-w-5xl mx-auto px-6 text-center space-y-12">
+          
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">
+              <Zap className="h-3.5 w-3.5" />
+              <span>Simulasi Interaktif Aliran Pesan</span>
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 font-heading uppercase">
+              Bagaimana Aliran Relasi Berjalan?
             </h2>
-            <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-body">
-              Akses berkas, dokumen koordinasi, dan arsip percakapan tim dengan cepat.
+            <p className="text-slate-500 text-sm max-w-xl mx-auto font-sans leading-relaxed">
+              Klik salah satu skenario di bawah ini untuk melihat bagaimana Ghost Relay mendistribusikan pesan dari gateway ke dasbor AI dalam hitungan detik.
             </p>
           </div>
 
-          {/* Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 auto-rows-[230px]">
-            
-            {/* Card 1: Voice Task Splitter (Large - 2/3 width) */}
-            <div className="md:col-span-8 p-8 rounded-3xl border border-slate-200 bg-white hover:shadow-xl hover:shadow-slate-100 transition-all flex flex-col justify-between overflow-hidden relative group">
-              <div className="space-y-2 relative z-10">
-                <span className="text-[10px] text-purple-600 bg-purple-100 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider font-heading">Transkripsi Audio</span>
-                <h3 className="text-lg font-bold text-slate-900 font-heading">Voice Note Task Splitter</h3>
-                <p className="text-slate-500 text-xs sm:text-sm font-sans leading-relaxed max-w-lg">
-                  Instruksi suara di Telegram/WA dipotong-potong secara otomatis oleh AI menjadi kartu tugas terpisah per divisi di Slack. Anda tidak perlu memutarnya manual.
-                </p>
-              </div>
-
-              {/* Visual Audio Waveform Simulation */}
-              <div className="h-16 w-full flex items-end gap-1.5 border-t border-slate-100 pt-3">
-                {[4, 8, 12, 5, 9, 14, 20, 12, 6, 8, 15, 24, 18, 9, 12, 16, 22, 10, 4, 9, 14, 6, 12, 18, 9, 5, 8, 12, 6, 11, 4, 9, 15, 7, 10, 4].map((height, i) => (
-                  <div 
-                    key={i} 
-                    className="flex-1 bg-slate-200 group-hover:bg-purple-600 rounded-full transition-all duration-300"
-                    style={{ height: `${height * 3.5}%` }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Card 2: Security Credentials (Small - 1/3 width) */}
-            <div className="md:col-span-4 p-8 rounded-3xl border border-slate-200 bg-white hover:shadow-xl hover:shadow-slate-100 transition-all flex flex-col justify-between relative overflow-hidden group">
-              <div className="space-y-2 relative z-10">
-                <span className="text-[10px] text-pink-600 bg-pink-100 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider font-heading">Keamanan</span>
-                <h3 className="text-lg font-bold text-slate-900 font-heading">AES-256-GCM</h3>
-                <p className="text-slate-500 text-xs sm:text-sm font-sans leading-relaxed">
-                  Semua token platform dan file verifikasi dienkripsi penuh di level database menggunakan kunci simetris yang aman.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Lock className="h-4 w-4 text-pink-500" />
-                  <span className="text-[10px] tracking-wider font-bold">Kredensial Aman</span>
-                </div>
-                <div className="text-[9px] bg-pink-100 text-pink-700 px-2.5 py-0.5 rounded-full font-bold uppercase">
-                  ACTIVE
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Knowledge Vault (Small - 1/3 width) */}
-            <div className="md:col-span-4 p-8 rounded-3xl border border-slate-200 bg-white hover:shadow-xl hover:shadow-slate-100 transition-all flex flex-col justify-between relative overflow-hidden group">
-              <div className="space-y-2 relative z-10">
-                <span className="text-[10px] text-emerald-600 bg-emerald-100 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider font-heading">Dokumen</span>
-                <h3 className="text-lg font-bold text-slate-900 font-heading">Anti-Scroll Vault</h3>
-                <p className="text-slate-500 text-xs sm:text-sm font-sans leading-relaxed">
-                  Gambar mockup, berkas invoice, dan rujukan file chat terindeks otomatis ke kategori folder tanpa tertimbun pesan baru.
-                </p>
-              </div>
-
-              {/* Directory Mockup */}
-              <div className="border-t border-slate-100 pt-3.5 text-xs space-y-2 text-slate-500">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-emerald-500">📁</span>
-                  <span className="font-bold text-slate-700">/UI_Mockups_V3</span>
-                </div>
-                <div className="flex items-center gap-1.5 pl-4">
-                  <span>📄</span>
-                  <span className="text-slate-500 text-[11px] font-sans">dashboard-redesign.pdf</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 4: RAG Auto-Reply (Large - 2/3 width) */}
-            <div className="md:col-span-8 p-8 rounded-3xl border border-slate-200 bg-white hover:shadow-xl hover:shadow-slate-100 transition-all flex flex-col justify-between overflow-hidden relative group">
-              <div className="space-y-2 relative z-10">
-                <span className="text-[10px] text-cyan-600 bg-cyan-100 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider font-heading">Memori Pencarian</span>
-                <h3 className="text-lg font-bold text-slate-900 font-heading">Auto-Reply RAG</h3>
-                <p className="text-slate-500 text-xs sm:text-sm font-sans leading-relaxed max-w-lg">
-                  AI mendeteksi pertanyaan tim yang berulang-ulang di grup komunikasi dan membalas otomatis dengan merujuk berkas/data yang pernah dibagikan.
-                </p>
-              </div>
-
-              {/* RAG Typing Search Bar Simulation */}
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs shadow-sm">
-                <div className="flex items-center gap-2.5 text-slate-500 w-full pr-4">
-                  <Search className="h-4 w-4 text-cyan-600 animate-pulse" />
-                  <span className="text-slate-800 font-sans font-medium">
-                    {typedQuery}<span className="animate-ping">|</span>
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase shrink-0">Kecocokan AI: <strong className="text-cyan-600">97.8%</strong></div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* How it Works / Workflow Pipeline (Horizontal Steps Card) */}
-      <section id="workflow" className="py-24 bg-white border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-20 space-y-3">
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 font-heading uppercase">
-              Langkah Integrasi Platform
-            </h2>
-            <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-body">
-              Hanya butuh beberapa menit untuk menyambungkan bot dan basis pengetahuan Anda.
-            </p>
+          {/* Scenario Triggers */}
+          <div className="flex justify-center gap-4">
+            <button 
+              onClick={() => {
+                setSimulatorScenario('vn')
+                setSimulatorStep(0)
+              }}
+              className={`px-5 py-3 rounded-xl border text-xs font-bold transition-all ${
+                simulatorScenario === 'vn' ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              Skenario A: Kirim Voice Note Revisi
+            </button>
+            <button 
+              onClick={() => {
+                setSimulatorScenario('query')
+                setSimulatorStep(0)
+              }}
+              className={`px-5 py-3 rounded-xl border text-xs font-bold transition-all ${
+                simulatorScenario === 'query' ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              Skenario B: Klien Tanya Staging URL
+            </button>
           </div>
 
-          {/* Steps Horizontal Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          {/* Simulator Visual Flow Container */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 min-h-[220px] flex items-center justify-center relative shadow-sm">
             
-            {/* Step 1 */}
-            <div 
-              onClick={() => setActiveStep(1)}
-              className={`p-8 rounded-3xl border transition-all cursor-pointer ${
-                activeStep === 1 ? 'border-purple-600 bg-white shadow-xl' : 'border-slate-200/80 bg-[#fafbfc]/50 hover:bg-[#fafbfc]'
-              }`}
-            >
-              <div className="text-xs font-bold text-purple-600 uppercase tracking-widest block mb-4">Langkah 01</div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2 font-heading">Hubungkan Gateway</h3>
-              <p className="text-slate-500 text-xs sm:text-sm leading-relaxed font-sans">
-                Pindai kode QR untuk menyinkronkan WhatsApp, atau masukkan token API Telegram / Slack ke dalam sistem secara aman.
-              </p>
-            </div>
+            {!simulatorScenario ? (
+              <div className="text-slate-400 text-xs flex flex-col items-center gap-2">
+                <Layers className="h-8 w-8 text-slate-300 animate-bounce" />
+                <span>Pilih skenario di atas untuk memulai simulasi visual asinkron.</span>
+              </div>
+            ) : (
+              <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-left font-sans text-xs">
+                
+                {/* Step 1: Input Gateway */}
+                <div className={`p-4 rounded-xl border transition-all duration-500 ${
+                  simulatorStep >= 1 ? 'border-purple-200 bg-purple-50/10 shadow-sm opacity-100 scale-100' : 'border-slate-100 bg-[#fafafa] opacity-40 scale-95'
+                }`}>
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <span className="font-bold text-slate-800">1. Input Gateway</span>
+                    <span className="text-[8px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold font-heading">GATEWAY</span>
+                  </div>
+                  <div className="mt-3 space-y-1.5">
+                    {simulatorScenario === 'vn' ? (
+                      <>
+                        <div className="flex items-center gap-1.5 text-purple-600 font-bold">
+                          <Mic className="h-3.5 w-3.5" />
+                          <span>Voice Note Budi (18s)</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500">"Frontend revisi padding, backend fix endpoint."</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          <span>Pesan WhatsApp Klien</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500">"Kunci API server testing apa?"</p>
+                      </>
+                    )}
+                  </div>
+                </div>
 
-            {/* Step 2 */}
-            <div 
-              onClick={() => setActiveStep(2)}
-              className={`p-8 rounded-3xl border transition-all cursor-pointer ${
-                activeStep === 2 ? 'border-purple-600 bg-white shadow-xl' : 'border-slate-200/80 bg-[#fafbfc]/50 hover:bg-[#fafbfc]'
-              }`}
-            >
-              <div className="text-xs font-bold text-purple-600 uppercase tracking-widest block mb-4">Langkah 02</div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2 font-heading">Latih Knowledge Vault</h3>
-              <p className="text-slate-500 text-xs sm:text-sm leading-relaxed font-sans">
-                Unggah dokumen pendukung tim langsung dari komputer atau teruskan berkas gambar/PDF lewat chat grup Telegram.
-              </p>
-            </div>
+                {/* Step 2: Ghost AI Relay */}
+                <div className={`p-4 rounded-xl border transition-all duration-500 relative ${
+                  simulatorStep >= 2 ? 'border-purple-300 bg-purple-50/30 shadow-md opacity-100 scale-100' : 'border-slate-100 bg-[#fafafa] opacity-40 scale-95'
+                }`}>
+                  {simulatorStep === 1 && (
+                    <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
+                      <span className="text-[10px] text-slate-500 font-bold animate-pulse">Menunggu data di-relay...</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <span className="font-bold text-purple-800 flex items-center gap-1">
+                      <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+                      <span>2. Ghost AI Relay</span>
+                    </span>
+                    <span className="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold font-heading">AI_PROCESS</span>
+                  </div>
+                  <div className="mt-3 space-y-1 text-[10px] text-slate-600">
+                    {simulatorScenario === 'vn' ? (
+                      <>
+                        <div>✓ Transkripsi audio selesai.</div>
+                        <div className="text-purple-600">✓ Memecah tugas menjadi 2 divisi.</div>
+                      </>
+                    ) : (
+                      <>
+                        <div>✓ Menghitung kosinus kemiripan...</div>
+                        <div className="text-emerald-600">✓ Berkas "credential.txt" ditemukan.</div>
+                      </>
+                    )}
+                  </div>
+                </div>
 
-            {/* Step 3 */}
-            <div 
-              onClick={() => setActiveStep(3)}
-              className={`p-8 rounded-3xl border transition-all cursor-pointer ${
-                activeStep === 3 ? 'border-purple-600 bg-white shadow-xl' : 'border-slate-200/80 bg-[#fafbfc]/50 hover:bg-[#fafbfc]'
-              }`}
-            >
-              <div className="text-xs font-bold text-purple-600 uppercase tracking-widest block mb-4">Langkah 03</div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2 font-heading">Asisten AI Aktif</h3>
-              <p className="text-slate-500 text-xs sm:text-sm leading-relaxed font-sans">
-                AI di latar belakang otomatis memecah voice note tim, mengekstrak aset dokumen, dan membalas chat berulang.
-              </p>
-            </div>
+                {/* Step 3: Output Dispatch */}
+                <div className={`p-4 rounded-xl border transition-all duration-500 relative ${
+                  simulatorStep >= 3 ? 'border-indigo-200 bg-indigo-50/10 shadow-sm opacity-100 scale-100' : 'border-slate-100 bg-[#fafafa] opacity-40 scale-95'
+                }`}>
+                  {simulatorStep < 3 && (
+                    <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
+                      <span className="text-[10px] text-slate-500 font-bold animate-pulse">Menunggu pemrosesan AI...</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <span className="font-bold text-indigo-900">3. Output Dispatch</span>
+                    <span className="text-[8px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold font-heading">RELAY</span>
+                  </div>
+                  <div className="mt-3 space-y-1.5">
+                    {simulatorScenario === 'vn' ? (
+                      <>
+                        <div className="text-[10px] text-slate-800">
+                          <strong>Tugas dikirim ke Slack #dev:</strong>
+                          <ul className="list-disc pl-3 text-[9px] text-slate-500 mt-1">
+                            <li>Frontend: revisi padding</li>
+                            <li>Backend: fix endpoint login</li>
+                          </ul>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-[10px] text-slate-800">
+                          <strong>Auto-Reply terkirim ke klien:</strong> <br />
+                          <span className="text-slate-500 italic">"Kunci API: staging_token_abc. (Rujukan: @Andi 2 Juli)"</span>
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
 
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Security Info Card */}
-      <section id="security" className="py-20 border-t border-slate-200 bg-[#fafbfc]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="max-w-4xl mx-auto rounded-3xl border border-slate-200 bg-white p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+      <section id="security" className="py-20 border-t border-slate-200 bg-white">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="max-w-4xl mx-auto rounded-3xl border border-slate-200 bg-slate-50/50 p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
             <div className="h-14 w-14 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0">
               <Shield className="h-7 w-7 text-purple-600" />
             </div>
             <div className="space-y-2 text-left">
-              <span className="text-xs font-bold text-purple-600 uppercase tracking-wider block font-heading">Enkripsi Tingkat Tinggi</span>
-              <h2 className="text-base font-bold text-slate-900 font-heading">Kunci Enkripsi AES-256-GCM Terisolasi</h2>
+              <span className="text-xs font-bold text-purple-600 uppercase tracking-wider block font-heading">Kepatuhan Kriptografi Enterprise</span>
+              <h2 className="text-base font-bold text-slate-900 font-heading">AES-256-GCM + Penandatanganan HMAC Webhook</h2>
               <p className="text-slate-500 text-xs sm:text-sm leading-relaxed font-sans">
-                Setiap token API dan session file WhatsApp Anda diamankan penuh di level database. Data dilindungi menggunakan algoritma enkripsi simetris AES-256-GCM, memastikan integritas dan privasi data koordinasi tim Anda.
+                Keamanan adalah prioritas utama. Seluruh kredensial API dan verification secret diamankan menggunakan algoritma enkripsi simetris AES-256-GCM. Webhook masuk diverifikasi menggunakan tanda tangan HMAC-SHA256 untuk memblokir spoofing data.
               </p>
             </div>
           </div>
@@ -504,7 +644,7 @@ export function LandingPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-28 text-center relative border-t border-slate-200 bg-white">
+      <section className="py-28 text-center relative border-t border-slate-200 bg-slate-50/30">
         <div className="max-w-4xl mx-auto px-6 space-y-6">
           <h2 className="text-3xl sm:text-[40px] font-black tracking-tight text-slate-900 leading-tight font-heading uppercase">
             Mulai Sinkronisasi Tim Sekarang
@@ -521,7 +661,7 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-slate-200 bg-[#fafbfc]">
+      <footer className="py-12 border-t border-slate-200 bg-[#f8fafc]">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6 font-sans">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600">
