@@ -66,7 +66,7 @@ jobs:
       - name: Start backend server
         run: |
           cd apps/backend
-          bun run src/main.ts &
+          bun run src/main.ts > ../../backend.log 2>&1 &
         env:
           JWT_SECRET_KEY: ci-test-jwt-secret-key
           ENCRYPTION_KEY: ci-test-encryption-key-32char-long!!
@@ -81,7 +81,8 @@ jobs:
               break
             fi
             if [ $i -eq 30 ]; then
-              echo "Backend failed to start"
+              echo "Backend failed to start. Logs:"
+              cat backend.log || true
               exit 1
             fi
             sleep 1
@@ -159,7 +160,7 @@ jobs:
       - name: Start backend
         run: |
           cd apps/backend
-          bun run src/main.ts &
+          bun run src/main.ts > ../../backend-auth.log 2>&1 &
         env:
           JWT_SECRET_KEY: ci-test-jwt-secret-key
           ENCRYPTION_KEY: ci-test-encryption-key-32char-long!!
@@ -174,7 +175,8 @@ jobs:
               break
             fi
             if [ $i -eq 30 ]; then
-              echo "Backend failed to start"
+              echo "Backend failed to start. Logs:"
+              cat backend-auth.log || true
               exit 1
             fi
             sleep 1
