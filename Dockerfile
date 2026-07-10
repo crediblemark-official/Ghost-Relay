@@ -1,5 +1,5 @@
-# ---- Stage 1: Install deps using Bun ----
-FROM oven/bun:1-alpine AS deps
+# ---- Stage 1: Build everything ----
+FROM oven/bun:1-alpine AS builder
 RUN apk add --no-cache nodejs
 WORKDIR /app
 COPY package.json bun.lock turbo.json ./
@@ -8,37 +8,19 @@ COPY apps/frontend/package.json ./apps/frontend/
 COPY packages/config/package.json ./packages/config/
 COPY packages/database/package.json ./packages/database/
 COPY packages/shared/package.json ./packages/shared/
-
 RUN bun install --frozen-lockfile
 
-# ---- Stage 2: Build backend ----
-FROM oven/bun:1-alpine AS builder
-RUN apk add --no-cache nodejs
-WORKDIR /app
-COPY --from=deps /app /app
 COPY . .
-RUN bun install --frozen-lockfile
 RUN bun run db:generate
-RUN bun x turbo build --filter=@ghost/backend
+RUN bun x turbo build
 
-# ---- Stage 3: Build frontend ----
-FROM oven/bun:1-alpine AS frontend-builder
-RUN apk add --no-cache nodejs
-WORKDIR /app
-COPY --from=deps /app /app
-COPY . .
-RUN bun install --frozen-lockfile
-RUN bun x turbo build --filter=frontend
-
-
-
-# ---- Stage 4: Runtime ----
+# ---- Stage 2: Runtime ----
 FROM node:22-alpine
 WORKDIR /app
 COPY --from=builder /app/apps/backend/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
-COPY --from=frontend-builder /app/apps/frontend/dist /app/frontend/dist
+COPY --from=builder /app/apps/frontend/dist /app/frontend/dist
 RUN echo '{"name":"runtime","private":true,"type":"module"}' > package.json && npm install tsx
 ENV FRONTEND_DIR=/app/frontend/dist
 ENV NODE_ENV=production
