@@ -72,6 +72,7 @@ jobs:
           ENCRYPTION_KEY: ci-test-encryption-key-32char-long!!
           CRYPTO_SALT: ci-test-salt-value-at-least-16-char
           DATABASE_URL: postgresql://ghost:changeme@localhost:5433/ghost_relay
+          ENVIRONMENT: test
 
       - name: Wait for backend
         run: |
@@ -166,6 +167,7 @@ jobs:
           ENCRYPTION_KEY: ci-test-encryption-key-32char-long!!
           CRYPTO_SALT: ci-test-salt-value-at-least-16-char
           DATABASE_URL: postgresql://ghost:changeme@localhost:5433/ghost_relay
+          ENVIRONMENT: test
 
       - name: Wait for backend
         run: |
