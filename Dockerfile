@@ -20,7 +20,7 @@ WORKDIR /app
 COPY package.json bun.lock turbo.json ./
 COPY packages ./packages
 COPY apps/backend/package.json ./apps/backend/
-RUN bun install --production
+RUN bun install --production --no-frozen-lockfile
 
 COPY --from=builder /app/apps/backend/dist ./dist
 COPY --from=builder /app/apps/frontend/dist /app/frontend/dist
