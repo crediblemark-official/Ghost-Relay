@@ -3,8 +3,11 @@ import { Navigation } from './Navigation'
 
 export function AppLayout() {
   const isLogin = useMatch({ from: '/login', shouldThrow: false }) !== undefined
+  const isLanding = useMatch({ from: '/', shouldThrow: false }) !== undefined
+  const isInvite = useMatch({ from: '/invite/$code', shouldThrow: false }) !== undefined
+  const isReset = useMatch({ from: '/reset-password', shouldThrow: false }) !== undefined
 
-  if (isLogin) {
+  if (isLogin || isLanding || isInvite || isReset) {
     return <Outlet />
   }
 
