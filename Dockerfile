@@ -12,6 +12,7 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 RUN bun run db:generate
+RUN ls -la node_modules/.bin || true
 RUN bun x turbo build
 
 # ---- Stage 2: Runtime ----
