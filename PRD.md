@@ -12,13 +12,13 @@ Saya kosongkan semua tech stack sesuai permintaanmu. Fokusnya murni ke **masalah
 ---
 
 ## 1. Ringkasan Eksekutif (Executive Summary)
-**Ghost Relay** adalah sistem komunikasi asinkron berbasis AI yang bertindak sebagai **"Penerjemah & Pengorganisir"** di tengah-tengah tim. Produk ini mengintegrasikan seluruh platform chat (WhatsApp, Telegram, Slack) ke dalam satu antarmuka. Tugas utamanya adalah:
-1. Mengubah voice note menjadi teks terstruktur.
-2. Memecah instruksi panjang menjadi tugas per divisi.
-3. Mengindeks semua dokumen/file yang dikirim agar mudah dicari tanpa scroll.
-4. Menjawab pertanyaan berulang secara otomatis menggunakan memori tim.
+**Ghost Relay** adalah asisten AI personal dan ruang kerja pengetahuan terenkripsi yang menggunakan platform chat (WhatsApp, Telegram, Slack) sebagai **gateway komunikasi**. Tugas utamanya adalah:
+1. Menerima catatan, file, dan voice note dari gateway chat pribadi untuk diproses oleh AI.
+2. Memecah instruksi suara (voice command) menjadi dekomposisi tugas terstruktur.
+3. Mengindeks seluruh file/dokumen yang dikirim melalui gateway chat ke dalam Knowledge Vault terenkripsi.
+4. Menjawab secara otomatis pertanyaan berulang dari klien di aplikasi chat (Auto-Reply RAG) menggunakan basis data pengetahuan Anda.
 
-**Value Proposition:** Menghemat 70% waktu koordinasi tim dengan mengeliminasi kebiasaan scroll chat, dengar voice note, dan tanya jawab berulang.
+**Value Proposition:** Efisiensi koordinasi asinkron dengan menjadikan chat platform populer sebagai gateway asisten AI pribadi Anda.
 
 ---
 
@@ -60,9 +60,9 @@ Saya kosongkan semua tech stack sesuai permintaanmu. Fokusnya murni ke **masalah
 
 ## 6. Fitur Fungsional (Functional Requirements)
 
-### 6.1. Universal Inbox (Aggregator Chat)
-- Sistem mampu **membaca dan mengirim** pesan ke 3 platform: WhatsApp, Telegram, dan Slack.
-- Semua pesan masuk dari 3 platform tersebut **disatukan** dalam satu feed chat utama di UI (tampak seperti satu grup besar).
+### 6.1. Gateway Aggregator (Platform Inbox)
+- Sistem mampu berfungsi sebagai **gateway komunikasi** untuk menerima input dari WhatsApp, Telegram, dan Slack.
+- Menyatukan aliran data (catatan, instruksi, dan berkas) dari berbagai gateway chat pribadi ke dalam satu feed asisten AI di UI utama.
 
 ### 6.2. Main Chat Interface (UI Tengah)
 - Menampilkan riwayat percakapan kronologis dari semua platform.
