@@ -22,6 +22,9 @@ COPY packages ./packages
 COPY apps/backend/package.json ./apps/backend/
 RUN bun install --production
 
+# Copy the generated Prisma client from builder
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /app/apps/frontend/dist /app/frontend/dist
 ENV FRONTEND_DIR=/app/frontend/dist
