@@ -16,7 +16,7 @@ services:
       retries: 5
 
   ghost-relay:
-    build: .
+    image: ghcr.io/crediblemark-official/ghost-relay:latest
     container_name: ghost-relay
     ports:
       - "8000:8000"

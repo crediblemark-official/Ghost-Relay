@@ -78,8 +78,8 @@ ghost-team/
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/rasyiqi-code/Ghost-Team.git
-cd Ghost-Team
+git clone https://github.com/crediblemark-official/Ghost-Relay.git
+cd Ghost-Relay
 
 # Install semua dependencies (workspace)
 bun install

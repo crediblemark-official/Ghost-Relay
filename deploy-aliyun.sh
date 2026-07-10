@@ -184,8 +184,8 @@ success "Firewall aktif (SSH, HTTP, HTTPS, 8000)"
 # ─── Jalankan aplikasi ──────────────────────────────────────────────────────
 cd "$APP_DIR"
 
-info "Membangun image Docker (ini mungkin memakan waktu 5-10 menit)..."
-docker compose build --no-cache
+info "Menarik (pull) image Docker dari GHCR..."
+docker compose pull
 
 info "Menjalankan services..."
 docker compose up -d
@@ -194,9 +194,8 @@ info "Menunggu database siap..."
 sleep 10
 
 info "Menjalankan migrasi database..."
-docker compose exec ghost-relay node --import tsx/esm dist/main.js --migrate 2>/dev/null || \
-  docker compose exec ghost-relay sh -c "cd /app && node -e \"import('./dist/main.js')\"" 2>/dev/null || \
-  warn "Migrasi mungkin sudah berjalan otomatis saat startup"
+docker compose exec ghost-relay bun run apps/backend/dist/main.js --migrate 2>/dev/null || \
+  warn "Migrasi mungkin sudah berjalan otomatis saat startup atau terdapat kendala koneksi"
 
 # ─── Status akhir ───────────────────────────────────────────────────────────
 PUBLIC_IP=$(curl -s --max-time 5 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || \
