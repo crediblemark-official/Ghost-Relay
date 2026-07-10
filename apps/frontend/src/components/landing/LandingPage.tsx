@@ -67,16 +67,45 @@ export function LandingPage() {
   return (
     <div className="min-h-screen text-[#0f172a] selection:bg-purple-100 selection:text-purple-900 overflow-x-hidden font-body bg-[#fafbfc]">
       
-      {/* Import Premium Google Fonts */}
+      {/* Import Premium Google Fonts & Advanced Animations */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
         .font-heading { font-family: 'Outfit', sans-serif; }
         .font-body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
         @keyframes pulseGlow {
           0%, 100% { opacity: 0.6; }
           50% { opacity: 0.9; }
         }
         .pulse-glow { animation: pulseGlow 2s infinite ease-in-out; }
+
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient {
+          background-size: 200% auto;
+          animation: gradientShift 6s ease infinite;
+        }
+
+        @keyframes floatSlow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+          animation: floatSlow 5s ease-in-out infinite;
+        }
+
+        @keyframes dashFlow {
+          to {
+            stroke-dashoffset: -20;
+          }
+        }
+        .animate-dash-flow {
+          stroke-dasharray: 6, 4;
+          animation: dashFlow 1.5s linear infinite;
+        }
       `}</style>
 
       {/* Sunset Glow Background Gradient */}
@@ -129,7 +158,7 @@ export function LandingPage() {
         {/* Large Centered Title */}
         <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 leading-[1.08] font-heading max-w-4xl mx-auto uppercase">
           Jembatan Koordinasi Asinkron <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600">Tim Anda Tanpa Scroll Chat.</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 animate-gradient">Tim Anda Tanpa Scroll Chat.</span>
         </h1>
 
         {/* Subtitle */}
@@ -158,7 +187,7 @@ export function LandingPage() {
         </div>
 
         {/* Product Showcase: Clean Collaborative Inbox UI (Cut off at the bottom) */}
-        <div className="relative max-w-4xl mx-auto rounded-t-2xl border-t border-x border-slate-200/80 bg-white shadow-2xl overflow-hidden mt-16 h-[320px]">
+        <div className="relative max-w-4xl mx-auto rounded-t-2xl border-t border-x border-slate-200/80 bg-white shadow-2xl overflow-hidden mt-16 h-[320px] animate-float">
           
           {/* Mock Dashboard Window Header */}
           <div className="flex items-center justify-between bg-slate-50 px-5 py-3.5 border-b border-slate-200/60">
@@ -168,8 +197,11 @@ export function LandingPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
             </div>
             <div className="text-[10px] font-bold text-slate-400 font-heading tracking-wider">GHOST_RELAY_CONSOLE</div>
-            <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 bg-emerald-50 px-2 rounded-full font-bold">
-              <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold">
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
               <span>Gateway Aktif</span>
             </div>
           </div>
