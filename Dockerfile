@@ -1,5 +1,6 @@
 # ---- Stage 1: Install deps using Bun ----
 FROM oven/bun:1-alpine AS deps
+RUN apk add --no-cache nodejs
 WORKDIR /app
 COPY package.json bun.lock turbo.json ./
 COPY apps/backend/package.json ./apps/backend/
@@ -12,6 +13,7 @@ RUN bun install --frozen-lockfile
 
 # ---- Stage 2: Build backend ----
 FROM oven/bun:1-alpine AS builder
+RUN apk add --no-cache nodejs
 WORKDIR /app
 COPY --from=deps /app /app
 COPY . .
@@ -21,11 +23,13 @@ RUN bun x turbo build --filter=@ghost/backend
 
 # ---- Stage 3: Build frontend ----
 FROM oven/bun:1-alpine AS frontend-builder
+RUN apk add --no-cache nodejs
 WORKDIR /app
 COPY --from=deps /app /app
 COPY . .
 RUN bun install --frozen-lockfile
 RUN bun x turbo build --filter=frontend
+
 
 
 # ---- Stage 4: Runtime ----
