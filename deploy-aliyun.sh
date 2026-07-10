@@ -119,10 +119,16 @@ if [ ! -f "$ENV_FILE" ]; then
   read -rp "  Telegram Bot Token (opsional, Enter=skip): " TELEGRAM_BOT_TOKEN
 
   JWT_SECRET=$(generate_secret)
+  BETTER_AUTH_SECRET=$(generate_secret)
   ENC_KEY=$(generate_secret | head -c 32)
   CRYPTO_SALT=$(generate_secret)
 
   DB_PASS=$(generate_secret | head -c 24)
+
+  # Dapatkan IP Publik ECS untuk BETTER_AUTH_URL
+  PUBLIC_IP=$(curl -s --max-time 5 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || \
+              curl -s --max-time 5 http://100.100.100.200/latest/meta-data/eipv4 2>/dev/null || \
+              curl -s --max-time 5 ifconfig.me 2>/dev/null || echo "localhost")
 
   cat > "$ENV_FILE" <<EOF
 # ── Database ──────────────────────────────────────────────
@@ -136,6 +142,8 @@ CORS_ORIGINS=["*"]
 
 # ── Keamanan ──────────────────────────────────────────────
 JWT_SECRET_KEY=${JWT_SECRET}
+BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+BETTER_AUTH_URL=http://${PUBLIC_IP}:8000
 ENCRYPTION_KEY=${ENC_KEY}
 CRYPTO_SALT=${CRYPTO_SALT}
 

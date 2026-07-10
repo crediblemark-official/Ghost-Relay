@@ -26,6 +26,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production-better-auth-secret-key-123}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:8000}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-me-in-production}
       CRYPTO_SALT: ${CRYPTO_SALT:-change-me-in-production}
       REDIS_URL: ""
