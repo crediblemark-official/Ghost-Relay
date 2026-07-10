@@ -5,7 +5,7 @@ export const Route = createFileRoute('/demo')({
   component: DemoOne,
 })
 
-export default function DemoOne() {
+function DemoOne() {
   return (
     <div className="w-screen h-screen">
       <Home />
