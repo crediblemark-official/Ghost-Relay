@@ -15,6 +15,7 @@ FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app /app
 COPY . .
+RUN bun install --frozen-lockfile
 RUN bun run db:generate
 RUN bun x turbo build --filter=@ghost/backend
 
@@ -23,7 +24,9 @@ FROM oven/bun:1-alpine AS frontend-builder
 WORKDIR /app
 COPY --from=deps /app /app
 COPY . .
+RUN bun install --frozen-lockfile
 RUN bun x turbo build --filter=frontend
+
 
 # ---- Stage 4: Runtime ----
 FROM node:22-alpine
