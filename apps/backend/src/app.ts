@@ -52,7 +52,7 @@ export async function buildApp() {
   })
 
   await app.register(rateLimit, {
-    max: 100,
+    max: env.ENVIRONMENT === 'test' ? 10000 : 100,
     timeWindow: '1 minute',
     keyGenerator: (req) => req.ip,
   })
