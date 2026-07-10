@@ -114,7 +114,10 @@ jobs:
 
       - name: Stop backend
         if: always()
-        run: kill $(pgrep -f 'bun run src/main.ts') 2>/dev/null || true
+        run: |
+          kill $(pgrep -f 'bun run src/main.ts') 2>/dev/null || true
+          echo "=== Backend logs ==="
+          cat backend.log || true
 
   # Job terpisah untuk endpoint yang butuh autentikasi
   authenticated:
@@ -247,4 +250,7 @@ jobs:
 
       - name: Stop backend
         if: always()
-        run: kill $(pgrep -f 'bun run src/main.ts') 2>/dev/null || true
+        run: |
+          kill $(pgrep -f 'bun run src/main.ts') 2>/dev/null || true
+          echo "=== Backend logs ==="
+          cat backend-auth.log || true
