@@ -97,24 +97,40 @@ export function LandingPage() {
       <section className="relative pt-20 pb-16 px-6 max-w-7xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/20 bg-purple-500/5 text-purple-400 text-xs font-semibold mb-6 animate-fade-in">
           <Sparkles className="h-3 w-3" />
-          <span>Personal AI Assistant & Knowledge Workspace</span>
+          <span>Jembatan Koordinasi Tim (Human → AI → Human)</span>
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-[1.15] mb-6">
           Hubungkan Asisten AI Anda ke <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400">WhatsApp, Telegram, dan Slack.</span>
         </h1>
 
-        <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10">
-          Jadikan aplikasi pesan harian Anda sebagai gateway pribadi menuju asisten kecerdasan buatan. Kirim perintah suara, kelola data basis pengetahuan terenkripsi, dan aktifkan auto-reply otomatis untuk klien.
+        <p className="text-slate-400 text-base sm:text-lg max-w-3xl mx-auto leading-relaxed mb-8">
+          Ghost Relay adalah sistem komunikasi asinkron berbasis AI (Human → AI → Human) yang bertindak sebagai "Penerjemah & Pengorganisir" di tengah-tengah tim. Menghemat hingga 70% waktu koordinasi dengan mengubah instruksi suara menjadi tugas terstruktur, mengelompokkan berkas otomatis, dan menjawab pertanyaan berulang.
         </p>
 
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-20">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
           <Link to="/login" className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 group transition-all transform hover:-translate-y-0.5">
             Mulai Demo Gratis <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
           <a href="#features" className="w-full sm:w-auto px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-bold transition-all flex items-center justify-center">
             Pelajari Fitur
           </a>
+        </div>
+
+        {/* Stats Grid from PRD success metrics */}
+        <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-16 border-y border-white/5 py-5">
+          <div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">70%</div>
+            <div className="text-[10px] sm:text-xs text-slate-500 font-medium mt-1">Waktu Koordinasi Terhemat</div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-indigo-400">&lt; 10s</div>
+            <div className="text-[10px] sm:text-xs text-slate-500 font-medium mt-1">Pencarian File di Vault</div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">90%</div>
+            <div className="text-[10px] sm:text-xs text-slate-500 font-medium mt-1">Pertanyaan Berulang Terjawab</div>
+          </div>
         </div>
 
         {/* Hero Interactive Screen Preview */}
