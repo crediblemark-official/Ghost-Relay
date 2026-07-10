@@ -16,38 +16,38 @@ import {
 } from 'lucide-react'
 
 export function LandingPage() {
-  const [activeDemoTab, setActiveDemoTab] = useState<'inbox' | 'voice' | 'rag'>('inbox')
+  const [activeDemoTab, setActiveDemoTab] = useState<'gateway' | 'voice' | 'rag'>('gateway')
 
   const features = [
     {
       icon: <Layers className="h-6 w-6 text-purple-400" />,
-      title: "Universal Inbox",
-      desc: "Satukan chat dari WhatsApp, Telegram, Slack, dan Web chat langsung ke dalam satu feed tunggal yang terintegrasi."
+      title: "Platform Gateway",
+      desc: "Gunakan WhatsApp, Telegram, dan Slack sebagai gateway instan untuk menyalurkan catatan pribadi, voice note, atau file ke asisten AI Anda."
     },
     {
       icon: <Mic className="h-6 w-6 text-indigo-400" />,
       title: "Smart Voice Processing",
-      desc: "Transkripsikan voice note secara otomatis, buat ringkasan cerdas, dan dekomposisi instruksi suara menjadi tugas siap pakai."
+      desc: "Kirim pesan suara via gateway untuk ditranskripsikan, diringkas, dan didekomposisi otomatis menjadi daftar tugas siap pakai."
     },
     {
       icon: <Brain className="h-6 w-6 text-pink-400" />,
       title: "Auto-Reply RAG",
-      desc: "Sistem kecerdasan buatan dapat membalas pesan secara kontekstual berdasarkan basis data histori percakapan."
+      desc: "Asisten AI secara otomatis menjawab pertanyaan klien di Telegram/WhatsApp/Slack dengan referensi data histori percakapan."
     },
     {
       icon: <FileText className="h-6 w-6 text-emerald-400" />,
       title: "Knowledge Vault",
-      desc: "Unggah dokumen pendukung untuk diindeks dan dicari secara semantik melalui semantic search bertenaga AI."
+      desc: "Simpan dokumen (PDF, TXT, dll) secara terenkripsi untuk pencarian semantik dan melatih basis pengetahuan asisten RAG Anda."
     },
     {
       icon: <Volume2 className="h-6 w-6 text-amber-400" />,
-      title: "Voice Command",
-      desc: "Kirim pesan ke platform eksternal atau grup hanya menggunakan instruksi suara langsung dari mikrofon PC Anda."
+      title: "Voice Command Dispatcher",
+      desc: "Kirim instruksi suara dari mikrofon dasbor Anda untuk diteruskan atau didelegasikan sebagai pesan ke grup chat eksternal."
     },
     {
       icon: <Cpu className="h-6 w-6 text-cyan-400" />,
       title: "AI Provider Agnostic",
-      desc: "Bebas memilih provider model AI (OpenAI, Claude, Qwen, Gemini, Llama) sesuai dengan kebutuhan performa dan biaya."
+      desc: "Bebas memilih provider model AI (OpenAI, Claude, Qwen, Gemini, Llama) sesuai kebutuhan performa dan keamanan data."
     }
   ]
 
@@ -72,7 +72,7 @@ export function LandingPage() {
 
           <nav className="hidden md:flex items-center gap-8 text-[13px] font-medium text-slate-400">
             <a href="#features" className="hover:text-white transition-colors">Fitur</a>
-            <a href="#demo" className="hover:text-white transition-colors">Demo</a>
+            <a href="#demo" className="hover:text-white transition-colors">Demo Gateway</a>
             <a href="#workflow" className="hover:text-white transition-colors">Cara Kerja</a>
             <a href="#security" className="hover:text-white transition-colors">Keamanan</a>
           </nav>
@@ -97,15 +97,15 @@ export function LandingPage() {
       <section className="relative pt-20 pb-16 px-6 max-w-7xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/20 bg-purple-500/5 text-purple-400 text-xs font-semibold mb-6 animate-fade-in">
           <Sparkles className="h-3 w-3" />
-          <span>Integrasi AI & Multi-Platform Generasi Baru</span>
+          <span>Personal AI Assistant & Knowledge Workspace</span>
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-[1.15] mb-6">
-          Satu Dashboard. <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400">Semua Saluran Pesan.</span> Bertenaga AI.
+          Hubungkan Asisten AI Anda ke <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400">WhatsApp, Telegram, dan Slack.</span>
         </h1>
 
         <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10">
-          Satukan komunikasi dari Telegram, WhatsApp, Slack, dan Web chat secara real-time. Transkripsikan voice note, simpan memori pengetahuan, dan balas pesan otomatis dengan asisten kecerdasan buatan.
+          Jadikan aplikasi pesan harian Anda sebagai gateway pribadi menuju asisten kecerdasan buatan. Kirim perintah suara, kelola data basis pengetahuan terenkripsi, dan aktifkan auto-reply otomatis untuk klien.
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-20">
@@ -129,12 +129,12 @@ export function LandingPage() {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={() => setActiveDemoTab('inbox')}
+                onClick={() => setActiveDemoTab('gateway')}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  activeDemoTab === 'inbox' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-slate-400 border border-transparent hover:text-white'
+                  activeDemoTab === 'gateway' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-slate-400 border border-transparent hover:text-white'
                 }`}
               >
-                Universal Inbox
+                Platform Gateway
               </button>
               <button 
                 onClick={() => setActiveDemoTab('voice')}
@@ -142,7 +142,7 @@ export function LandingPage() {
                   activeDemoTab === 'voice' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-slate-400 border border-transparent hover:text-white'
                 }`}
               >
-                Voice AI
+                Voice Dispatcher
               </button>
               <button 
                 onClick={() => setActiveDemoTab('rag')}
@@ -150,7 +150,7 @@ export function LandingPage() {
                   activeDemoTab === 'rag' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-slate-400 border border-transparent hover:text-white'
                 }`}
               >
-                RAG Memory
+                RAG Auto-Reply
               </button>
             </div>
           </div>
@@ -158,50 +158,41 @@ export function LandingPage() {
           {/* Interactive Screen Body */}
           <div className="relative bg-[#0d0e15] rounded-xl p-4 sm:p-6 min-h-[300px] sm:min-h-[380px] text-left transition-all duration-300">
             
-            {activeDemoTab === 'inbox' && (
+            {activeDemoTab === 'gateway' && (
               <div className="space-y-4 animate-fade-in">
                 <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                  <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">Feed Pesan Masuk Terpadu</span>
-                  <span className="text-[10px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full font-medium">3 Saluran Aktif</span>
+                  <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">Gateway Input: Catatan & Berkas Masuk</span>
+                  <span className="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full font-medium">Relay Terenkripsi</span>
                 </div>
                 
-                {/* Telegram Msg */}
+                {/* Me to WhatsApp Self msg */}
                 <div className="flex gap-3 bg-white/5 p-3.5 rounded-xl border border-white/5 relative">
-                  <span className="absolute top-3 right-3 text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-semibold">Telegram</span>
-                  <div className="h-9 w-9 rounded-full bg-blue-500/10 flex items-center justify-center font-bold text-blue-400 shrink-0 text-sm">
-                    JD
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white">John Doe (Klien A)</h4>
-                    <p className="text-[12px] text-slate-300 mt-1">Halo Ghost, saya sudah mengirimkan mockup terbaru untuk aplikasi kita di grup. Tolong dicek ya.</p>
-                  </div>
-                </div>
-
-                {/* WhatsApp Msg */}
-                <div className="flex gap-3 bg-white/5 p-3.5 rounded-xl border border-white/5 relative">
-                  <span className="absolute top-3 right-3 text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-semibold">WhatsApp</span>
+                  <span className="absolute top-3 right-3 text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-semibold">WhatsApp Gateway</span>
                   <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center font-bold text-emerald-400 shrink-0 text-sm">
-                    AL
+                    Me
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">Alicia (Marketing)</h4>
-                    <p className="text-[12px] text-slate-300 mt-1">🎙️ *Mengirimkan pesan suara (0:24)*</p>
-                    <div className="mt-2.5 p-2.5 bg-purple-500/5 rounded-lg border border-purple-500/10 flex items-center gap-3">
-                      <Sparkles className="h-3.5 w-3.5 text-purple-400 shrink-0" />
-                      <p className="text-[11px] text-purple-300 leading-normal"><strong className="text-white">AI Transcribe:</strong> "Tolong jadwalkan rapat besok jam 10 pagi bersama tim pengembangan untuk membahas rilis baru."</p>
+                    <h4 className="text-xs font-bold text-white">Owner ("Message Yourself")</h4>
+                    <p className="text-[12px] text-slate-300 mt-1">Ide bisnis: Membuat sistem monitoring server terdistribusi dengan auto-healing script.</p>
+                    <div className="mt-2.5 p-2 bg-purple-500/5 rounded-lg border border-purple-500/10 text-[10px] text-purple-300">
+                      ⚡ <strong>Relayed:</strong> Catatan berhasil disimpan ke dalam basis data ide AI Anda.
                     </div>
                   </div>
                 </div>
 
-                {/* Slack Msg */}
+                {/* Telegram Bot Msg */}
                 <div className="flex gap-3 bg-white/5 p-3.5 rounded-xl border border-white/5 relative">
-                  <span className="absolute top-3 right-3 text-[10px] bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded-full font-semibold">Slack</span>
-                  <div className="h-9 w-9 rounded-full bg-pink-500/10 flex items-center justify-center font-bold text-pink-400 shrink-0 text-sm">
-                    DS
+                  <span className="absolute top-3 right-3 text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-semibold">Telegram Gateway</span>
+                  <div className="h-9 w-9 rounded-full bg-blue-500/10 flex items-center justify-center font-bold text-blue-400 shrink-0 text-sm">
+                    TB
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">#dev-alerts</h4>
-                    <p className="text-[12px] text-slate-300 mt-1">Deployment prod server sukses dilakukan pada pukul 14:02. Semua servis terpantau sehat.</p>
+                    <h4 className="text-xs font-bold text-white">Ghost Relay Bot</h4>
+                    <p className="text-[12px] text-slate-300 mt-1">📎 <strong>Mengirim berkas:</strong> dokumen-proyek.pdf</p>
+                    <div className="mt-2.5 p-2.5 bg-purple-500/5 rounded-lg border border-purple-500/10 flex items-center gap-3">
+                      <FileText className="h-4 w-4 text-purple-400 shrink-0" />
+                      <p className="text-[11px] text-purple-300 leading-normal"><strong className="text-white">AI Indexer:</strong> "dokumen-proyek.pdf telah disimpan secara aman dan diindeks ke dalam **Knowledge Vault** Anda untuk RAG."</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -210,7 +201,7 @@ export function LandingPage() {
             {activeDemoTab === 'voice' && (
               <div className="space-y-5 animate-fade-in">
                 <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                  <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">Pemrosesan Suara & Tugas AI</span>
+                  <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">Voice Command & Task Dispatcher</span>
                 </div>
                 
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
@@ -219,29 +210,29 @@ export function LandingPage() {
                       <Mic className="h-4 w-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white">Input Suara Diterima (WhatsApp / PC Mic)</h4>
-                      <p className="text-[10px] text-slate-500">Durasi: 12 detik • Diproses via Whisper</p>
+                      <h4 className="text-xs font-bold text-white">Dasbor Kontrol Suara (Mikrofon PC)</h4>
+                      <p className="text-[10px] text-slate-500">Menerjemahkan suara ke aksi sistem</p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <p className="text-xs text-slate-300 bg-black/30 p-2.5 rounded-lg border border-white/5">
-                      "Kirim pesan ke grup pengembang bahwa rapat mingguan diundur menjadi jam 2 siang ini."
+                      "Kirim pesan ke grup pengembang Slack bahwa backend migrasi sudah selesai dijalankan."
                     </p>
                     
                     <div className="flex items-center gap-2 text-[11px] text-slate-400">
                       <ChevronRight className="h-3 w-3 text-slate-500" />
-                      <span>Mengidentifikasi intent: <strong className="text-purple-400">Task Dispatch</strong></span>
+                      <span>Mengidentifikasi intent: <strong className="text-purple-400">Relay Message</strong></span>
                     </div>
 
                     <div className="p-3 bg-purple-500/5 rounded-lg border border-purple-500/10 space-y-2">
                       <div className="flex items-center gap-2 text-xs font-bold text-white">
                         <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
-                        <span>Aksi AI Otomatis Dijalankan:</span>
+                        <span>Eksekusi Sukses via Slack Gateway:</span>
                       </div>
                       <p className="text-[11px] text-slate-400 leading-normal pl-5">
-                        Pesan terkirim ke WhatsApp Group <span className="text-emerald-400">"Dev Team HQ"</span>: <br />
-                        <span className="text-slate-300">"Pengumuman: Rapat mingguan diundur menjadi jam 2 siang ini."</span>
+                        Relay ke Slack Channel <span className="text-pink-400">"#dev-alerts"</span>: <br />
+                        <span className="text-slate-300">"Pemberitahuan: Backend migrasi sudah selesai dijalankan."</span>
                       </p>
                     </div>
                   </div>
@@ -252,38 +243,34 @@ export function LandingPage() {
             {activeDemoTab === 'rag' && (
               <div className="space-y-4 animate-fade-in">
                 <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                  <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">Pencarian Semantik & Auto-Reply RAG</span>
+                  <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">Auto-Reply Klien via Chat Gateway (RAG)</span>
                 </div>
                 
                 <div className="space-y-3">
-                  {/* User Query */}
-                  <div className="flex gap-2 justify-end">
-                    <div className="bg-purple-600 text-white p-3 rounded-2xl rounded-tr-none text-xs max-w-sm">
-                      Berapa biaya langganan paket premium Ghost Relay dan fasilitas apa saja yang didapat?
+                  {/* Client Query on WA */}
+                  <div className="flex gap-2 justify-start">
+                    <div className="bg-slate-800 text-slate-200 p-3 rounded-2xl rounded-tl-none text-xs max-w-sm">
+                      <span className="text-[9px] text-emerald-400 block font-bold mb-1">WhatsApp Client</span>
+                      Halo, jam berapa kantor Ghost Relay melayani konsultasi offline hari ini?
                     </div>
                   </div>
 
                   {/* AI Vault Searching */}
                   <div className="flex gap-2 items-center text-xs text-slate-500">
                     <Brain className="h-3.5 w-3.5 text-purple-500 animate-pulse" />
-                    <span>Mencari di Knowledge Vault (katalog-harga.pdf)...</span>
+                    <span>Mencari kecocokan data RAG (jadwal-operasional.txt)...</span>
                   </div>
 
-                  {/* AI Response */}
+                  {/* AI Auto-Response relayed back to Client */}
                   <div className="flex gap-3 bg-white/5 p-3.5 rounded-xl border border-white/5 max-w-xl">
                     <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center font-bold text-purple-400 shrink-0 text-xs">
                       🤖
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white">Asisten AI (Auto-Reply)</h4>
+                      <h4 className="text-xs font-bold text-white">Ghost Auto-Reply (Relayed to Client WA)</h4>
                       <p className="text-[12px] text-slate-300 mt-1 leading-relaxed">
-                        Berdasarkan dokumen <span className="text-emerald-400">katalog-harga.pdf</span>, biaya paket Premium adalah Rp 150.000/bulan. Fasilitas mencakup:
+                        Halo! Sesuai dokumen <span className="text-emerald-400">jadwal-operasional.txt</span>, konsultasi offline dibuka setiap hari Senin - Jumat pukul 09:00 hingga 17:00 WIB.
                       </p>
-                      <ul className="list-disc pl-4 text-[11px] text-slate-400 mt-1 space-y-1">
-                        <li>Integrasi tanpa batas untuk Telegram & WhatsApp</li>
-                        <li>Transkripsi voice note hingga 500 menit/bulan</li>
-                        <li>Penyimpanan Knowledge Vault 5 GB</li>
-                      </ul>
                     </div>
                   </div>
                 </div>
@@ -298,10 +285,10 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4">
-              Komunikasi yang Terstruktur Lebih Baik dengan AI
+              AI Workspace yang Terintegrasi Dengan Saluran Pesan Anda
             </h2>
             <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-              Meninggalkan keruwetan mengelola puluhan platform chat secara manual. Asisten pintar kami membantu mengorganisasikan, menyarikan, dan merespons segala hal untuk Anda.
+              Jadikan Telegram, WhatsApp, dan Slack sebagai asisten input nirkabel Anda untuk menyimpan catatan, melatih database, dan mengontrol workflow asisten AI.
             </p>
           </div>
 
@@ -341,9 +328,9 @@ export function LandingPage() {
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10 text-purple-400 text-sm font-bold border border-purple-500/20">
                 01
               </div>
-              <h3 className="text-lg font-bold text-white">Hubungkan Saluran</h3>
+              <h3 className="text-lg font-bold text-white">Hubungkan Gateway</h3>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                Hubungkan WhatsApp dengan QR scan, daftarkan token bot Telegram, atau instal webhook Slack Anda dalam hitungan detik.
+                Scan kode QR untuk WhatsApp, atau masukkan token API Telegram / Slack Anda secara terenkripsi ke dalam platform.
               </p>
             </div>
 
@@ -352,9 +339,9 @@ export function LandingPage() {
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10 text-purple-400 text-sm font-bold border border-purple-500/20">
                 02
               </div>
-              <h3 className="text-lg font-bold text-white">Latih Asisten AI</h3>
+              <h3 className="text-lg font-bold text-white">Latih Basis Pengetahuan</h3>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                Unggah dokumen pendukung, SOP, atau instruksi kerja Anda ke dalam Vault untuk melatih ingatan asisten RAG internal.
+                Kirim dokumen referensi lewat gateway chat atau unggah langsung ke Knowledge Vault untuk melatih kecerdasan asisten AI.
               </p>
             </div>
 
@@ -363,9 +350,9 @@ export function LandingPage() {
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10 text-purple-400 text-sm font-bold border border-purple-500/20">
                 03
               </div>
-              <h3 className="text-lg font-bold text-white">Delegasi & Kelola</h3>
+              <h3 className="text-lg font-bold text-white">Mulai Interaksi & Auto-Reply</h3>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                Gunakan dashboard inbox terpadu untuk memantau pesan masuk, transkripsi otomatis, dan jalankan kontrol suara.
+                Asisten AI siap memproses voice command Anda, mengarsipkan chat pribadi, atau menjawab otomatis pertanyaan dari klien Anda secara mandiri.
               </p>
             </div>
           </div>
@@ -382,10 +369,10 @@ export function LandingPage() {
             <div className="space-y-4 text-center md:text-left">
               <span className="text-[10px] bg-purple-500/10 text-purple-300 px-2 py-1 rounded-full font-bold uppercase tracking-wider">Keamanan Kelas Enterprise</span>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                Data Anda Selalu Terenkripsi & Aman
+                Data Kredensial Gateway Terenkripsi Aman
               </h2>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                Kami memahami privasi dan kerahasiaan komunikasi Anda. Seluruh kredensial API, token integrasi pihak ketiga, dan history chat disimpan menggunakan enkripsi tingkat tinggi **AES-256-GCM**. Hanya Anda yang memegang kunci untuk membukanya.
+                Kami memahami privasi dan kerahasiaan komunikasi Anda. Seluruh token gateway Telegram & Slack serta session file WhatsApp disimpan menggunakan enkripsi tingkat tinggi **AES-256-GCM**. Server Anda terlindungi dengan standar enkripsi asimetris dan firewall berlapis.
               </p>
             </div>
           </div>
@@ -396,14 +383,14 @@ export function LandingPage() {
       <section className="py-24 text-center relative border-t border-white/5">
         <div className="max-w-4xl mx-auto px-6 space-y-6">
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-            Siap Merevolusi Cara Anda Berkomunikasi?
+            Hubungkan Asisten AI Anda Sekarang
           </h2>
           <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-            Bergabunglah sekarang dan kelola semua pesan masuk dengan kepintaran buatan terbaik.
+            Mulai kelola basis pengetahuan dan otomatisasi asisten komunikasi Anda dengan gateway terbaik.
           </p>
           <div className="pt-4">
             <Link to="/login" className="px-10 py-4 bg-white text-slate-950 hover:bg-slate-100 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg shadow-white/5 transform hover:-translate-y-0.5 transition-all">
-              Mulai Sekarang Gratis <ArrowRight className="h-4 w-4" />
+              Hubungkan Sekarang <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
