@@ -122,11 +122,17 @@ export async function getLanguageModel(userId?: string): Promise<{ model: Langua
     // Fallback ke 'audio' provider (GPT-4o/Gemini/Qwen-audio juga bisa chat)
     if (!provider) provider = await findActiveProvider(userId, 'audio')
     if (provider) {
+      console.log(`[AI] getLanguageModel: found provider="${provider.name}" type=${provider.providerType} model=${provider.modelId}`)
       const npm = await resolveNpmPackage(provider.name) ?? '@ai-sdk/openai-compatible'
+      console.log(`[AI] getLanguageModel: npm=${npm}, baseUrl=${provider.apiBaseUrl}`)
       const sdk = createProviderForNpm(npm, decrypt(provider.apiKey), provider.apiBaseUrl)
       return { model: sdk.chat(provider.modelId), modelId: provider.modelId }
     }
-  } catch { /* noop */ }
+    console.warn(`[AI] getLanguageModel: no provider found for userId=${userId}`)
+  } catch (err) {
+    console.error('[AI] getLanguageModel error:', err)
+    return null
+  }
   return null
 }
 

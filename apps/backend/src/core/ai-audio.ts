@@ -49,6 +49,8 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
     const finalExt = processedAudioPath.split('.').pop()?.toLowerCase() ?? 'wav'
     const mediaType = finalExt === 'webm' ? 'audio/webm' : finalExt === 'mp3' ? 'audio/mpeg' : 'audio/wav'
 
+    console.log(`[AUDIO] transcribeAudio: model=${model.modelId}, mediaType=${mediaType}, bufferSize=${audioBuffer.length}`)
+
     const { text } = await generateText({
       model: model.model,
       messages: [
@@ -78,6 +80,9 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
     if (wasTranscoded) {
       fs.unlinkSync(processedAudioPath)
     }
+
+    console.error(`[AUDIO] transcribeAudio error:`, err?.message ?? err)
+    console.error(`[AUDIO] statusCode:`, err?.statusCode, `status:`, err?.status)
 
     // Some providers return 400/404 for unsupported content types
     if (err?.statusCode === 404 || err?.statusCode === 400 || err?.status === 404 || err?.status === 400) {
