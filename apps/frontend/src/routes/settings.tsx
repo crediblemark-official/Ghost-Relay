@@ -45,9 +45,9 @@ function SettingsPage() {
 
         {/* Vertical Sidebar layout */}
         <div className="flex flex-1 gap-8 items-start">
-          
+
           {/* Left Column: Vertical tab menu */}
-          <div className="w-48 shrink-0 space-y-1.5 sticky top-0">
+          <div className="w-48 shrink-0 space-y-1.5 sticky top-1">
             {tabs.map(tab => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -55,11 +55,10 @@ function SettingsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all duration-150 ${
-                    isActive
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all duration-150 ${isActive
                       ? 'bg-primary/10 text-primary font-bold'
                       : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   <span className="text-xs">{tab.label}</span>
