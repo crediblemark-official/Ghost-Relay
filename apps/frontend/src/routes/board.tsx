@@ -153,25 +153,22 @@ function BoardPage() {
     {
       id: 'todo' as const,
       title: 'Siap Dikerjakan',
-      subtitle: 'Tugas baru yang diurai AI',
       color: 'border-t-slate-500',
-      icon: <ListTodo className="h-4 w-4 text-slate-500" />,
+      icon: <ListTodo className="h-3.5 w-3.5 text-slate-500" />,
       bg: 'bg-card/45'
     },
     {
       id: 'in_progress' as const,
       title: 'Sedang Dikerjakan',
-      subtitle: 'Tugas dalam pengerjaan aktif',
       color: 'border-t-blue-500',
-      icon: <PlayCircle className="h-4 w-4 text-blue-500" />,
+      icon: <PlayCircle className="h-3.5 w-3.5 text-blue-500" />,
       bg: 'bg-blue-500/[0.015]'
     },
     {
       id: 'done' as const,
       title: 'Selesai',
-      subtitle: 'Tugas yang telah rampung',
       color: 'border-t-emerald-500',
-      icon: <CheckCircle2 className="h-4 w-4 text-emerald-500" />,
+      icon: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />,
       bg: 'bg-emerald-500/[0.015]'
     }
   ]
@@ -179,44 +176,44 @@ function BoardPage() {
   return (
     <div className="flex flex-1 flex-col bg-background min-h-screen">
       {/* Top Banner Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border bg-card/40 backdrop-blur-md px-8 py-5">
+      <div className="flex shrink-0 items-center justify-between border-b border-border bg-card/40 backdrop-blur-md px-5 py-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            Papan Kanban Tugas <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">AI-Generated</span>
+          <h1 className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
+            Papan Kanban Tugas <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">AI-Generated</span>
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             Ekstraksi tugas otomatis dari transkrip voice note menggunakan Qwen LLM. Geser kartu untuk mengubah status pengerjaan.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={() => refetch()} 
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
             title="Refresh Papan"
           >
-            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Filter and Search Action Bar */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-card/10 px-8 py-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-card/10 px-5 py-2.5">
         {/* Search */}
         <div className="relative w-72 max-w-full">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
           <input
             type="text"
             placeholder="Cari deskripsi tugas atau pembuat..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 rounded-lg border border-border bg-card text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+            className="w-full h-8 pl-8 pr-3 rounded-lg border border-border bg-card text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
           />
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Filter className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Filter className="h-3 w-3" />
             <span>Filter:</span>
           </div>
 
@@ -224,7 +221,7 @@ function BoardPage() {
           <select
             value={filterDivisi}
             onChange={(e) => setFilterDivisi(e.target.value)}
-            className="h-9 px-3 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
+            className="h-8 px-2.5 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
           >
             <option value="all">Semua Divisi</option>
             <option value="backend">Backend</option>
@@ -239,7 +236,7 @@ function BoardPage() {
           <select
             value={filterPrioritas}
             onChange={(e) => setFilterPrioritas(e.target.value)}
-            className="h-9 px-3 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
+            className="h-8 px-2.5 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
           >
             <option value="all">Semua Prioritas</option>
             <option value="tinggi">Tinggi</option>
@@ -252,12 +249,12 @@ function BoardPage() {
       {/* Main Board Columns Area */}
       {isLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground py-20 gap-3">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+          <RefreshCw className="h-7 w-7 animate-spin text-primary" />
           <p className="text-xs">Mengambil daftar tugas...</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-x-auto p-8 bg-muted/20">
-          <div className="flex gap-6 h-full min-w-[900px] items-stretch">
+        <div className="flex-1 overflow-x-auto p-4 bg-muted/20">
+          <div className="flex gap-4 h-full min-w-[900px] items-stretch">
             {columns.map(col => {
               const columnTasks = getTasksByStatus(col.id)
               const isOver = draggingOverColumn === col.id
@@ -268,27 +265,27 @@ function BoardPage() {
                   onDragOver={(e) => handleDragOver(e, col.id)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.id)}
-                  className={`flex flex-col w-1/3 rounded-xl border border-border bg-card/65 backdrop-blur-md overflow-hidden transition-all duration-200 border-t-4 ${col.color} ${col.bg} ${
+                  className={`flex flex-col w-1/3 rounded-lg border border-border bg-card/65 backdrop-blur-md overflow-hidden transition-all duration-200 border-t-2 ${col.color} ${col.bg} ${
                     isOver ? 'ring-2 ring-primary/40 border-primary scale-[1.01]' : ''
                   }`}
                 >
                   {/* Column Header */}
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card/30">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border bg-card/30">
+                    <div className="flex items-center gap-1.5">
                       {col.icon}
                       <h2 className="text-xs font-bold text-foreground">{col.title}</h2>
-                      <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-semibold text-muted-foreground">
+                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full font-semibold text-muted-foreground">
                         {columnTasks.length}
                       </span>
                     </div>
                   </div>
 
                   {/* Tasks List */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3.5 max-h-[calc(100vh-270px)]">
+                  <div className="flex-1 overflow-y-auto p-2.5 space-y-2 max-h-[calc(100vh-190px)]">
                     {columnTasks.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground border border-dashed border-border/80 rounded-lg">
-                        <ListTodo className="h-6 w-6 opacity-20 mb-2" />
-                        <span className="text-[10px]">Belum ada tugas di kolom ini</span>
+                      <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground border border-dashed border-border/80 rounded-lg">
+                        <ListTodo className="h-5 w-5 opacity-20 mb-1.5" />
+                        <span className="text-[10px]">Belum ada tugas</span>
                       </div>
                     ) : (
                       columnTasks.map(task => (
@@ -296,12 +293,12 @@ function BoardPage() {
                           key={task.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, task.messageId, task.taskIndex)}
-                          className="group relative flex flex-col p-4 rounded-xl border border-border bg-card hover:bg-accent/40 shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing border-l-3 border-l-primary/30"
+                          className="group relative flex flex-col p-2.5 rounded-lg border border-border bg-card hover:bg-accent/40 shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing border-l-2 border-l-primary/30"
                         >
                           {/* Top Badges */}
-                          <div className="flex items-center justify-between gap-2 mb-2.5">
+                          <div className="flex items-center justify-between gap-2 mb-2">
                             {/* Divisi Badge */}
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-semibold tracking-tight uppercase ${getDivisiColor(task.divisi)}`}>
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[9px] font-semibold tracking-tight uppercase ${getDivisiColor(task.divisi)}`}>
                               {getDivisiIcon(task.divisi)}
                               {task.divisi}
                             </span>
@@ -310,12 +307,12 @@ function BoardPage() {
                           </div>
 
                           {/* Task Description */}
-                          <p className="text-xs text-foreground font-medium leading-relaxed mb-3.5">
+                          <p className="text-xs text-foreground font-medium leading-normal mb-2.5">
                             {task.deskripsi}
                           </p>
 
                           {/* Info Footer */}
-                          <div className="flex flex-col gap-1.5 pt-3 border-t border-border/40 text-[10px] text-muted-foreground">
+                          <div className="flex flex-col gap-1 pt-2 border-t border-border/40 text-[10px] text-muted-foreground">
                             {/* Deadline */}
                             {task.deadline ? (
                               <div className="flex items-center gap-1 text-amber-500 font-medium">
@@ -337,11 +334,11 @@ function BoardPage() {
                           </div>
 
                           {/* Mobile Quick Action Status Changer */}
-                          <div className="absolute top-2 right-2 flex opacity-0 group-hover:opacity-100 transition-opacity gap-1 bg-background/95 border border-border p-1 rounded-md shadow-sm">
+                          <div className="absolute top-1.5 right-1.5 flex opacity-0 group-hover:opacity-100 transition-opacity gap-0.5 bg-background/95 border border-border p-0.5 rounded shadow-sm">
                             {task.status !== 'todo' && (
                               <button
                                 onClick={() => handleUpdateStatus(task.messageId, task.taskIndex, 'todo')}
-                                className="p-1 hover:bg-accent text-muted-foreground hover:text-foreground rounded transition-colors"
+                                className="p-0.5 hover:bg-accent text-muted-foreground hover:text-foreground rounded transition-colors"
                                 title="Kembalikan ke Siap Dikerjakan"
                               >
                                 <ListTodo className="h-3 w-3" />
@@ -350,7 +347,7 @@ function BoardPage() {
                             {task.status !== 'in_progress' && (
                               <button
                                 onClick={() => handleUpdateStatus(task.messageId, task.taskIndex, 'in_progress')}
-                                className="p-1 hover:bg-accent text-muted-foreground hover:text-foreground rounded transition-colors"
+                                className="p-0.5 hover:bg-accent text-muted-foreground hover:text-foreground rounded transition-colors"
                                 title="Pindahkan ke Sedang Dikerjakan"
                               >
                                 <PlayCircle className="h-3 w-3" />
@@ -359,7 +356,7 @@ function BoardPage() {
                             {task.status !== 'done' && (
                               <button
                                 onClick={() => handleUpdateStatus(task.messageId, task.taskIndex, 'done')}
-                                className="p-1 hover:bg-accent text-muted-foreground hover:text-foreground rounded transition-colors"
+                                className="p-0.5 hover:bg-accent text-muted-foreground hover:text-foreground rounded transition-colors"
                                 title="Pindahkan ke Selesai"
                               >
                                 <CheckCircle2 className="h-3 w-3" />
