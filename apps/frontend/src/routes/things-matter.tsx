@@ -99,7 +99,8 @@ function ThingsMatterPage() {
   return (
     <div className="flex flex-1 flex-col bg-background min-h-screen">
       {/* Header Banner */}
-      <div className="shrink-0 border-b border-border bg-card/40 backdrop-blur-md">
+      <div className="shrink-0 border-b border-border/60 bg-gradient-to-r from-primary/5 via-background to-background backdrop-blur-md relative">
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
         <div className="max-w-6xl mx-auto w-full flex flex-wrap items-center justify-between gap-4 px-5 py-2.5">
           {/* Left Section: Title & Description */}
           <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4">
