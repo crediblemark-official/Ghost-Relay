@@ -23,12 +23,7 @@ let cachedClient: ReturnType<typeof createOpenAI> | null = null
 let cachedApiKey = ''
 
 export async function getQwenApiKey(userId?: string): Promise<string | null> {
-  // 1. Check process.env
-  if (process.env.DASHSCOPE_API_KEY) {
-    return process.env.DASHSCOPE_API_KEY
-  }
-
-  // 2. Check DB AIProvider
+  // Check DB AIProvider
   try {
     const provider = await db.aIProvider.findFirst({
       where: {

@@ -65,7 +65,7 @@ function QwenCloudStatus() {
             <div className="text-xs text-slate-400 mt-1">
               {data.configured
                 ? `${data.modelsCount} models · Primary provider for chat, embedding, and audio`
-                : 'Set DASHSCOPE_API_KEY in environment to enable'
+                : 'Tambahkan provider Qwen di daftar bawah untuk mengaktifkan'
               }
             </div>
           </div>
