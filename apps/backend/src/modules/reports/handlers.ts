@@ -1,6 +1,6 @@
 import type { FastifyRequest } from 'fastify'
 import { db } from '@ghost/database'
-import { summarizeText } from '../../core/ai-chat.js'
+import { summarizeText, chatCompletion } from '../../core/ai-chat.js'
 
 export async function handleGetDailyReport(req: FastifyRequest) {
   const { date } = req.query as { date?: string }
@@ -122,4 +122,62 @@ export async function handleEmailReport(req: FastifyRequest) {
   } catch (err) {
     return { success: false, error: 'Failed to send email' }
   }
+}
+
+export async function handleGetThingsMatterReport(req: FastifyRequest) {
+  const { date } = req.query as { date?: string }
+  const now = new Date()
+  const reportDate = date
+    ? new Date(date + 'T00:00:00.000Z')
+    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const nextDay = new Date(reportDate)
+  nextDay.setDate(nextDay.getDate() + 1)
+
+  const rows = await db.message.findMany({
+    where: {
+      userId: req.userId,
+      timestamp: {
+        gte: reportDate,
+        lt: nextDay,
+      },
+    },
+    orderBy: { timestamp: 'asc' },
+  })
+
+  if (!rows.length) {
+    return { report: '### Tidak ada aktivitas obrolan pada tanggal ini.', messageCount: 0, date: reportDate.toISOString().slice(0, 10) }
+  }
+
+  const logLines = rows.map((m: any) => {
+    const dir = m.isOutgoing ? '→' : '←'
+    const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '??:??'
+    return `[${time}] ${dir} [${m.platform}] ${m.senderName ?? ''}: ${m.content ?? '(voice/file)'}`
+  })
+
+  const chatLog = logLines.join('\n')
+  let report = ''
+
+  try {
+    const prompt = `Kamu adalah asisten AI senior. Buatlah laporan aktivitas dan koordinasi tim berdasarkan log chat hari ini menggunakan format 5W1H yang terstruktur, rapi, dan mudah dipahami.
+Format laporan harus dalam bahasa Indonesia dan menyertakan aspek-aspek berikut untuk setiap poin aktivitas penting:
+1. **WHAT (Apa)**: Detail deskripsi aktivitas, insiden, atau pekerjaan yang terjadi.
+2. **WHO (Siapa)**: Siapa yang mengerjakan, menginstruksikan, atau terlibat dalam aktivitas tersebut.
+3. **WHERE (Di mana)**: Di platform mana obrolan atau aksi tersebut terjadi (WhatsApp/Telegram/Slack/Web).
+4. **WHEN (Kapan)**: Kapan waktu obrolan berlangsung atau tenggat waktu tugas yang disebutkan.
+5. **WHY (Mengapa)**: Mengapa keputusan ini diambil atau latar belakang tingkat kepentingan aktivitas tersebut.
+6. **HOW (Bagaimana)**: Bagaimana status pengerjaan atau tindakan penyelesaian saat ini.
+
+Log Chat Hari Ini:
+${chatLog}
+
+Kembalikan laporan dalam format Markdown yang rapi dengan heading dan bullet points.`
+
+    report = await chatCompletion('', [
+      { role: 'user', content: prompt }
+    ], { temperature: 0.3, userId: req.userId })
+  } catch (err) {
+    report = `### Gagal menggenerasi laporan otomatis via AI.\n\n**Log Percakapan Mentah:**\n\n\`\`\`\n${chatLog}\n\`\`\``
+  }
+
+  return { report, messageCount: rows.length, date: reportDate.toISOString().slice(0, 10) }
 }
