@@ -16,19 +16,59 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
   })
 
   const fs = await import('node:fs')
-  try {
-    const result = await client.audio.transcriptions.create({
-      model: provider.modelId,
-      file: fs.createReadStream(audioPath),
-    })
-    return result.text ?? ''
-  } catch (err: any) {
-    if (err?.status === 404) {
-      throw new Error(
-        `Audio transcription endpoint not found for provider "${provider.baseURL}". ` +
-        `The provider may not support audio transcription. Check your audio model ID ("${provider.modelId}") and base URL in Settings → AI Providers.`
-      )
+
+  const isMultimodalChatFallback =
+    provider.modelId.includes('qwen-audio') ||
+    provider.modelId.includes('qwen2-audio') ||
+    provider.modelId.includes('omni')
+
+  if (!isMultimodalChatFallback) {
+    try {
+      const result = await client.audio.transcriptions.create({
+        model: provider.modelId,
+        file: fs.createReadStream(audioPath),
+      })
+      return result.text ?? ''
+    } catch (err: any) {
+      if (err?.status !== 404) {
+        throw err
+      }
     }
-    throw err
+  }
+
+  try {
+    const audioBuffer = fs.readFileSync(audioPath)
+    const base64Audio = audioBuffer.toString('base64')
+    const ext = audioPath.split('.').pop()?.toLowerCase() ?? 'webm'
+    const format = ext === 'mp3' ? 'mp3' : ext === 'wav' ? 'wav' : 'wav'
+
+    const response = await client.chat.completions.create({
+      model: provider.modelId,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Transcribe this audio precisely. Output only the transcript text, no translations, no explanations, no markdown tags.',
+            },
+            {
+              type: 'input_audio',
+              input_audio: {
+                data: base64Audio,
+                format: format as any,
+              },
+            },
+          ],
+        },
+      ] as any,
+    })
+
+    const text = response.choices[0]?.message?.content?.trim() ?? ''
+    return text
+  } catch (chatErr: any) {
+    throw new Error(
+      `Audio transcription failed. Dedicated endpoint was not found and chat completion fallback failed: ${chatErr.message || chatErr}`
+    )
   }
 }

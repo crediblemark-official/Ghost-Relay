@@ -1,9 +1,3 @@
-Sempurna! Berikut **PRD (Product Requirements Document)** lengkap untuk produk **"Ghost Relay"** (atau kamu bisa ganti namanya nanti). 
-
-Saya kosongkan semua tech stack sesuai permintaanmu. Fokusnya murni ke **masalah, alur, dan fitur**—biar kamu tinggal eksekusi dengan tools apa pun yang kamu suka nanti.
-
----
-
 # PRD - Ghost Relay: Jembatan Koordinasi Tim
 **Versi:** 1.0  
 **Tujuan:** Hackathon Qwen Cloud (Track 1 & 4 Hybrid)  
