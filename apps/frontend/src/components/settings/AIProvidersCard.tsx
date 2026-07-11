@@ -22,17 +22,20 @@ const inputCls = 'h-8 w-full rounded-md border border-slate-200 bg-white px-3 te
 const selectCls = 'h-8 w-full appearance-none rounded-md border border-slate-200 bg-white px-3 pr-8 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-400 transition-all cursor-pointer'
 
 const QWEN_CHAT_OPTIONS = [
-  { id: 'qwen3.7-plus', name: 'Qwen 3.7 Plus', multimodal: false },
-  { id: 'qwen3.7-max', name: 'Qwen 3.7 Max', multimodal: false },
-  { id: 'qwen3.6-flash', name: 'Qwen 3.6 Flash', multimodal: false },
-  { id: 'qwen3.5-omni-plus', name: 'Qwen 3.5 Omni Plus 🎧 (Multimodal)', multimodal: true },
-  { id: 'qwen2-audio-instruct', name: 'Qwen 2 Audio Instruct 🎧 (Multimodal)', multimodal: true },
-  { id: 'qwen-audio-turbo', name: 'Qwen Audio Turbo 🎧 (Multimodal)', multimodal: true },
+  'qwen3.7-plus',
+  'qwen3.7-max',
+  'qwen3.6-flash',
+  'qwen3.5-omni-plus',
+  'qwen3.5-omni-flash',
+  'qwen2-audio-instruct',
+  'qwen-audio-turbo',
+  'qwen-vl-plus',
+  'qwen-vl-max',
 ]
 
 const QWEN_AUDIO_OPTIONS = [
-  { id: 'qwen3-asr-flash', name: 'Qwen 3 ASR Flash (Recommended)' },
-  { id: 'qwen3-omni-flash', name: 'Qwen 3 Omni Flash' },
+  'qwen3-asr-flash',
+  'qwen3-omni-flash',
 ]
 
 function QwenCloudStatus() {
@@ -64,7 +67,12 @@ function QwenCloudStatus() {
     }
   }, [config])
 
-  const isSelectedMultimodal = QWEN_CHAT_OPTIONS.find(m => m.id === chatModel)?.multimodal ?? false
+  const isSelectedMultimodal = (
+    chatModel.toLowerCase().includes('omni') ||
+    chatModel.toLowerCase().includes('audio') ||
+    chatModel.toLowerCase().includes('vl') ||
+    chatModel.toLowerCase().includes('vision')
+  )
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -119,7 +127,7 @@ function QwenCloudStatus() {
             </div>
             <div className="text-xs text-slate-400 mt-1">
               {status.configured
-                ? `${chatModel}${isSelectedMultimodal ? ' 🎧' : ''} · Primary provider for chat, embedding, and audio`
+                ? `${chatModel}${isSelectedMultimodal ? ' 🎧 (Multimodal)' : ''} · Primary provider for chat, embedding, and audio`
                 : 'Tambahkan API key untuk mengaktifkan model Qwen Cloud bawaan secara langsung'
               }
             </div>
@@ -156,20 +164,18 @@ function QwenCloudStatus() {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-600">Qwen Model</label>
               <div className="relative">
-                <select
+                <input
+                  list="qwen-models"
                   value={chatModel}
                   onChange={(e) => setChatModel(e.target.value)}
-                  className={selectCls}
-                >
+                  className={inputCls}
+                  placeholder="Ketik atau pilih model Qwen..."
+                />
+                <datalist id="qwen-models">
                   {QWEN_CHAT_OPTIONS.map(m => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
+                    <option key={m} value={m} />
                   ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </div>
+                </datalist>
               </div>
             </div>
 
@@ -177,20 +183,18 @@ function QwenCloudStatus() {
               <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
                 <label className="text-xs font-semibold text-slate-600">Audio/STT Model</label>
                 <div className="relative">
-                  <select
+                  <input
+                    list="qwen-audio-models"
                     value={audioModel}
                     onChange={(e) => setAudioModel(e.target.value)}
-                    className={selectCls}
-                  >
+                    className={inputCls}
+                    placeholder="Ketik atau pilih model audio..."
+                  />
+                  <datalist id="qwen-audio-models">
                     {QWEN_AUDIO_OPTIONS.map(m => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
+                      <option key={m} value={m} />
                     ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </div>
+                  </datalist>
                 </div>
               </div>
             )}

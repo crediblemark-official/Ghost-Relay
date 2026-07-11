@@ -111,12 +111,13 @@ export async function qwenTranscribe(
   const baseUrl = await getQwenBaseUrl(userId)
 
   const chatModel = await getSetting('qwen_chat_model') || QWEN_MODELS.chat
-  const isMultimodal = [
-    'qwen3.5-omni-plus',
-    'qwen3.5-omni-flash',
-    'qwen2-audio-instruct',
-    'qwen-audio-turbo'
-  ].includes(chatModel)
+  const normalized = chatModel.toLowerCase()
+  const isMultimodal = (
+    normalized.includes('omni') ||
+    normalized.includes('audio') ||
+    normalized.includes('vl') ||
+    normalized.includes('vision')
+  )
 
   const resolvedModel = isMultimodal
     ? chatModel
