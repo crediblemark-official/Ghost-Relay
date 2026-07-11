@@ -34,7 +34,9 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
   if (isWebm && !isGoogle) {
     const tempWavPath = join(tmpdir(), `${randomUUID()}.wav`)
     try {
-      execSync(`ffmpeg -i "${audioPath}" -acodec pcm_s16le -ar 16000 -ac 1 "${tempWavPath}" -y`, { stdio: 'ignore' })
+      const ffmpeg = await (import('@ffmpeg-installer/ffmpeg') as any)
+      const ffmpegPath = ffmpeg.default?.path || ffmpeg.path || 'ffmpeg'
+      execSync(`"${ffmpegPath}" -i "${audioPath}" -acodec pcm_s16le -ar 16000 -ac 1 "${tempWavPath}" -y`, { stdio: 'ignore' })
       processedAudioPath = tempWavPath
       wasTranscoded = true
     } catch (ffmpegErr) {
