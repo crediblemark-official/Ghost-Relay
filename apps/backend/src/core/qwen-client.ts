@@ -5,6 +5,8 @@
  */
 import { createOpenAI } from '@ai-sdk/openai'
 import type { LanguageModel, EmbeddingModel } from 'ai'
+import { db } from '@ghost/database'
+import { decrypt } from './encryption.js'
 
 const QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
 
@@ -20,32 +22,78 @@ export const QWEN_MODELS = {
 let cachedClient: ReturnType<typeof createOpenAI> | null = null
 let cachedApiKey = ''
 
-export function getQwenApiKey(): string | null {
-  return process.env.DASHSCOPE_API_KEY || null
+export async function getQwenApiKey(userId?: string): Promise<string | null> {
+  // 1. Check process.env
+  if (process.env.DASHSCOPE_API_KEY) {
+    return process.env.DASHSCOPE_API_KEY
+  }
+
+  // 2. Check DB AIProvider
+  try {
+    const provider = await db.aIProvider.findFirst({
+      where: {
+        OR: [
+          { name: { in: ['Qwen', 'DashScope', 'qwen', 'dashscope'] } },
+          { apiBaseUrl: { contains: 'dashscope' } },
+          { apiBaseUrl: { contains: 'aliyuncs.com' } }
+        ],
+        isActive: true
+      }
+    })
+    if (provider) {
+      return decrypt(provider.apiKey)
+    }
+  } catch (err) {
+    console.error('[QWEN] Failed to query Qwen API Key from DB:', err)
+  }
+
+  return null
 }
 
-export function isQwenAvailable(): boolean {
-  return !!getQwenApiKey()
+export async function isQwenAvailable(userId?: string): Promise<boolean> {
+  const key = await getQwenApiKey(userId)
+  return !!key
 }
 
-export function createQwenClient(apiKey?: string): ReturnType<typeof createOpenAI> {
-  const key = apiKey || getQwenApiKey() || ''
+export async function getQwenBaseUrl(userId?: string): Promise<string> {
+  try {
+    const provider = await db.aIProvider.findFirst({
+      where: {
+        OR: [
+          { name: { in: ['Qwen', 'DashScope', 'qwen', 'dashscope'] } },
+          { apiBaseUrl: { contains: 'dashscope' } },
+          { apiBaseUrl: { contains: 'aliyuncs.com' } }
+        ],
+        isActive: true
+      }
+    })
+    if (provider?.apiBaseUrl) {
+      return provider.apiBaseUrl
+    }
+  } catch {}
+  return QWEN_BASE_URL
+}
+
+export async function createQwenClient(apiKey?: string, userId?: string): Promise<ReturnType<typeof createOpenAI>> {
+  const key = apiKey || await getQwenApiKey(userId) || ''
+  const baseUrl = await getQwenBaseUrl(userId)
+
   if (cachedClient && cachedApiKey === key) return cachedClient
   cachedClient = createOpenAI({
     apiKey: key,
-    baseURL: QWEN_BASE_URL,
+    baseURL: baseUrl,
   })
   cachedApiKey = key
   return cachedClient
 }
 
-export function getQwenChatModel(modelId?: string): LanguageModel {
-  const client = createQwenClient()
+export async function getQwenChatModel(modelId?: string, userId?: string): Promise<LanguageModel> {
+  const client = await createQwenClient(undefined, userId)
   return client.chat(modelId || QWEN_MODELS.chat)
 }
 
-export function getQwenEmbeddingModel(modelId?: string): EmbeddingModel {
-  const client = createQwenClient()
+export async function getQwenEmbeddingModel(modelId?: string, userId?: string): Promise<EmbeddingModel> {
+  const client = await createQwenClient(undefined, userId)
   return client.textEmbeddingModel(modelId || QWEN_MODELS.embedding)
 }
 
@@ -57,14 +105,17 @@ export async function qwenTranscribe(
   audioBuffer: Buffer,
   mediaType: string,
   apiKey?: string,
+  userId?: string,
 ): Promise<string> {
-  const key = apiKey || getQwenApiKey()
-  if (!key) throw new Error('DASHSCOPE_API_KEY not set')
+  const key = apiKey || await getQwenApiKey(userId)
+  if (!key) throw new Error('DASHSCOPE_API_KEY not set and no Qwen provider found in Settings')
+
+  const baseUrl = await getQwenBaseUrl(userId)
 
   const audioBase64 = audioBuffer.toString('base64')
   const dataUri = `data:${mediaType};base64,${audioBase64}`
 
-  const res = await fetch(`${QWEN_BASE_URL}/chat/completions`, {
+  const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/chat/completions`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${key}`,
@@ -98,12 +149,14 @@ export async function qwenTranscribe(
 /**
  * Health check — verify API key works.
  */
-export async function qwenHealthCheck(apiKey?: string): Promise<{ ok: boolean; error?: string }> {
+export async function qwenHealthCheck(apiKey?: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    const key = apiKey || getQwenApiKey()
-    if (!key) return { ok: false, error: 'DASHSCOPE_API_KEY not set' }
+    const key = apiKey || await getQwenApiKey(userId)
+    if (!key) return { ok: false, error: 'DASHSCOPE_API_KEY not set and no Qwen provider found in Settings' }
 
-    const res = await fetch(`${QWEN_BASE_URL}/models`, {
+    const baseUrl = await getQwenBaseUrl(userId)
+
+    const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/models`, {
       headers: { 'Authorization': `Bearer ${key}` },
     })
 

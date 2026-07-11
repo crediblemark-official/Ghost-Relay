@@ -249,8 +249,9 @@ export async function handleTestProvider(req: FastifyRequest) {
 /**
  * Qwen Cloud status — built-in provider, checks DASHSCOPE_API_KEY
  */
-export async function handleQwenStatus() {
-  const configured = isQwenAvailable()
+export async function handleQwenStatus(request: any) {
+  const userId = request.user?.id
+  const configured = await isQwenAvailable(userId)
   return {
     configured,
     modelsCount: configured ? Object.keys(QWEN_MODELS).length : 0,

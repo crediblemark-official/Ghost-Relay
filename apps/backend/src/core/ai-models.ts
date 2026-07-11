@@ -12,7 +12,8 @@ export async function listAvailableModels(
   const QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
 
   // 1. Qwen Cloud models (built-in, always listed if API key exists)
-  if (isQwenAvailable()) {
+  const qwenOk = await isQwenAvailable(userId)
+  if (qwenOk) {
     const qwenModels = [
       { id: QWEN_MODELS.chat, name: 'Qwen 3.7 Plus (Chat)' },
       { id: QWEN_MODELS.chatFast, name: 'Qwen 3.6 Flash (Fast)' },

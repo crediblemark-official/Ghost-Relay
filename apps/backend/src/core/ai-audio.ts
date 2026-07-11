@@ -95,13 +95,14 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
   const finalExt = processedAudioPath.split('.').pop()?.toLowerCase() ?? 'wav'
   const mediaType = finalExt === 'webm' ? 'audio/webm' : finalExt === 'mp3' ? 'audio/mpeg' : 'audio/wav'
 
-  console.log(`[AUDIO] transcribeAudio: qwen=${isQwenAvailable()}, model=${model?.modelId}, mediaType=${mediaType}, size=${audioBuffer.length}`)
+  const qwenOk = await isQwenAvailable(userId)
+  console.log(`[AUDIO] transcribeAudio: qwen=${qwenOk}, model=${model?.modelId}, mediaType=${mediaType}, size=${audioBuffer.length}`)
 
   try {
     // 1. Qwen Cloud native STT (dedicated speech-to-text model)
-    if (isQwenAvailable()) {
+    if (qwenOk) {
       try {
-        const text = await qwenTranscribe(audioBuffer, mediaType)
+        const text = await qwenTranscribe(audioBuffer, mediaType, undefined, userId)
         if (text) {
           console.log(`[AUDIO] Qwen STT success: "${text.slice(0, 80)}..."`)
           return text

@@ -134,10 +134,11 @@ async function resolveDbProvider(userId: string | undefined, providerType: strin
  * Get LanguageModel — Qwen Cloud first, then user-configured providers.
  */
 export async function getLanguageModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
-  // 1. Qwen Cloud (built-in, just needs DASHSCOPE_API_KEY)
-  if (isQwenAvailable()) {
+  // 1. Qwen Cloud (built-in, just needs DASHSCOPE_API_KEY or DB Qwen Provider)
+  const qwenOk = await isQwenAvailable(userId)
+  if (qwenOk) {
     try {
-      const model = getQwenChatModel()
+      const model = await getQwenChatModel(undefined, userId)
       return { model, modelId: 'qwen3.7-plus' }
     } catch (err) {
       console.warn('[AI] Qwen Cloud unavailable, falling back to DB providers:', (err as Error).message)
@@ -150,7 +151,7 @@ export async function getLanguageModel(userId?: string): Promise<{ model: Langua
     return { model: dbResult.sdk.chat(dbResult.modelId), modelId: dbResult.modelId }
   }
 
-  console.warn(`[AI] getLanguageModel: no provider found (qwen=${isQwenAvailable()}, userId=${userId})`)
+  console.warn(`[AI] getLanguageModel: no provider found (qwen=${qwenOk}, userId=${userId})`)
   return null
 }
 
@@ -159,9 +160,10 @@ export async function getLanguageModel(userId?: string): Promise<{ model: Langua
  */
 export async function getEmbeddingModel(userId?: string): Promise<{ model: EmbeddingModel; modelId: string } | null> {
   // 1. Qwen Cloud
-  if (isQwenAvailable()) {
+  const qwenOk = await isQwenAvailable(userId)
+  if (qwenOk) {
     try {
-      const model = getQwenEmbeddingModel()
+      const model = await getQwenEmbeddingModel(undefined, userId)
       return { model, modelId: 'text-embedding-v4' }
     } catch (err) {
       console.warn('[AI] Qwen Cloud embedding unavailable:', (err as Error).message)
