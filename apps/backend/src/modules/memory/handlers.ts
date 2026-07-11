@@ -13,7 +13,14 @@ export async function handleSearchMemory(req: FastifyRequest, reply: FastifyRepl
     throw err
   }
   const { query, top_k = 3 } = body
-  const queryEmbedding = await generateEmbedding(query, req.userId)
+  let queryEmbedding: number[]
+  try {
+    queryEmbedding = await generateEmbedding(query, req.userId)
+  } catch (err) {
+    reply.status(400).send({ detail: (err as Error).message || 'AI provider not configured for embedding' })
+    return
+  }
+
   const searchWhere: Record<string, string> = req.workspaceId
     ? { workspaceId: req.workspaceId }
     : { userId: String(req.userId) }

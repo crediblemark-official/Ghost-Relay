@@ -58,18 +58,6 @@ export async function getQwenApiKey(userId?: string): Promise<string | null> {
     console.error('[QWEN] Failed to query Qwen API Key from DB:', err)
   }
 
-  // 3. Fallback: Cek dari Environment Variable
-  if (process.env.DASHSCOPE_API_KEY) {
-    return process.env.DASHSCOPE_API_KEY
-  }
-  if (process.env.OPENAI_API_KEY) {
-    // Pastikan ini adalah DashScope key dengan mengecek base URL atau polanya
-    const baseUrl = process.env.OPENAI_BASE_URL || ''
-    if (baseUrl.includes('dashscope') || baseUrl.includes('aliyuncs.com')) {
-      return process.env.OPENAI_API_KEY
-    }
-  }
-
   return null
 }
 
