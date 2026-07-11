@@ -12,7 +12,14 @@ import {
   searchProviders,
   getProviderModels,
 } from '../../core/models-dev.js'
-import { isQwenAvailable, QWEN_MODELS, getQwenApiKey, getQwenBaseUrl } from '../../core/qwen-client.js'
+import {
+  isQwenAvailable,
+  QWEN_MODELS,
+  getQwenApiKey,
+  getQwenBaseUrl,
+  QWEN_BASE_URL_OPENAI,
+  QWEN_BASE_URL_ANTHROPIC
+} from '../../core/qwen-client.js'
 import { setSetting, deleteSetting } from '../../core/db-settings.js'
 
 function maskKey(encrypted: string): string {
@@ -263,23 +270,118 @@ export async function handleGetQwenConfig(request: any) {
   const userId = request.user?.id
   const key = await getQwenApiKey(userId)
   const { getSetting } = await import('../../core/db-settings.js')
-  const scope = await getSetting('qwen_scope') || 'international'
-  const chatModel = await getSetting('qwen_chat_model') || QWEN_MODELS.chat
-  const audioModel = await getSetting('qwen_audio_model') || QWEN_MODELS.stt
+
+  let scope = 'personal'
+  let compatibility = 'openai'
+  let chatModel: string = QWEN_MODELS.chat
+  let audioModel: string = QWEN_MODELS.stt
+
+  try {
+    const provider = await db.aIProvider.findFirst({
+      where: {
+        userId,
+        name: 'Qwen Cloud',
+        providerType: 'chat'
+      }
+    })
+    if (provider) {
+      scope = provider.scope
+      chatModel = provider.modelId
+      compatibility = provider.apiBaseUrl.includes('apps/anthropic') ? 'anthropic' : 'openai'
+    } else {
+      scope = await getSetting('qwen_scope') || 'personal'
+      chatModel = await getSetting('qwen_chat_model') || QWEN_MODELS.chat
+      compatibility = await getSetting('qwen_compatibility') || 'openai'
+    }
+    audioModel = await getSetting('qwen_audio_model') || QWEN_MODELS.stt
+  } catch {}
+
   return {
     apiKey: key ? 'sk-••••••••' + key.slice(-4) : '',
     configured: !!key,
     scope,
+    compatibility,
     chatModel,
     audioModel,
   }
 }
 
 export async function handlePostQwenConfig(request: any, reply: any) {
-  const { apiKey, chatModel, audioModel, scope } = request.body as {
-    apiKey?: string; chatModel?: string; audioModel?: string; scope?: string
+  const userId = request.user?.id
+  const { apiKey, chatModel, audioModel, scope, compatibility } = request.body as {
+    apiKey?: string; chatModel?: string; audioModel?: string; scope?: string; compatibility?: string
   }
 
+  // Resolve existing key if new key is masked
+  let finalEncryptedKey = ''
+  if (apiKey !== undefined && apiKey !== '') {
+    if (apiKey.startsWith('sk-••••••••')) {
+      const existingKey = await getQwenApiKey(userId)
+      if (existingKey) {
+        finalEncryptedKey = encrypt(existingKey)
+      }
+    } else {
+      finalEncryptedKey = encrypt(apiKey)
+    }
+  }
+
+  // Resolve scope & workspaceId if scope = 'workspace'
+  let workspaceId: string | null = null
+  const targetScope = scope || 'personal'
+  if (targetScope === 'workspace') {
+    const ws = await findWorkspaceByMemberRole(userId, 'admin')
+    if (!ws) {
+      reply.status(403).send({ detail: 'You are not a workspace admin.' })
+      return
+    }
+    workspaceId = ws.id
+  }
+
+  // Determine base url based on compatibility
+  const targetCompatibility = compatibility || 'openai'
+  const baseUrl = targetCompatibility === 'anthropic' ? QWEN_BASE_URL_ANTHROPIC : QWEN_BASE_URL_OPENAI
+
+  // Upsert into AIProvider table
+  try {
+    const existing = await db.aIProvider.findFirst({
+      where: {
+        userId,
+        name: 'Qwen Cloud',
+        providerType: 'chat'
+      }
+    })
+
+    if (existing) {
+      await db.aIProvider.update({
+        where: { id: existing.id },
+        data: {
+          apiKey: finalEncryptedKey || existing.apiKey,
+          modelId: chatModel || existing.modelId,
+          scope: targetScope,
+          workspaceId,
+          apiBaseUrl: baseUrl
+        }
+      })
+    } else {
+      await db.aIProvider.create({
+        data: {
+          userId,
+          name: 'Qwen Cloud',
+          providerType: 'chat',
+          apiKey: finalEncryptedKey,
+          modelId: chatModel || QWEN_MODELS.chat,
+          apiBaseUrl: baseUrl,
+          scope: targetScope,
+          workspaceId,
+          isActive: true
+        }
+      })
+    }
+  } catch (err) {
+    console.error('[QWEN] Failed to upsert Qwen provider in DB:', err)
+  }
+
+  // Also update SystemSetting for compatibility
   if (apiKey !== undefined) {
     if (apiKey === '') {
       await deleteSetting('qwen_api_key')
@@ -287,17 +389,17 @@ export async function handlePostQwenConfig(request: any, reply: any) {
       await setSetting('qwen_api_key', encrypt(apiKey))
     }
   }
-
   if (chatModel !== undefined) {
     await setSetting('qwen_chat_model', chatModel)
   }
-
   if (audioModel !== undefined) {
     await setSetting('qwen_audio_model', audioModel)
   }
-
   if (scope !== undefined) {
     await setSetting('qwen_scope', scope)
+  }
+  if (compatibility !== undefined) {
+    await setSetting('qwen_compatibility', compatibility)
   }
 
   return { status: 'ok', message: 'Qwen configuration updated' }

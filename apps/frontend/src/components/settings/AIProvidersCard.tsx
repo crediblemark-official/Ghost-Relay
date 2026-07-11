@@ -39,12 +39,17 @@ const QWEN_AUDIO_OPTIONS = [
   'qwen3-omni-flash',
 ]
 
-function QwenCloudStatus() {
+interface QwenCloudStatusProps {
+  userRole: string
+}
+
+function QwenCloudStatus({ userRole }: QwenCloudStatusProps) {
   const queryClient = useQueryClient()
   const [apiKey, setApiKey] = useState('')
   const [chatModel, setChatModel] = useState('qwen3.7-plus')
   const [audioModel, setAudioModel] = useState('qwen3-asr-flash')
-  const [scope, setScope] = useState<'openai' | 'anthropic'>('openai')
+  const [qwenScope, setQwenScope] = useState<'personal' | 'global' | 'workspace'>('personal')
+  const [compatibility, setCompatibility] = useState<'openai' | 'anthropic'>('openai')
   const [showInput, setShowInput] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -55,7 +60,7 @@ function QwenCloudStatus() {
     staleTime: 300_000,
   })
 
-  const { data: config, isLoading: loadingConfig } = useQuery<{ apiKey: string; chatModel: string; audioModel: string; scope: string; configured: boolean }>({
+  const { data: config, isLoading: loadingConfig } = useQuery<{ apiKey: string; chatModel: string; audioModel: string; scope: string; compatibility: string; configured: boolean }>({
     queryKey: ['qwen-cloud-config'],
     queryFn: () => api.get('/ai/qwen/config', { silent: true }),
     retry: false,
@@ -75,7 +80,8 @@ function QwenCloudStatus() {
       if (config.apiKey) setApiKey(config.apiKey)
       if (config.chatModel) setChatModel(config.chatModel)
       if (config.audioModel) setAudioModel(config.audioModel)
-      if (config.scope) setScope(config.scope as 'openai' | 'anthropic')
+      if (config.scope) setQwenScope(config.scope as 'personal' | 'global' | 'workspace')
+      if (config.compatibility) setCompatibility(config.compatibility as 'openai' | 'anthropic')
     }
   }, [config])
 
@@ -90,7 +96,7 @@ function QwenCloudStatus() {
     e.preventDefault()
     setSaving(true)
     try {
-      await api.post('/ai/qwen/config', { apiKey, chatModel, audioModel, scope })
+      await api.post('/ai/qwen/config', { apiKey, chatModel, audioModel, scope: qwenScope, compatibility })
       queryClient.invalidateQueries({ queryKey: ['qwen-cloud-status'] })
       queryClient.invalidateQueries({ queryKey: ['qwen-cloud-config'] })
       queryClient.invalidateQueries({ queryKey: ['ai-models'] })
@@ -137,12 +143,23 @@ function QwenCloudStatus() {
                 </Badge>
               )}
               <Badge variant="outline" className={`text-[10px] font-bold tracking-wider rounded px-2 py-0.5 ${
-                scope === 'anthropic'
+                compatibility === 'anthropic'
                   ? 'bg-purple-50 text-purple-600 border border-purple-200'
                   : 'bg-sky-50 text-sky-600 border border-sky-200'
               }`}>
-                {scope === 'anthropic' ? '🦉 Anthropic Compat' : '🌐 OpenAI Compat'}
+                {compatibility === 'anthropic' ? '🦉 Anthropic Compat' : '🌐 OpenAI Compat'}
               </Badge>
+              {status.configured && (
+                <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-wider rounded px-2 py-0.5 ${
+                  qwenScope === 'global'
+                    ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                    : qwenScope === 'workspace'
+                      ? 'bg-amber-50 text-amber-600 border border-amber-200'
+                      : 'bg-pink-50 text-pink-600 border border-pink-200'
+                }`}>
+                  {qwenScope === 'global' ? 'Global' : qwenScope === 'workspace' ? 'Workspace' : 'Personal'}
+                </Badge>
+              )}
             </div>
             <div className="text-xs text-slate-400 mt-1">
               {status.configured
@@ -179,14 +196,66 @@ function QwenCloudStatus() {
             </div>
           </div>
 
+          {/* Access Scope (Personal / Global / Share with Team) */}
+          {userRole === 'owner' && (
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Scope</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="qwen-scope"
+                    checked={qwenScope === 'personal'}
+                    onChange={() => setQwenScope('personal')}
+                  />
+                  Personal
+                </label>
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="qwen-scope"
+                    checked={qwenScope === 'global'}
+                    onChange={() => setQwenScope('global')}
+                  />
+                  Global
+                </label>
+              </div>
+            </div>
+          )}
+          {userRole !== 'owner' && (
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Scope</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="qwen-scope"
+                    checked={qwenScope === 'personal'}
+                    onChange={() => setQwenScope('personal')}
+                  />
+                  Personal
+                </label>
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="qwen-scope"
+                    checked={qwenScope === 'workspace'}
+                    onChange={() => setQwenScope('workspace')}
+                  />
+                  Share with Team
+                </label>
+              </div>
+            </div>
+          )}
+
           {/* Scope + Model dalam 1 grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600">Scope / Compatibility</label>
+              <label className="text-xs font-semibold text-slate-600">Compatibility Mode</label>
               <div className="relative">
                 <select
-                  value={scope}
-                  onChange={(e) => setScope(e.target.value as 'openai' | 'anthropic')}
+                  value={compatibility}
+                  onChange={(e) => setCompatibility(e.target.value as 'openai' | 'anthropic')}
                   className={selectCls}
                 >
                   <option value="openai">🌐 OpenAI Compatible (compatible-mode)</option>
@@ -489,7 +558,7 @@ export function AIProvidersCard() {
 
       <div className="pt-2 space-y-3">
         {/* Qwen Cloud Status — built-in default provider */}
-        <QwenCloudStatus />
+        <QwenCloudStatus userRole={userRole} />
 
         {isLoading ? (
           <div className="space-y-3">

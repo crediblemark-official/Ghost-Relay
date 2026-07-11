@@ -10,8 +10,8 @@ import { decrypt } from './encryption.js'
 
 import { getSetting } from './db-settings.js'
 
-const QWEN_BASE_URL_OPENAI = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
-const QWEN_BASE_URL_ANTHROPIC = 'https://dashscope-intl.aliyuncs.com/apps/anthropic'
+export const QWEN_BASE_URL_OPENAI = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+export const QWEN_BASE_URL_ANTHROPIC = 'https://dashscope-intl.aliyuncs.com/apps/anthropic'
 
 // Default ke OpenAI Compatible
 const QWEN_BASE_URL = QWEN_BASE_URL_OPENAI
@@ -29,7 +29,62 @@ let cachedClient: ReturnType<typeof createOpenAI> | null = null
 let cachedApiKey = ''
 
 export async function getQwenApiKey(userId?: string): Promise<string | null> {
-  // 1. Cek dari SystemSetting (konfigurasi mandiri Qwen Cloud)
+  // 1. Cek dari DB AIProvider menggunakan user-scoping yang tepat
+  if (userId) {
+    try {
+      // 1.1 Personal provider
+      let provider = await db.aIProvider.findFirst({
+        where: {
+          userId,
+          isActive: true,
+          scope: 'personal',
+          OR: [
+            { name: { in: ['Qwen Cloud', 'Qwen', 'DashScope', 'qwen', 'dashscope'] } },
+            { apiBaseUrl: { contains: 'dashscope' } },
+            { apiBaseUrl: { contains: 'aliyuncs.com' } }
+          ]
+        }
+      })
+      if (provider) return decrypt(provider.apiKey)
+
+      // 1.2 Workspace provider
+      const { findWorkspaceByMember } = await import('./workspace.js')
+      const ws = await findWorkspaceByMember(userId)
+      if (ws) {
+        provider = await db.aIProvider.findFirst({
+          where: {
+            workspaceId: ws.id,
+            isActive: true,
+            scope: 'workspace',
+            OR: [
+              { name: { in: ['Qwen Cloud', 'Qwen', 'DashScope', 'qwen', 'dashscope'] } },
+              { apiBaseUrl: { contains: 'dashscope' } },
+              { apiBaseUrl: { contains: 'aliyuncs.com' } }
+            ]
+          }
+        })
+        if (provider) return decrypt(provider.apiKey)
+      }
+
+      // 1.3 Global provider
+      provider = await db.aIProvider.findFirst({
+        where: {
+          scope: 'global',
+          isActive: true,
+          OR: [
+            { name: { in: ['Qwen Cloud', 'Qwen', 'DashScope', 'qwen', 'dashscope'] } },
+            { apiBaseUrl: { contains: 'dashscope' } },
+            { apiBaseUrl: { contains: 'aliyuncs.com' } }
+          ]
+        }
+      })
+      if (provider) return decrypt(provider.apiKey)
+    } catch (err) {
+      console.error('[QWEN] Scoped query failed:', err)
+    }
+  }
+
+  // 2. Fallback: Cek dari SystemSetting (global/legacy)
   try {
     const keySetting = await getSetting('qwen_api_key')
     if (keySetting) {
@@ -37,25 +92,6 @@ export async function getQwenApiKey(userId?: string): Promise<string | null> {
     }
   } catch (err) {
     console.error('[QWEN] Failed to read qwen_api_key from settings:', err)
-  }
-
-  // 2. Fallback: Cek dari DB AIProvider
-  try {
-    const provider = await db.aIProvider.findFirst({
-      where: {
-        OR: [
-          { name: { in: ['Qwen', 'DashScope', 'qwen', 'dashscope'] } },
-          { apiBaseUrl: { contains: 'dashscope' } },
-          { apiBaseUrl: { contains: 'aliyuncs.com' } }
-        ],
-        isActive: true
-      }
-    })
-    if (provider) {
-      return decrypt(provider.apiKey)
-    }
-  } catch (err) {
-    console.error('[QWEN] Failed to query Qwen API Key from DB:', err)
   }
 
   return null
@@ -67,7 +103,60 @@ export async function isQwenAvailable(userId?: string): Promise<boolean> {
 }
 
 export async function getQwenBaseUrl(userId?: string): Promise<string> {
-  // Cek scope setting dulu
+  // 1. Cek dari DB AIProvider menggunakan user-scoping yang tepat
+  if (userId) {
+    try {
+      // 1.1 Personal provider
+      let provider = await db.aIProvider.findFirst({
+        where: {
+          userId,
+          isActive: true,
+          scope: 'personal',
+          OR: [
+            { name: { in: ['Qwen Cloud', 'Qwen', 'DashScope', 'qwen', 'dashscope'] } },
+            { apiBaseUrl: { contains: 'dashscope' } },
+            { apiBaseUrl: { contains: 'aliyuncs.com' } }
+          ]
+        }
+      })
+      if (provider?.apiBaseUrl) return provider.apiBaseUrl
+
+      // 1.2 Workspace provider
+      const { findWorkspaceByMember } = await import('./workspace.js')
+      const ws = await findWorkspaceByMember(userId)
+      if (ws) {
+        provider = await db.aIProvider.findFirst({
+          where: {
+            workspaceId: ws.id,
+            isActive: true,
+            scope: 'workspace',
+            OR: [
+              { name: { in: ['Qwen Cloud', 'Qwen', 'DashScope', 'qwen', 'dashscope'] } },
+              { apiBaseUrl: { contains: 'dashscope' } },
+              { apiBaseUrl: { contains: 'aliyuncs.com' } }
+            ]
+          }
+        })
+        if (provider?.apiBaseUrl) return provider.apiBaseUrl
+      }
+
+      // 1.3 Global provider
+      provider = await db.aIProvider.findFirst({
+        where: {
+          scope: 'global',
+          isActive: true,
+          OR: [
+            { name: { in: ['Qwen Cloud', 'Qwen', 'DashScope', 'qwen', 'dashscope'] } },
+            { apiBaseUrl: { contains: 'dashscope' } },
+            { apiBaseUrl: { contains: 'aliyuncs.com' } }
+          ]
+        }
+      })
+      if (provider?.apiBaseUrl) return provider.apiBaseUrl
+    } catch {}
+  }
+
+  // 2. Fallback: Cek scope setting dari SystemSetting
   try {
     const scope = await getSetting('qwen_scope')
     if (scope === 'openai') {
@@ -78,22 +167,6 @@ export async function getQwenBaseUrl(userId?: string): Promise<string> {
     }
   } catch {}
 
-  // Fallback: cek dari DB provider
-  try {
-    const provider = await db.aIProvider.findFirst({
-      where: {
-        OR: [
-          { name: { in: ['Qwen', 'DashScope', 'qwen', 'dashscope'] } },
-          { apiBaseUrl: { contains: 'dashscope' } },
-          { apiBaseUrl: { contains: 'aliyuncs.com' } }
-        ],
-        isActive: true
-      }
-    })
-    if (provider?.apiBaseUrl) {
-      return provider.apiBaseUrl
-    }
-  } catch {}
   return QWEN_BASE_URL
 }
 
