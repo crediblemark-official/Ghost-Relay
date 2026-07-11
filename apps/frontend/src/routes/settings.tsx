@@ -25,7 +25,7 @@ function SettingsPage() {
   ] as const
 
   return (
-    <div className="flex flex-1 bg-background text-foreground min-h-screen overflow-y-auto">
+    <div className="flex flex-1 bg-background text-foreground h-full overflow-y-auto">
       <div className="flex flex-1 max-w-5xl w-full mx-auto p-8 flex-col gap-6">
 
         {/* Top Header Navigation (like profile.tsx) */}
@@ -47,7 +47,7 @@ function SettingsPage() {
         <div className="flex flex-1 gap-8 items-start">
           
           {/* Left Column: Vertical tab menu */}
-          <div className="w-48 shrink-0 space-y-1.5">
+          <div className="w-48 shrink-0 space-y-1.5 sticky top-0">
             {tabs.map(tab => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
