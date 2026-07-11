@@ -206,7 +206,7 @@ docker compose -f docker-compose.full.yml up -d
 
 ### Deploy to Alibaba Cloud ECS
 
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** for step-by-step guide with automated script.
+See **[deployment.md](docs/deployment.md)** for step-by-step guide with automated script.
 
 ---
 
