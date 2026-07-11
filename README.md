@@ -1,6 +1,7 @@
 # Ghost Relay — Jembatan Koordinasi Tim / Team Coordination Bridge
 
-[Bahasa Indonesia](#bahasa-indonesia) | [English](#english)
+* [Lompat ke Bahasa Indonesia](#bahasa-indonesia)
+* [Jump to English](#english)
 
 ---
 
@@ -32,7 +33,7 @@ Ghost Relay menyelesaikan ini dengan pendekatan **Human → AI → Human**: AI m
 
 ## Siapa yang Dirancang Untuk
 
-| Persona | Role | Masalahnya | Ghost Relay Menjawab |
+| Persona | Peran | Masalahnya | Ghost Relay Menjawab |
 |---------|------|-----------|---------------------|
 | **Andi** | Backend Engineer | Males buka HP, males dengerin voice note, gak suka scroll chat | Kirim/pesan via UI PC, semua voice note jadi teks |
 | **Budi** | Project Manager | Ngirim instruksi panjang lewat voice note, tim selalu nanya ulang | Cukup ngomong 1 kali, AI pecah tugas & ingatkan otomatis |
@@ -45,52 +46,7 @@ Ghost Relay menyelesaikan ini dengan pendekatan **Human → AI → Human**: AI m
 - **90% pertanyaan berulang** terminimalisir — AI jawab pakai referensi otomatis
 - **100% voice note** otomatis ter-transkrip dan ter-ringkas
 
----
-
-# English
-
-> AI as a communication bridge between team members. More than just a chat aggregator — Ghost Relay transforms, remembers, and replies.
-
-## Why This Matters
-
-Remote teams face the same issue: **chaotic asynchronous communication.**
-
-Messages pour in from WhatsApp, Telegram, Slack, and the web. Each inbox is isolated. Voice notes pile up. Documents get lost. The same questions are asked repeatedly. New hires have no access to historical discussions. Night owls miss daytime context; daytime workers miss decisions made at night.
-
-**The result:** hours wasted scrolling chat feeds, listening to voice notes, and repeating answers — instead of building.
-
-Ghost Relay solves this with a **Human → AI → Human** approach: the AI receives input from one side, processes and structures it, and relays it to the other — faster, cleaner, without losing context.
-
-## Problems Solved
-
-| Problem | Impact | Ghost Relay Solution |
-|---------|--------|---------------------|
-| **Fragmented Inboxes** (3+ platforms) | Missed messages, lost leads | **Universal Inbox** — unified real-time feed |
-| **Voice Note Overload** | Key decisions overlooked | **Voice Intelligence** — auto-transcribes, summarizes, decomposes into tasks |
-| **Repetitive Questions** | Frustration, wasted engineering time | **Auto-Reply RAG** — AI replies using chat history + local documents |
-| **Lost Files & Documents** | Minutes spent digging for files | **Knowledge Vault** — semantic search, auto-indexed attachments |
-| **No Long-term Memory** | AI starts from scratch every session | **Memory** — pgvector search over conversations + documents |
-| **New Hires Onboarding** | Repetitive manual handovers | **Knowledge Vault + Auto-Reply** — searchable organizational knowledge |
-| **Lack of Team Visibility** | Overlapping work | **Daily Reports** — automated daily activity summaries |
-
-## Who It Is For
-
-| Persona | Role | Pain Point | Ghost Relay Solution |
-|---------|------|------------|----------------------|
-| **Andi** | Backend Engineer | Dislikes opening phone, listening to audio, or scrolling | Send/receive via PC UI, audio transcribed instantly |
-| **Budi** | Project Manager | Sends long audio, team repeats questions | Speaks once, AI decomposes tasks & auto-notifies division |
-| **Citra** | Frontend Engineer | Misses WA info, technical discussions on Slack | Multi-platform messages in a single clean feed |
-
-## Key Impacts
-
-- **70% coordination time saved** — no more chat scrubbing or listening to voice notes.
-- **5 minutes → 10 seconds** — time spent finding documents.
-- **90% repetitive questions eliminated** — AI auto-replies with references.
-- **100% voice notes** transcribed and summarized automatically.
-
----
-
-## Arsitektur / Architecture
+## Arsitektur
 
 ```mermaid
 graph TB
@@ -140,7 +96,404 @@ graph TB
     P --> T
 ```
 
+## Tech Stack
+
+| Layer | Teknologi |
+|-------|-----------|
+| **Frontend** | React 19, TypeScript, Vite 8, Tailwind CSS v4, shadcn/ui |
+| **Routing** | TanStack Router (type-safe) |
+| **Server State** | TanStack Query v5 |
+| **Client State** | Zustand v5 |
+| **Backend** | Fastify v5, TypeScript, Bun runtime |
+| **Database** | PostgreSQL 16 + Prisma ORM |
+| **Vector Search** | pgvector (`vector(3072)`) — native PostgreSQL extension |
+| **Task Queue** | BullMQ + Redis (fallback: in-memory `setImmediate`) |
+| **Real-time** | Socket.io (server + client) |
+| **AI SDK** | Vercel AI SDK (`ai` + `@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/anthropic`) |
+| **Auth** | Better Auth (session-based) |
+| **Encryption** | AES-256-GCM |
+| **Package Manager** | Bun (workspace monorepo) + Turborepo |
+| **Container** | Docker + Docker Compose |
+
+## Struktur Proyek
+
+```
+ghost-team/
+├── apps/
+│   ├── backend/              # Fastify API server
+│   │   └── src/
+│   │       ├── core/         # AI, enkripsi, memori, workspace, task queue
+│   │       ├── modules/      # Modul domain (auth, messages, voice, files, dll.)
+│   │       └── plugins/      # Fastify plugins (auth, socket)
+│   └── frontend/             # React SPA
+│       └── src/
+│           ├── routes/       # Halaman TanStack Router
+│           ├── components/   # Komponen UI (shadcn/ui, ai-elements)
+│           ├── hooks/        # React Hooks (TanStack Query)
+│           └── stores/       # Zustand stores
+├── packages/
+│   ├── database/             # Prisma schema + client
+│   ├── shared/               # Zod schemas + tipe data TS bersama
+│   └── config/               # Zod-validated env variables
+├── docker-compose.yml        # PostgreSQL (pgvector) + app
+├── docker-compose.full.yml   # PostgreSQL + Redis + app
+└── Dockerfile                # Multi-stage build (Bun)
+```
+
+## Panduan Cepat
+
+### Persyaratan
+
+- **Bun** 1.1+ — `curl -fsSL https://bun.sh/install | bash`
+- **PostgreSQL 16** dengan pgvector (atau pakai Docker)
+
+### 1. Instalasi
+
+```bash
+git clone https://github.com/crediblemark-official/Ghost-Relay.git
+cd Ghost-Relay
+bun install
+bun run db:generate
+```
+
+### 2. Setup Environment
+
+```bash
+cp .env.example .env
+# Isi variabel minimum yang dibutuhkan (lihat bagian Variabel Lingkungan di bawah)
+```
+
+Atau jalankan PostgreSQL via Docker:
+
+```bash
+docker compose up -d db    # PostgreSQL pada port 5433
+```
+
+### 3. Migrasi Database
+
+```bash
+bun run db:push
+```
+
+### 4. Jalankan Server Development
+
+```bash
+bun dev
+```
+
+- **Backend**: http://localhost:8000
+- **Frontend**: http://localhost:5173
+
+### 5. Masuk Log / Login
+
+Pengguna pertama otomatis ditunjuk sebagai `owner` / pemilik platform:
+
+- **Email**: `admin@ghost.local`
+- **Password**: `admin123`
+
+## Docker
+
+```bash
+# Production (PostgreSQL + app)
+docker compose up -d
+
+# Full stack (PostgreSQL + Redis + app)
+docker compose -f docker-compose.full.yml up -d
+```
+
+### Deployment ke Alibaba Cloud ECS
+
+Lihat **[deployment.md](docs/deployment.md)** untuk panduan langkah-demi-langkah dengan script otomatis.
+
+## Variabel Lingkungan
+
+| Variable | Wajib | Default | Deskripsi |
+|----------|-------|---------|-------------|
+| `DATABASE_URL` | Ya | — | PostgreSQL connection string |
+| `JWT_SECRET_KEY` | Ya | — | Secret untuk JWT signing (min 32 karakter) |
+| `BETTER_AUTH_SECRET` | Ya | — | Secret untuk Better Auth sessions |
+| `ENCRYPTION_KEY` | Ya | — | AES-256-GCM encryption key |
+| `CRYPTO_SALT` | Ya | — | Salt untuk key derivation |
+| `REDIS_URL` | Tidak | `""` | Redis URL (kosong = in-memory fallback) |
+| `CORS_ORIGINS` | Tidak | `["*"]` | Allowed CORS origins |
+| `ENVIRONMENT` | Tidak | `production` | `development` / `production` / `test` |
+| `ADMIN_EMAIL` | Tidak | `admin@ghost.local` | Email admin seeder |
+| `ADMIN_PASSWORD` | Tidak | `admin123` | Password admin seeder |
+| `DASHSCOPE_API_KEY` | Tidak | — | API key Alibaba DashScope / Qwen |
+| `TELEGRAM_BOT_TOKEN` | Tidak | — | Telegram bot token |
+
+## Endpoint API
+
+<details>
+<summary><b>Auth</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `POST` | `/api/auth/sign-up/email` | Daftar user baru |
+| `POST` | `/api/auth/sign-in/email` | Login |
+| `POST` | `/api/auth/sign-out` | Logout |
+| `GET` | `/api/auth/get-session` | Dapatkan sesi saat ini |
+
+</details>
+
+<details>
+<summary><b>Pesan & Sesi</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `GET` | `/api/sessions` | List sesi obrolan |
+| `POST` | `/api/sessions` | Buat sesi baru |
+| `DELETE` | `/api/sessions/:id` | Hapus sesi obrolan |
+| `PATCH` | `/api/sessions/:id` | Ganti nama sesi |
+| `POST` | `/api/sessions/:id/generate-title` | Buat judul otomatis via AI |
+| `POST` | `/api/sessions/:id/summarize` | Ringkas isi sesi chat |
+| `GET` | `/api/messages` | Dapatkan pesan (paginated) |
+| `POST` | `/api/messages/send` | Kirim pesan |
+| `POST` | `/api/messages/search` | Cari isi pesan |
+| `DELETE` | `/api/messages/:id` | Hapus pesan |
+
+</details>
+
+<details>
+<summary><b>AI</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `POST` | `/api/ai/chat/stream` | Streaming chat (SSE) |
+| `GET` | `/api/ai/providers` | List provider |
+| `POST` | `/api/ai/providers` | Buat provider baru |
+| `PUT` | `/api/ai/providers/:id` | Update provider |
+| `DELETE` | `/api/ai/providers/:id` | Hapus provider |
+| `GET` | `/api/ai/providers/models` | List semua model aktif |
+| `GET` | `/api/ai/models/browse` | Jelajahi katalog model |
+| `GET` | `/api/ai/providers/browse` | Jelajahi katalog provider |
+| `POST` | `/api/ai/providers/test` | Test koneksi provider |
+
+</details>
+
+<details>
+<summary><b>Suara / Voice</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `POST` | `/api/voice/process` | Proses voice note |
+| `POST` | `/api/voice/command` | Perintah suara (audio) |
+| `POST` | `/api/voice/command-text` | Perintah suara (teks) |
+| `GET` | `/api/voice/status/:id` | Cek status pemrosesan suara |
+
+</details>
+
+<details>
+<summary><b>Files (Knowledge Vault)</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `GET` | `/api/files` | List file terunggah |
+| `POST` | `/api/files/upload` | Upload file |
+| `POST` | `/api/files/search` | Pencarian semantik RAG |
+| `GET` | `/api/files/download/:fileId` | Unduh file |
+| `PATCH` | `/api/files/:fileId/access` | Ubah cakupan akses file |
+| `DELETE` | `/api/files/:fileId` | Hapus file |
+
+</details>
+
+<details>
+<summary><b>Pengaturan & Workspace</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `GET` | `/api/settings/workspace` | Dapatkan nama workspace |
+| `GET` | `/api/settings/workspace/members` | List anggota workspace |
+| `POST` | `/api/settings/invite/generate` | Buat kode undangan |
+| `POST` | `/api/settings/invite/regenerate` | Regenerasi kode undangan |
+| `GET` | `/api/settings/invite/:code` | Dapatkan info undangan |
+| `POST` | `/api/settings/invite/accept` | Terima undangan |
+| `POST` | `/api/settings/onboarding` | Selesaikan onboarding |
+| `GET` | `/api/settings/platforms` | List koneksi platform |
+| `POST` | `/api/settings/platforms` | Buat koneksi platform |
+| `PUT` | `/api/settings/platforms/:id` | Update koneksi platform |
+| `DELETE` | `/api/settings/platforms/:id` | Hapus koneksi platform |
+| `POST` | `/api/settings/platforms/test` | Test koneksi platform |
+| `GET/POST` | `/api/settings/auto-reply` | Toggle auto-reply |
+
+</details>
+
+<details>
+<summary><b>Notifikasi</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `GET` | `/api/notifications` | List notifikasi |
+| `GET` | `/api/notifications/unread-count` | Dapatkan jumlah notifikasi baru |
+| `POST` | `/api/notifications/:id/read` | Tandai telah dibaca |
+| `POST` | `/api/notifications/send` | Kirim notifikasi manual |
+
+</details>
+
+<details>
+<summary><b>Laporan / Reports</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `GET` | `/api/reports/daily` | Dapatkan laporan harian |
+| `POST` | `/api/reports/generate` | Generasi laporan baru |
+| `POST` | `/api/reports/email` | Kirim laporan via email |
+
+</details>
+
+<details>
+<summary><b>Admin</b> (Khusus Owner)</summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `GET` | `/api/admin/check` | Cek peran admin user |
+| `GET` | `/api/admin/workspaces` | List semua workspace sistem |
+| `GET` | `/api/admin/users` | List semua user sistem |
+
+</details>
+
+<details>
+<summary><b>Webhooks</b></summary>
+
+| Metode | Path | Deskripsi |
+|--------|------|-------------|
+| `POST` | `/api/webhook/telegram` | Webhook Telegram |
+| `GET/POST` | `/api/webhook/whatsapp` | Webhook WhatsApp (Baileys) |
+| `POST` | `/api/webhook/slack` | Webhook Slack |
+
+</details>
+
+## Desain Database
+
+Tidak ada batasan foreign key di tingkat database — integritas referensial ditegakkan di tingkat aplikasi. Hal ini memungkinkan dekomposisi microservice yang bersih di kemudian hari.
+
+```mermaid
+erDiagram
+    User ||--o{ WorkspaceMember : "is member of"
+    User ||--o{ Workspace : "owns"
+    User ||--o{ Message : "sends"
+    User ||--o{ File : "uploads"
+    User ||--o{ Notification : "receives"
+    User ||--o{ AIProvider : "configures"
+    User ||--o{ ChatSession : "creates"
+
+    Workspace ||--o{ WorkspaceMember : "has"
+    Workspace ||--o{ AIProvider : "has"
+    Workspace ||--o{ File : "contains"
+
+    ChatSession ||--o{ Message : "contains"
+
+    Message }o--o| File : "attaches"
+
+    Embedding ||--|| File : "indexes"
+    Embedding ||--|| Message : "indexes"
+
+    Session ||--|| User : "auth"
+    Account ||--|| User : "auth"
+```
+
+## Keamanan
+
+- **Kredensial**: API key dienkripsi dengan AES-256-GCM sebelum disimpan di PostgreSQL.
+- **Otentikasi**: Berbasis sesi via Better Auth.
+- **Penyamaran Key**: API Key disamarkan dalam respons API (contoh: `sk-••••••••1234`).
+- **CORS**: Domain CORS yang diizinkan dapat dikonfigurasi.
+- **Batas Payload**: Maksimal ukuran request adalah 5MB.
+- **Webhook Auth**: HMAC-SHA256 (Slack), secret token (Telegram).
+- **Kontrol Akses**: Cakupan akses file terbatas berdasarkan workspace & status keanggotaan.
+
 ---
+
+# English
+
+> AI as a communication bridge between team members. More than just a chat aggregator — Ghost Relay transforms, remembers, and replies.
+
+## Why This Matters
+
+Remote teams face the same issue: **chaotic asynchronous communication.**
+
+Messages pour in from WhatsApp, Telegram, Slack, and the web. Each inbox is isolated. Voice notes pile up. Documents get lost. The same questions are asked repeatedly. New hires have no access to historical discussions. Night owls miss daytime context; daytime workers miss decisions made at night.
+
+**The result:** hours wasted scrolling chat feeds, listening to voice notes, and repeating answers — instead of building.
+
+Ghost Relay solves this with a **Human → AI → Human** approach: the AI receives input from one side, processes and structures it, and relays it to the other — faster, cleaner, without losing context.
+
+## Problems Solved
+
+| Problem | Impact | Ghost Relay Solution |
+|---------|--------|---------------------|
+| **Fragmented Inboxes** (3+ platforms) | Missed messages, lost leads | **Universal Inbox** — unified real-time feed |
+| **Voice Note Overload** | Key decisions overlooked | **Voice Intelligence** — auto-transcribes, summarizes, decomposes into tasks |
+| **Repetitive Questions** | Frustration, wasted engineering time | **Auto-Reply RAG** — AI replies using chat history + local documents |
+| **Lost Files & Documents** | Minutes spent digging for files | **Knowledge Vault** — semantic search, auto-indexed attachments |
+| **No Long-term Memory** | AI starts from scratch every session | **Memory** — pgvector search over conversations + documents |
+| **New Hires Onboarding** | Repetitive manual handovers | **Knowledge Vault + Auto-Reply** — searchable organizational knowledge |
+| **Lack of Team Visibility** | Overlapping work | **Daily Reports** — automated daily activity summaries |
+
+## Who It Is For
+
+| Persona | Role | Pain Point | Ghost Relay Solution |
+|---------|------|------------|----------------------|
+| **Andi** | Backend Engineer | Dislikes opening phone, listening to audio, or scrolling | Send/receive via PC UI, audio transcribed instantly |
+| **Budi** | Project Manager | Sends long audio, team repeats questions | Speaks once, AI decomposes tasks & auto-notifies division |
+| **Citra** | Frontend Engineer | Misses WA info, technical discussions on Slack | Multi-platform messages in a single clean feed |
+
+## Key Impacts
+
+- **70% coordination time saved** — no more chat scrubbing or listening to voice notes.
+- **5 minutes → 10 seconds** — time spent finding documents.
+- **90% repetitive questions eliminated** — AI auto-replies with references.
+- **100% voice notes** transcribed and summarized automatically.
+
+## Architecture
+
+```mermaid
+graph TB
+    subgraph Client["Frontend (React 19 + Vite)"]
+        A[TanStack Router]
+        B[TanStack Query]
+        C[Zustand]
+        D[Socket.io]
+    end
+
+    subgraph API["Backend (Fastify v5 — Modular Monolith)"]
+        E[Auth Module]
+        F[Messages Module]
+        G[Voice Module]
+        H[Files Module]
+        I[AI Module]
+        J[Platforms Module]
+        K[Notifications]
+        L[Reports]
+        M[Settings]
+    end
+
+    subgraph Core["Core Services"]
+        N[AI Client<br/>Multi-provider]
+        O[Memory Store<br/>pgvector]
+        P[Task Queue<br/>Redis / In-Memory]
+        Q[Event Bus]
+        R[Encryption<br/>AES-256-GCM]
+    end
+
+    subgraph Data["Data Layer"]
+        S[(PostgreSQL 16<br/>+ pgvector)]
+        T[(Redis)]
+    end
+
+    subgraph External["External Platforms"]
+        U[WhatsApp<br/>Baileys]
+        V[Telegram<br/>Bot API]
+        W[Slack<br/>Bolt SDK]
+    end
+
+    Client -->|REST + WebSocket| API
+    API --> Core
+    API --> Data
+    API --> External
+    O --> S
+    P --> T
+```
 
 ## Tech Stack
 
@@ -161,9 +514,7 @@ graph TB
 | **Package Manager** | Bun (workspace monorepo) + Turborepo |
 | **Container** | Docker + Docker Compose |
 
----
-
-## Struktur Proyek / Project Structure
+## Project Structure
 
 ```
 ghost-team/
@@ -188,16 +539,14 @@ ghost-team/
 └── Dockerfile                # Multi-stage build (Bun)
 ```
 
----
+## Quick Start
 
-## Panduan Cepat / Quick Start
-
-### Persyaratan / Prerequisites
+### Prerequisites
 
 - **Bun** 1.1+ — `curl -fsSL https://bun.sh/install | bash`
-- **PostgreSQL 16** dengan pgvector (atau pakai Docker / with pgvector or Docker)
+- **PostgreSQL 16** with pgvector (or use Docker)
 
-### 1. Instalasi / Install
+### 1. Install
 
 ```bash
 git clone https://github.com/crediblemark-official/Ghost-Relay.git
@@ -210,22 +559,22 @@ bun run db:generate
 
 ```bash
 cp .env.example .env
-# Isi variabel minimum yang dibutuhkan / Fill in the minimum required variables
+# Fill in minimum required variables (see Environment Variables below)
 ```
 
-Atau jalankan PostgreSQL via Docker / Or run PostgreSQL via Docker:
+Or use Docker for PostgreSQL:
 
 ```bash
-docker compose up -d db    # PostgreSQL pada port 5433 / on port 5433
+docker compose up -d db    # PostgreSQL on port 5433
 ```
 
-### 3. Migrasi Database / Push Database Schema
+### 3. Push Database Schema
 
 ```bash
 bun run db:push
 ```
 
-### 4. Jalankan Server / Run Development
+### 4. Run Development
 
 ```bash
 bun dev
@@ -234,14 +583,12 @@ bun dev
 - **Backend**: http://localhost:8000
 - **Frontend**: http://localhost:5173
 
-### 5. Masuk Log / Login
+### 5. Login
 
-Pengguna pertama otomatis ditunjuk sebagai `owner` / First user is automatically assigned `owner` role:
+First user is automatically assigned `owner` role:
 
 - **Email**: `admin@ghost.local`
 - **Password**: `admin123`
-
----
 
 ## Docker
 
@@ -253,13 +600,11 @@ docker compose up -d
 docker compose -f docker-compose.full.yml up -d
 ```
 
-### Deployment ke Alibaba Cloud / Deploy to Alibaba Cloud ECS
+### Deploy to Alibaba Cloud ECS
 
-Lihat **[deployment.md](docs/deployment.md)** untuk panduan langkah-demi-langkah dengan script otomatis / See **[deployment.md](docs/deployment.md)** for step-by-step guide with automated script.
+See **[deployment.md](docs/deployment.md)** for step-by-step guide with automated script.
 
----
-
-## Variabel Lingkungan / Environment Variables
+## Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
@@ -276,9 +621,7 @@ Lihat **[deployment.md](docs/deployment.md)** untuk panduan langkah-demi-langkah
 | `DASHSCOPE_API_KEY` | No | — | Alibaba DashScope / Qwen API key |
 | `TELEGRAM_BOT_TOKEN` | No | — | Telegram bot token |
 
----
-
-## Endpoint API / API Endpoints
+## API Endpoints
 
 <details>
 <summary><b>Auth</b></summary>
@@ -419,21 +762,9 @@ Lihat **[deployment.md](docs/deployment.md)** untuk panduan langkah-demi-langkah
 
 </details>
 
----
+## Database Design
 
-## Pengujian / Testing
-
-```bash
-bun run test          # Unit tests (41 tests)
-bun run typecheck     # TypeScript type checking
-bun run lint          # Linting
-```
-
----
-
-## Desain Database / Database Design
-
-Tidak ada batasan foreign key di tingkat database — integritas referensial ditegakkan di tingkat aplikasi. Hal ini memungkinkan dekomposisi microservice yang bersih di kemudian hari. / No foreign key constraints at database level — referential integrity enforced at application layer. This enables clean microservice decomposition later.
+No foreign key constraints at database level — referential integrity enforced at application layer. This enables clean microservice decomposition later.
 
 ```mermaid
 erDiagram
@@ -460,22 +791,18 @@ erDiagram
     Account ||--|| User : "auth"
 ```
 
-Indeks dipertahankan pada semua kolom ID untuk kinerja kueri. Hanya `Session` dan `Account` yang mempertahankan batasan FK (diperlukan oleh Better Auth). / Indexes preserved on all ID columns for query performance. Only `Session` and `Account` retain FK constraints (required by Better Auth).
+## Security
 
----
-
-## Keamanan / Security
-
-- **Credentials**: Kredensial API dienkripsi dengan AES-256-GCM sebelum disimpan / API keys encrypted with AES-256-GCM before storage
-- **Auth**: Berbasis sesi via Better Auth / Session-based via Better Auth
-- **API Keys**: Disamarkan dalam respons API / Masked in API responses (e.g., `sk-••••••••1234`)
-- **CORS**: Asal CORS yang diizinkan dapat dikonfigurasi / Configurable allowed origins
-- **Body Limit**: Batas ukuran permintaan maks 5MB / 5MB max request size
+- **Credentials**: API keys encrypted with AES-256-GCM before storage
+- **Auth**: Session-based via Better Auth
+- **API Keys**: Masked in API responses (e.g., `sk-••••••••1234`)
+- **CORS**: Configurable allowed origins
+- **Body Limit**: 5MB max request size
 - **Webhook Auth**: HMAC-SHA256 (Slack), secret token (Telegram)
-- **Access Control**: Cakupan akses file (`workspace` / `private`), keanggotaan workspace / File access scope (`workspace` / `private`), workspace membership
+- **Access Control**: File access scope (`workspace` / `private`), workspace membership
 
 ---
 
-## Lisensi / License
+## License
 
 [MIT](LICENSE)
