@@ -4,6 +4,9 @@
 
 ---
 
+> [!NOTE]
+> **Ghost Relay saat ini masih dalam tahap MVP (Minimum Viable Product).** Dikembangkan untuk kompetisi Global AI Hackathon Series with Qwen Cloud.
+
 > AI sebagai perantara komunikasi antar anggota tim. Bukan cuma chat aggregator — Ghost Relay mengubah, mengingat, dan menjawab.
 
 ## Kenapa Ini Penting

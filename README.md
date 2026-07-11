@@ -4,6 +4,9 @@
 
 ---
 
+> [!NOTE]
+> **Ghost Relay is currently in the MVP (Minimum Viable Product) stage.** Built for the Global AI Hackathon Series with Qwen Cloud.
+
 > AI as a communication bridge between team members. More than just a chat aggregator — Ghost Relay transforms, remembers, and replies.
 
 ## Why This Matters
