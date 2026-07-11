@@ -5,7 +5,7 @@ import { ChatInput } from '@/components/chat/ChatInput'
 import { ChannelList } from '@/components/sidebar/ChannelList'
 import { KnowledgeVault } from '@/components/sidebar/KnowledgeVault'
 import { useMessages, useSendMessage, useUploadVoice, useVoiceCommand } from '@/hooks/useMessages'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAiChat } from '@/hooks/useAiChat'
@@ -219,7 +219,15 @@ function ChatPage() {
   const handleVoice = async (blob: Blob) => {
     try {
       await voiceCommandMutation.mutateAsync(blob)
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 422) {
+        toast.error('AI provider tidak dikonfigurasi', {
+          description: 'Tambahkan provider audio di Settings → AI Providers.',
+          duration: 6000,
+        })
+        setShowRecorder(false)
+        return
+      }
       voiceMutation.mutate(blob)
     }
     setShowRecorder(false)

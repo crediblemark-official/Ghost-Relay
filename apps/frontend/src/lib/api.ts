@@ -4,6 +4,14 @@ import { disconnectSocket } from '@/lib/socket'
 
 const BASE_URL = import.meta.env.VITE_API_URL || ''
 
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+  }
+}
+
 function normalizePath(path: string): string {
   if (BASE_URL) return path
   return path.startsWith('/api/') ? path : `/api${path}`
@@ -76,7 +84,7 @@ async function request<T>(
       throw new Error('Sesi telah berakhir. Silakan login kembali.')
     }
 
-    throw new Error(error.message)
+    throw new ApiError(error.message, error.status)
   }
 
   if (res.status === 204) {

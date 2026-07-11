@@ -16,6 +16,7 @@ import { randomUUID } from 'node:crypto'
 import { resolveWorkspaceId } from '../../core/workspace.js'
 import { eventBus } from '../../core/event-bus.js'
 import { getSetting } from '../../core/db-settings.js'
+import { getActiveProvider } from '../../core/ai-client.js'
 
 export let socketIO: SocketIOServer
 
@@ -23,7 +24,18 @@ export function setSocketIO(io: SocketIOServer) {
   socketIO = io
 }
 
+function isAIConfigError(err: unknown): boolean {
+  const msg = (err as Error).message?.toLowerCase() ?? ''
+  return msg.includes('no ai provider') || msg.includes('not configured') || msg.includes('provider')
+}
+
 export async function handleProcessVoice(req: FastifyRequest, reply: FastifyReply) {
+  const provider = await getActiveProvider('audio', req.userId)
+  if (!provider) {
+    reply.status(422).send({ detail: 'No AI provider configured for audio transcription. Add an audio provider in Settings → AI Providers.' })
+    return
+  }
+
   const data = await req.file()
   if (!data) {
     reply.status(400).send({ detail: 'No audio file provided' })
@@ -99,7 +111,8 @@ export async function handleVoiceCommand(req: FastifyRequest, reply: FastifyRepl
   } catch (err) {
     const msg = (err as Error).message ?? String(err)
     console.error(`[VOICE] Command error: ${msg}`)
-    reply.status(500).send({ detail: `Voice command failed: ${msg}` })
+    const status = isAIConfigError(err) ? 422 : 500
+    reply.status(status).send({ detail: `Voice command failed: ${msg}` })
   }
 }
 
