@@ -5,7 +5,7 @@ import { api } from '@/lib/api'
 import { toast } from 'sonner'
 import { 
   Database, Monitor, Palette, CheckSquare, Cpu, User, 
-  Clock, Search, CheckCircle2, PlayCircle, RefreshCw, Filter, ListTodo
+  Clock, Search, CheckCircle2, PlayCircle, RefreshCw, ListTodo
 } from 'lucide-react'
 
 export const Route = createFileRoute('/board')({
@@ -175,53 +175,40 @@ function BoardPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-background min-h-screen">
-      {/* Top Banner Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border bg-card/40 backdrop-blur-md px-5 py-3">
-        <div>
-          <h1 className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
-            Papan Kanban Tugas <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">AI-Generated</span>
+      {/* Header Banner */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-card/40 backdrop-blur-md px-5 py-2.5">
+        {/* Left Section: Title & Description */}
+        <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4">
+          <h1 className="text-sm font-bold tracking-tight text-foreground flex items-center gap-1.5">
+            Papan Kanban <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold">AI Tasks</span>
           </h1>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Ekstraksi tugas otomatis dari transkrip voice note menggunakan Qwen LLM. Geser kartu untuk mengubah status pengerjaan.
+          <div className="hidden md:block h-3.5 w-px bg-border" />
+          <p className="text-[11px] text-muted-foreground">
+            Ekstraksi tugas otomatis dari voice note via Qwen. Geser kartu untuk mengubah status.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => refetch()} 
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            title="Refresh Papan"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
 
-      {/* Filter and Search Action Bar */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-card/10 px-5 py-2.5">
-        {/* Search */}
-        <div className="relative w-72 max-w-full">
-          <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Cari deskripsi tugas atau pembuat..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-8 pl-8 pr-3 rounded-lg border border-border bg-card text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
-          />
-        </div>
-
-        {/* Filters */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Filter className="h-3 w-3" />
-            <span>Filter:</span>
+        {/* Right Section: Search, Filters, Refresh */}
+        <div className="flex items-center flex-wrap gap-2">
+          {/* Search */}
+          <div className="relative w-52 max-w-full">
+            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Cari tugas..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-8 pl-8 pr-3 rounded-lg border border-border bg-card text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+            />
           </div>
+
+          <div className="hidden sm:block h-3.5 w-px bg-border" />
 
           {/* Divisi */}
           <select
             value={filterDivisi}
             onChange={(e) => setFilterDivisi(e.target.value)}
-            className="h-8 px-2.5 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
+            className="h-8 px-2 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
           >
             <option value="all">Semua Divisi</option>
             <option value="backend">Backend</option>
@@ -229,20 +216,28 @@ function BoardPage() {
             <option value="desain">Desain</option>
             <option value="qa">QA</option>
             <option value="devops">DevOps</option>
-            <option value="general">Umum (General)</option>
+            <option value="general">Umum</option>
           </select>
 
           {/* Prioritas */}
           <select
             value={filterPrioritas}
             onChange={(e) => setFilterPrioritas(e.target.value)}
-            className="h-8 px-2.5 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
+            className="h-8 px-2 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
           >
             <option value="all">Semua Prioritas</option>
             <option value="tinggi">Tinggi</option>
             <option value="sedang">Sedang</option>
             <option value="rendah">Rendah</option>
           </select>
+
+          <button 
+            onClick={() => refetch()} 
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+            title="Refresh Papan"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
 
