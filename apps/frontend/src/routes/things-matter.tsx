@@ -99,8 +99,8 @@ function ThingsMatterPage() {
   return (
     <div className="flex flex-1 flex-col bg-background min-h-screen">
       {/* Header Banner */}
-      <div className="shrink-0 border-b border-border bg-card/40 backdrop-blur-md px-5 py-2.5">
-        <div className="max-w-6xl mx-auto w-full flex flex-wrap items-center justify-between gap-4">
+      <div className="shrink-0 border-b border-border bg-card/40 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto w-full flex flex-wrap items-center justify-between gap-4 px-5 py-2.5">
           {/* Left Section: Title & Description */}
           <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4">
             <h1 className="text-sm font-bold tracking-tight text-foreground flex items-center gap-1.5">
@@ -169,8 +169,8 @@ function ThingsMatterPage() {
           <p className="text-xs">Menganalisis log obrolan & membuat laporan 5W1H via Qwen LLM...</p>
         </div>
       ) : (
-        <div className="flex-1 p-5 bg-muted/20 overflow-y-auto">
-          <div className="max-w-6xl w-full mx-auto flex flex-col md:flex-row gap-5 items-stretch min-h-[calc(100vh-170px)]">
+        <div className="flex-1 bg-muted/20 overflow-y-auto">
+          <div className="max-w-6xl w-full mx-auto px-5 py-5 flex flex-col md:flex-row gap-5 items-stretch min-h-[calc(100vh-170px)]">
             
             {/* Left Column: Summary Info card */}
             <div className="w-full md:w-64 shrink-0 flex flex-col gap-4">
