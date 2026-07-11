@@ -33,6 +33,13 @@ const QWEN_CHAT_OPTIONS = [
   'qwen-vl-max',
 ]
 
+const CLAUDE_CHAT_OPTIONS = [
+  'claude-3-5-sonnet-20241022',
+  'claude-3-5-sonnet',
+  'claude-3-5-haiku-20241022',
+  'claude-3-opus-20240229',
+]
+
 const QWEN_AUDIO_OPTIONS = [
   'qwen3-asr-flash',
   'qwen3-omni-flash',
@@ -67,7 +74,7 @@ function QwenCloudStatus() {
     retry: false,
   })
 
-  const qwenModelsList = modelsData?.models || QWEN_CHAT_OPTIONS
+  const qwenModelsList = modelsData?.models || (scope === 'anthropic' ? CLAUDE_CHAT_OPTIONS : QWEN_CHAT_OPTIONS)
 
   useEffect(() => {
     if (config) {
@@ -185,7 +192,15 @@ function QwenCloudStatus() {
               <div className="relative">
                 <select
                   value={scope}
-                  onChange={(e) => setScope(e.target.value as 'openai' | 'anthropic')}
+                  onChange={(e) => {
+                    const newScope = e.target.value as 'openai' | 'anthropic'
+                    setScope(newScope)
+                    if (newScope === 'anthropic' && chatModel.startsWith('qwen')) {
+                      setChatModel('claude-3-5-sonnet')
+                    } else if (newScope === 'openai' && chatModel.startsWith('claude')) {
+                      setChatModel('qwen3.7-plus')
+                    }
+                  }}
                   className={selectCls}
                 >
                   <option value="openai">🌐 OpenAI Compatible (compatible-mode)</option>
