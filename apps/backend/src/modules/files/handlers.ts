@@ -142,11 +142,17 @@ export async function handleSearchFiles(req: FastifyRequest, reply: FastifyReply
 
   const workspaceIds = await resolveAllWorkspaceIds(userId)
 
-  const matches = await memoryStore.searchVault(
-    await generateEmbedding(query, userId),
-    Math.min(limit, 50),
-    workspaceIds.length > 0 ? { workspaceIds } : { userId: String(userId) },
-  )
+  let matches: any[] = []
+  try {
+    const embedding = await generateEmbedding(query, userId)
+    matches = await memoryStore.searchVault(
+      embedding,
+      Math.min(limit, 50),
+      workspaceIds.length > 0 ? { workspaceIds } : { userId: String(userId) },
+    )
+  } catch (err) {
+    console.warn('[SEARCH] Skipping vault search due to embedding error:', (err as Error).message)
+  }
 
   const fileIds = matches.map(m => Number(m.id)).filter(id => !Number.isNaN(id))
   const fileMap = new Map<number, any>()

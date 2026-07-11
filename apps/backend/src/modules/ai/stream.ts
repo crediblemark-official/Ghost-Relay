@@ -116,7 +116,20 @@ export async function handleStreamChat(req: FastifyRequest, reply: FastifyReply)
   const normalized = normalizeMessages(messages) as any
   const lm = await getLanguageModel(req.userId)
   if (!lm) {
-    reply.status(400).send({ detail: 'No AI provider configured' })
+    reply.raw.setHeader('Content-Type', 'text/plain; charset=utf-8')
+    reply.raw.setHeader('X-Vercel-AI-Data-Stream', 'v1')
+    reply.raw.setHeader('Cache-Control', 'no-cache')
+    reply.raw.setHeader('Connection', 'keep-alive')
+
+    const warningText = '⚠️ Tidak ada provider AI yang aktif/dikonfigurasi. Silakan kunjungi halaman Pengaturan (Settings) atau halaman Profil Personal Tim untuk menyimpan API Key (Qwen DashScope atau Models.dev) Anda terlebih dahulu agar AI bisa merespons.'
+    const warningStream = new ReadableStream<string>({
+      start(controller) {
+        controller.enqueue(warningText)
+        controller.close()
+      }
+    })
+
+    await pipeTextStreamToResponse({ response: reply.raw, stream: warningStream })
     return
   }
 
