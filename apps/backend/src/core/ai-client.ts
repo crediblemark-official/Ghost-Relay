@@ -134,21 +134,21 @@ async function resolveDbProvider(userId: string | undefined, providerType: strin
  * Get LanguageModel — Qwen Cloud first, then user-configured providers.
  */
 export async function getLanguageModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
-  // 1. User-configured providers (DB) - has highest precedence
-  const dbResult = await resolveDbProvider(userId, 'chat')
-  if (dbResult) {
-    return { model: dbResult.sdk.chat(dbResult.modelId), modelId: dbResult.modelId }
-  }
-
-  // 2. Qwen Cloud (built-in fallback, configured via settings card)
+  // 1. Qwen Cloud (built-in, configured via settings card) - has highest precedence
   const qwenOk = await isQwenAvailable(userId)
   if (qwenOk) {
     try {
       const model = await getQwenChatModel(undefined, userId)
       return { model, modelId: 'qwen3.7-plus' }
     } catch (err) {
-      console.warn('[AI] Qwen Cloud built-in fallback failed:', (err as Error).message)
+      console.warn('[AI] Qwen Cloud built-in provider failed:', (err as Error).message)
     }
+  }
+
+  // 2. User-configured providers (DB)
+  const dbResult = await resolveDbProvider(userId, 'chat')
+  if (dbResult) {
+    return { model: dbResult.sdk.chat(dbResult.modelId), modelId: dbResult.modelId }
   }
 
   console.warn(`[AI] getLanguageModel: no provider found (userId=${userId})`)
@@ -156,24 +156,24 @@ export async function getLanguageModel(userId?: string): Promise<{ model: Langua
 }
 
 /**
- * Get EmbeddingModel — DB providers first, then Qwen Cloud fallback.
+ * Get EmbeddingModel — Qwen Cloud first, then DB providers.
  */
 export async function getEmbeddingModel(userId?: string): Promise<{ model: EmbeddingModel; modelId: string } | null> {
-  // 1. DB providers
-  const dbResult = await resolveDbProvider(userId, 'embedding')
-  if (dbResult && dbResult.sdk.embedding) {
-    return { model: dbResult.sdk.embedding(dbResult.modelId), modelId: dbResult.modelId }
-  }
-
-  // 2. Qwen Cloud
+  // 1. Qwen Cloud
   const qwenOk = await isQwenAvailable(userId)
   if (qwenOk) {
     try {
       const model = await getQwenEmbeddingModel(undefined, userId)
       return { model, modelId: 'text-embedding-v4' }
     } catch (err) {
-      console.warn('[AI] Qwen Cloud embedding fallback failed:', (err as Error).message)
+      console.warn('[AI] Qwen Cloud embedding failed:', (err as Error).message)
     }
+  }
+
+  // 2. DB providers
+  const dbResult = await resolveDbProvider(userId, 'embedding')
+  if (dbResult && dbResult.sdk.embedding) {
+    return { model: dbResult.sdk.embedding(dbResult.modelId), modelId: dbResult.modelId }
   }
 
   return null
