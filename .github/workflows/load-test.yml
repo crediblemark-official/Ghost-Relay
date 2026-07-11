@@ -68,7 +68,8 @@ jobs:
           cd apps/backend
           bun run src/main.ts > ../../backend.log 2>&1 &
         env:
-          JWT_SECRET_KEY: ci-test-jwt-secret-key
+          JWT_SECRET_KEY: ci-test-jwt-secret-key-at-least-32-chars-long!!
+          BETTER_AUTH_SECRET: ci-test-better-auth-secret-32char-long!!
           ENCRYPTION_KEY: ci-test-encryption-key-32char-long!!
           CRYPTO_SALT: ci-test-salt-value-at-least-16-char
           DATABASE_URL: postgresql://ghost:changeme@localhost:5433/ghost_relay
@@ -166,7 +167,8 @@ jobs:
           cd apps/backend
           bun run src/main.ts > ../../backend-auth.log 2>&1 &
         env:
-          JWT_SECRET_KEY: ci-test-jwt-secret-key
+          JWT_SECRET_KEY: ci-test-jwt-secret-key-at-least-32-chars-long!!
+          BETTER_AUTH_SECRET: ci-test-better-auth-secret-32char-long!!
           ENCRYPTION_KEY: ci-test-encryption-key-32char-long!!
           CRYPTO_SALT: ci-test-salt-value-at-least-16-char
           DATABASE_URL: postgresql://ghost:changeme@localhost:5433/ghost_relay
