@@ -160,7 +160,31 @@ export async function handleStreamChat(req: FastifyRequest, reply: FastifyReply)
     } catch { /* skip vector retrieval */ }
   }
 
-  const systemPrompt = `Kamu adalah asisten pribadi di perusahaan ini. Kepribadianmu:${sessionContext}
+  // === Personalization Context ===
+  let personalizationContext = ''
+  if (user) {
+    personalizationContext += `\n\n## Informasi User (Bos Kamu)
+- Nama: ${user.name}
+- Email: ${user.email}
+${(user as any).position ? `- Jabatan/Peran: ${(user as any).position}` : ''}
+${(user as any).department ? `- Departemen/Tim: ${(user as any).department}` : ''}
+${(user as any).bio ? `- Catatan Tambahan/Prefensi Kerja: ${(user as any).bio}` : ''}`
+
+    if ((user as any).tonePreference) {
+      personalizationContext += `\n- Gaya Bicara yang Diinginkan User: `
+      if ((user as any).tonePreference === 'professional') {
+        personalizationContext += 'Sangat formal, sopan, profesional, dan menggunakan bahasa baku yang rapi.'
+      } else if ((user as any).tonePreference === 'concise') {
+        personalizationContext += 'Sangat singkat, padat, dan langsung ke inti (singkat padat, hindari bertele-tele).'
+      } else if ((user as any).tonePreference === 'technical') {
+        personalizationContext += 'Teknis, mendalam, dan fokus pada detail data/implementasi program.'
+      } else {
+        personalizationContext += 'Kasual, santai, ramah, bersahabat, namun tetap sopan.'
+      }
+    }
+  }
+
+  const systemPrompt = `Kamu adalah asisten pribadi di perusahaan ini. Kepribadianmu:${sessionContext}${personalizationContext}
 
 ## Peran
 - Kamu adalah perantara dua arah antara user (bos) dan anggota tim lainnya.

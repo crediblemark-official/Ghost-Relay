@@ -66,6 +66,10 @@ export interface User {
   email: string
   name: string
   role?: string
+  position?: string | null
+  department?: string | null
+  tonePreference?: string | null
+  bio?: string | null
 }
 
 /** Provider AI yang tersimpan di database */
