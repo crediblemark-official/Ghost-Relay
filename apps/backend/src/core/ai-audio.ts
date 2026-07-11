@@ -1,5 +1,5 @@
 import { generateText } from 'ai'
-import { getLanguageModel } from './ai-client.js'
+import { getLanguageModel, getActiveProvider } from './ai-client.js'
 import { execSync } from 'node:child_process'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -10,8 +10,60 @@ const TRANSCRIPTION_PROMPT =
   'Return ONLY the transcription text — no punctuation normalization, no speaker labels, no summary.'
 
 /**
- * Audio transcription — using Vercel AI SDK `generateText()` with a multimodal chat model.
- * Supports GPT-4o, Gemini, Qwen-audio, or any model that accepts audio input.
+ * Transcribe audio using direct OpenAI-compatible API call.
+ * DashScope and other OpenAI-compatible providers expect `input_audio` content part,
+ * not `file` content part that Vercel AI SDK sends.
+ */
+async function transcribeViaAPI(
+  apiKey: string,
+  baseURL: string,
+  modelId: string,
+  audioBuffer: Buffer,
+  mediaType: string,
+): Promise<string> {
+  const audioBase64 = audioBuffer.toString('base64')
+  const format = mediaType.includes('wav') ? 'wav' : mediaType.includes('mp3') ? 'mp3' : 'wav'
+
+  const url = `${baseURL.replace(/\/+$/, '')}/chat/completions`
+
+  console.log(`[AUDIO] Direct API call: url=${url}, model=${modelId}, format=${format}`)
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: modelId,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: TRANSCRIPTION_PROMPT },
+            {
+              type: 'input_audio',
+              input_audio: { data: audioBase64, format },
+            },
+          ],
+        },
+      ],
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.text()
+    console.error(`[AUDIO] API error ${res.status}:`, body)
+    throw new Error(`Audio API error ${res.status}: ${body.slice(0, 200)}`)
+  }
+
+  const data = await res.json() as any
+  return (data.choices?.[0]?.message?.content ?? '').trim()
+}
+
+/**
+ * Audio transcription — uses Vercel AI SDK for native providers (Google/Gemini)
+ * and direct API call for OpenAI-compatible providers (DashScope, OpenAI, etc.).
  */
 export async function transcribeAudio(audioPath: string, userId?: string): Promise<string> {
   const fs = await import('node:fs')
@@ -28,7 +80,6 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
     )
   }
 
-  // OpenAI-compatible / DashScope audio models only support wav/mp3 in AI SDK. Transcode webm.
   const isGoogle = model.modelId.includes('gemini')
 
   if (isWebm && !isGoogle) {
@@ -49,42 +100,34 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
     const finalExt = processedAudioPath.split('.').pop()?.toLowerCase() ?? 'wav'
     const mediaType = finalExt === 'webm' ? 'audio/webm' : finalExt === 'mp3' ? 'audio/mpeg' : 'audio/wav'
 
-    console.log(`[AUDIO] transcribeAudio: model=${model.modelId}, mediaType=${mediaType}, bufferSize=${audioBuffer.length}`)
+    console.log(`[AUDIO] transcribeAudio: model=${model.modelId}, mediaType=${mediaType}, bufferSize=${audioBuffer.length}, isGoogle=${isGoogle}`)
 
-    const { text } = await generateText({
-      model: model.model,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'file',
-              data: audioBuffer,
-              mediaType: mediaType as any,
-            },
-            {
-              type: 'text',
-              text: TRANSCRIPTION_PROMPT,
-            },
-          ],
-        },
-      ],
-    })
-
-    if (wasTranscoded) {
-      fs.unlinkSync(processedAudioPath)
+    // Gemini: use Vercel AI SDK (native audio support)
+    if (isGoogle) {
+      const { text } = await generateText({
+        model: model.model,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'file', data: audioBuffer, mediaType: mediaType as any },
+              { type: 'text', text: TRANSCRIPTION_PROMPT },
+            ],
+          },
+        ],
+      })
+      return (text ?? '').trim()
     }
 
-    return (text ?? '').trim()
+    // OpenAI-compatible (DashScope, OpenAI, etc.): use direct API call
+    const provider = await getActiveProvider('chat', userId)
+    if (!provider) {
+      throw new Error('No AI provider configured for direct API call.')
+    }
+    return await transcribeViaAPI(provider.apiKey, provider.baseURL, provider.modelId, audioBuffer, mediaType)
   } catch (err: any) {
-    if (wasTranscoded) {
-      fs.unlinkSync(processedAudioPath)
-    }
-
     console.error(`[AUDIO] transcribeAudio error:`, err?.message ?? err)
-    console.error(`[AUDIO] statusCode:`, err?.statusCode, `status:`, err?.status)
 
-    // Some providers return 400/404 for unsupported content types
     if (err?.statusCode === 404 || err?.statusCode === 400 || err?.status === 404 || err?.status === 400) {
       throw new Error(
         `Audio input not supported by model "${model.modelId ?? 'unknown'}". ` +
@@ -93,5 +136,9 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
       )
     }
     throw err
+  } finally {
+    if (wasTranscoded) {
+      try { fs.unlinkSync(processedAudioPath) } catch {}
+    }
   }
 }
