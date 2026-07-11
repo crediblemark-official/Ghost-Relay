@@ -1,40 +1,43 @@
-# Ghost Relay
+# Ghost Relay — Jembatan Koordinasi Tim
 
-> Pesan masuk dari mana-mana — WhatsApp, Telegram, Slack, Web. Semua ada di satu tempat. AI membantu menjawab, mencari, dan mengingat.
+> AI sebagai perantara komunikasi antar anggota tim. Bukan cuma chat aggregator — Ghost Relay mengubah, mengingat, dan menjawab.
+
+## Kenapa Ini Penting
+
+Tim remote punya masalah yang sama: **komunikasi asinkron yang kacau.**
+
+Pesan masuk dari WhatsApp, Telegram, Slack, dan website. Masing-masing inbox terpisah. Voice note menumpuk. Dokumen berserakan. Pertanyaan yang sama diulang terus. Tim baru gabung tapi tidak tahu riwayat. Yang bekerja malam tidak tahu apa yang terjadi siang. Yang kerja siang tidak tahu keputusan malam.
+
+**Hasilnya:** waktu habis untuk scroll chat, dengar voice note, dan tanya ulang — bukan untuk kerja.
+
+Ghost Relay menyelesaikan ini dengan pendekatan **Human → AI → Human**: AI menerima dari satu sisi, memproses, dan menyampaikan ke sisi lain — lebih cepat, lebih terstruktur, tanpa kehilangan konteks.
 
 ## Masalah yang Diselesaikan
 
-**Bisnis kecil dan tim yang berinteraksi lewat chat punya masalah yang sama:**
+| Masalah | Dampak | Solusi Ghost Relay |
+|---------|--------|-------------------|
+| **Inbox terpisah** di 3+ platform | Pesan terlewat, pelanggan kabur | **Universal Inbox** — semua pesan dalam satu feed real-time |
+| **Voice note menumpuk** | Keputusan penting terlewat | **Voice Intelligence** — otomatis transkripsi, ringkas, pecah jadi tugas |
+| **Pertanyaan berulang** | Tim frustrasi, waktu terbuang | **Auto-Reply RAG** — AI jawab pakai riwayat chat + dokumen sendiri |
+| **File & dokumen hilit** | Butuh menit untuk cari file | **Knowledge Vault** — semantic search, otomatis terindeks |
+| **Tidak ada ingatan** | AI mulai dari nol setiap kali | **Memory** — vector search sejarah percakapan + dokumen |
+| **Tim baru gabung** | Harus tanya satu per satu | **Knowledge Vault + Auto-Reply** — semua pengetahuan bisa dicari |
+| **Tidak ada visibility** | Kerja tumpang tindih | **Daily Reports** — rangkuman aktivitas harian otomatis |
 
-- Pesan masuk dari WhatsApp, Telegram, Slack, dan website — masing-masing punya inbox terpisah. Satu pesan terlewat, satu pelanggan kabur.
-- Menjawab pertanyaan yang sama untuk yang ke-50 kalinya. "Berapa harganya?" "Jam berapa buka?" "Gimana cara pesannya?"
-- Voice note menumpuk. Terlalu banyak untuk didengar satu-satu, tapi isinya penting.
-- Dokumen dan file berserakan — di Drive, di chat, di email. Butuh waktu lama untuk menemukan yang dicari.
-- Tidak ada ingatan. AI mulai dari nol setiap percakapan. Tidak tahu konteks, tidak tahu riwayat.
+## Siapa yang Dirancang Untuk
 
-**Dan masalah ini semakin besar ketika tim bekerja dari mana-mana:**
+| Persona | Role | Masalahnya | Ghost Relay Menjawab |
+|---------|------|-----------|---------------------|
+| **Andi** | Backend Engineer | Males buka HP, males dengerin voice note, gak suka scroll chat | Kirim/pesan via UI PC, semua voice note jadi teks |
+| **Budi** | Project Manager | Ngirim instruksi panjang lewat voice note, tim selalu nanya ulang | Cukup ngomong 1 kali, AI pecah tugas & ingatkan otomatis |
+| **Citra** | Frontend Engineer | Ketinggalan info karena pesan di WA, diskusi di Slack | Semua pesan masuk dalam satu feed chat yang rapi |
 
-- Tim remote di timezone berbeda — pesan masuk tengah malam, tidak ada yang merespon sampai besok. Pelanggan sudah kabur ke kompetitor.
-- Tidak ada riwayat yang bisa diakses bersama. Tim baru gabung, tidak tahu apa yang sudah dibicarakan sebelumnya. Harus tanya satu per satu, menunggu jawaban, mengulang penjelasan yang sama.
-- Voice note dari rapat remote menumpuk. Terlalu banyak untuk didengar, tapi keputusan penting ada di dalamnya.
-- Tidak ada yang tahu apa yang sedang dikerjakan tim lain. Pekerjaan tumpang tindih, atau malah ada yang kosong.
+## Dampak
 
-**Ghost Relay mengatasi semuanya — untuk tim yang bekerja dari mana-mana.**
-
-## Solusi
-
-Satu dashboard yang menghubungkan semua platform komunikasi — dengan AI yang benar-benar mengerti konteks bisnis Anda.
-
-| Fitur | Apa yang Dilakukan |
-|-------|-------------------|
-| **Universal Inbox** | Semua pesan dari WhatsApp, Telegram, Slack, dan Web dalam satu feed real-time. Tidak ada yang terlewat, di timezone manapun. |
-| **Auto-Reply RAG** | AI menjawab pertanyaan berulang menggunakan dokumen dan riwayat chat Anda sendiri. Tim tidak perlu bangun tengah malam untuk hal yang sama. |
-| **Knowledge Vault** | Upload dokumen, PDF, atau file apapun. Otomatis terindeks dan bisa dicari secara semantik. Tim baru langsung punya akses ke semua pengetahuan. |
-| **Voice Intelligence** | Voice note masuk → otomatis ditranskripsikan, diringkas, dan dijadikan tindakan. Rapat remote jadi mudah diikuti tanpa mendengar semuanya. |
-| **Voice Command** | Bicara ke mic, pesan terkirim ke WhatsApp/Telegram tanpa buka HP. Ideal untuk di jalan atau sedang sibuk. |
-| **AI Chat** | Chat dengan AI yang sudah mengerti konteks bisnis Anda. Multi-provider — pilih model yang cocok (GPT, Gemini, Claude, Qwen). |
-| **Team Workspace** | Bekerja dalam tim. Satu workspace, beberapa anggota, role-based access. Semua orang lihat hal yang sama, dari mana pun mereka berada. |
-| **Daily Reports** | Laporan aktivitas harian otomatis. Tim lead tahu apa yang terjadi tanpa harus meeting satu per satu. |
+- **70% waktu koordinasi** tersisa — tidak perlu scroll chat, dengar voice note, tanya ulang
+- **5 menit → 10 detik** — waktu mencari dokumen lama
+- **90% pertanyaan berulang** terminimalisir — AI jawab pakai referensi otomatis
+- **100% voice note** otomatis ter-transkrip dan ter-ringkas
 
 ---
 
