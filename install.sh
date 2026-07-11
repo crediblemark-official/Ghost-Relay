@@ -33,16 +33,20 @@ echo ""
 # ── Setup .env ──────────────────────────────────────────
 if [ ! -f .env ]; then
     echo ">>> Membuat .env dengan default development..."
-    cat > .env <<- 'EOF'
+    JWT_SECRET=$(openssl rand -hex 32)
+    ENC_KEY=$(openssl rand -hex 32)
+    CRYPTO_SALT=$(openssl rand -hex 16)
+    BA_SECRET=$(openssl rand -hex 32)
+    cat > .env <<- EOF
 DATABASE_URL=postgresql://ghost:changeme@localhost:5433/ghost_relay
 REDIS_URL=
 ENVIRONMENT=development
 HOST=0.0.0.0
 PORT=8000
-JWT_SECRET_KEY=$(openssl rand -hex 32)
-ENCRYPTION_KEY=$(openssl rand -hex 32)
-CRYPTO_SALT=$(openssl rand -hex 16)
-BETTER_AUTH_SECRET=$(openssl rand -hex 32)
+JWT_SECRET_KEY=${JWT_SECRET}
+ENCRYPTION_KEY=${ENC_KEY}
+CRYPTO_SALT=${CRYPTO_SALT}
+BETTER_AUTH_SECRET=${BA_SECRET}
 BETTER_AUTH_URL=http://localhost:8000
 ADMIN_EMAIL=admin@ghost.local
 ADMIN_PASSWORD=admin123

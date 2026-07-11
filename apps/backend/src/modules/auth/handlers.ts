@@ -26,14 +26,19 @@ export async function handleAuthRequest(request: FastifyRequest, reply: FastifyR
     body,
   })
 
-  const webRes = await auth.handler(webReq)
+  try {
+    const webRes = await auth.handler(webReq)
 
-  reply.status(webRes.status)
-  webRes.headers.forEach((value, key) => {
-    if (key.toLowerCase() !== 'transfer-encoding') {
-      reply.header(key, value)
-    }
-  })
+    reply.status(webRes.status)
+    webRes.headers.forEach((value, key) => {
+      if (key.toLowerCase() !== 'transfer-encoding') {
+        reply.header(key, value)
+      }
+    })
 
-  return reply.send(await webRes.text())
+    return reply.send(await webRes.text())
+  } catch (err) {
+    console.error(`[AUTH] Error handling ${method} ${request.url}:`, err)
+    reply.status(500).send({ error: 'Internal authentication error' })
+  }
 }

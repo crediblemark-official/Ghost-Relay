@@ -201,9 +201,9 @@ docker compose up -d
 info "Menunggu database siap..."
 sleep 10
 
-info "Menjalankan migrasi database..."
-docker compose exec ghost-relay bun run apps/backend/dist/main.js --migrate 2>/dev/null || \
-  warn "Migrasi mungkin sudah berjalan otomatis saat startup atau terdapat kendala koneksi"
+info "Pushing database schema..."
+docker compose exec ghost-relay bun run db:push 2>/dev/null || \
+  warn "Schema push mungkin sudah berjalan otomatis saat startup"
 
 # ─── Status akhir ───────────────────────────────────────────────────────────
 PUBLIC_IP=$(curl -s --max-time 5 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || \
