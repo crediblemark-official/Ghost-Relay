@@ -1,7 +1,7 @@
 import { createOpenAI, type OpenAIProvider } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import type { LanguageModel, EmbeddingModel } from 'ai'
+import type { LanguageModel, EmbeddingModel, TranscriptionModel } from 'ai'
 import { db } from '@ghost/database'
 import { decrypt } from './encryption.js'
 import { getAllProviders } from './models-dev.js'
@@ -36,7 +36,7 @@ function createProviderForNpm(
   npmPackage: string,
   apiKey: string,
   userBaseUrl: string | null,
-): { chat: (modelId: string) => LanguageModel; embedding?: (modelId: string) => EmbeddingModel } {
+): { chat: (modelId: string) => LanguageModel; embedding?: (modelId: string) => EmbeddingModel; transcription?: (modelId: string) => TranscriptionModel } {
   const cacheKey = `${npmPackage}:${apiKey}:${userBaseUrl ?? ''}`
   const cached = providerCache.get(cacheKey)
   if (cached && cached.expiresAt > Date.now()) return cached.data
@@ -48,7 +48,7 @@ function createProviderForNpm(
     return { ...opts, baseURL: userSetUrl }
   }
 
-  let result: { chat: (id: string) => LanguageModel; embedding?: (id: string) => EmbeddingModel }
+  let result: { chat: (id: string) => LanguageModel; embedding?: (id: string) => EmbeddingModel; transcription?: (id: string) => TranscriptionModel }
 
   switch (npmPackage) {
     case '@ai-sdk/google': {
@@ -63,7 +63,7 @@ function createProviderForNpm(
     }
     default: {
       const p = createOpenAI(withUrl({ apiKey: apiKey || 'no-key' }))
-      result = { chat: (id) => p.chat(id), embedding: (id) => p.textEmbeddingModel(id) }
+      result = { chat: (id) => p.chat(id), embedding: (id) => p.textEmbeddingModel(id), transcription: (id) => p.transcription(id) }
       break
     }
   }
@@ -189,4 +189,21 @@ export async function getActiveProvider(
  */
 export async function getVisionModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
   return getLanguageModel(userId)
+}
+
+/**
+ * Dapatkan TranscriptionModel untuk transkripsi audio (STT).
+ * Jatuh ke workspace default jika user tidak punya provider sendiri.
+ */
+export async function getAudioModel(userId?: string): Promise<{ model: TranscriptionModel; modelId: string } | null> {
+  if (!userId) return null
+  try {
+    const provider = await findActiveProvider(userId, 'audio')
+    if (provider) {
+      const npm = await resolveNpmPackage(provider.name) ?? '@ai-sdk/openai-compatible'
+      const sdk = createProviderForNpm(npm, decrypt(provider.apiKey), provider.apiBaseUrl)
+      if (sdk.transcription) return { model: sdk.transcription(provider.modelId), modelId: provider.modelId }
+    }
+  } catch { /* noop */ }
+  return null
 }
