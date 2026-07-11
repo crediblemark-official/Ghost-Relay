@@ -1,4 +1,10 @@
-# Ghost Relay — Jembatan Koordinasi Tim
+# Ghost Relay — Jembatan Koordinasi Tim / Team Coordination Bridge
+
+[Bahasa Indonesia](#bahasa-indonesia) | [English](#english)
+
+---
+
+# Bahasa Indonesia
 
 > AI sebagai perantara komunikasi antar anggota tim. Bukan cuma chat aggregator — Ghost Relay mengubah, mengingat, dan menjawab.
 
@@ -12,14 +18,14 @@ Pesan masuk dari WhatsApp, Telegram, Slack, dan website. Masing-masing inbox ter
 
 Ghost Relay menyelesaikan ini dengan pendekatan **Human → AI → Human**: AI menerima dari satu sisi, memproses, dan menyampaikan ke sisi lain — lebih cepat, lebih terstruktur, tanpa kehilangan konteks.
 
-## Masalah yang Diselesaikan
+## Masalah yang Dipecahkan
 
 | Masalah | Dampak | Solusi Ghost Relay |
 |---------|--------|-------------------|
 | **Inbox terpisah** di 3+ platform | Pesan terlewat, pelanggan kabur | **Universal Inbox** — semua pesan dalam satu feed real-time |
 | **Voice note menumpuk** | Keputusan penting terlewat | **Voice Intelligence** — otomatis transkripsi, ringkas, pecah jadi tugas |
 | **Pertanyaan berulang** | Tim frustrasi, waktu terbuang | **Auto-Reply RAG** — AI jawab pakai riwayat chat + dokumen sendiri |
-| **File & dokumen hilit** | Butuh menit untuk cari file | **Knowledge Vault** — semantic search, otomatis terindeks |
+| **File & dokumen hilang** | Butuh menit untuk cari file | **Knowledge Vault** — semantic search, otomatis terindeks |
 | **Tidak ada ingatan** | AI mulai dari nol setiap kali | **Memory** — vector search sejarah percakapan + dokumen |
 | **Tim baru gabung** | Harus tanya satu per satu | **Knowledge Vault + Auto-Reply** — semua pengetahuan bisa dicari |
 | **Tidak ada visibility** | Kerja tumpang tindih | **Daily Reports** — rangkuman aktivitas harian otomatis |
@@ -41,7 +47,50 @@ Ghost Relay menyelesaikan ini dengan pendekatan **Human → AI → Human**: AI m
 
 ---
 
-## Arsitektur
+# English
+
+> AI as a communication bridge between team members. More than just a chat aggregator — Ghost Relay transforms, remembers, and replies.
+
+## Why This Matters
+
+Remote teams face the same issue: **chaotic asynchronous communication.**
+
+Messages pour in from WhatsApp, Telegram, Slack, and the web. Each inbox is isolated. Voice notes pile up. Documents get lost. The same questions are asked repeatedly. New hires have no access to historical discussions. Night owls miss daytime context; daytime workers miss decisions made at night.
+
+**The result:** hours wasted scrolling chat feeds, listening to voice notes, and repeating answers — instead of building.
+
+Ghost Relay solves this with a **Human → AI → Human** approach: the AI receives input from one side, processes and structures it, and relays it to the other — faster, cleaner, without losing context.
+
+## Problems Solved
+
+| Problem | Impact | Ghost Relay Solution |
+|---------|--------|---------------------|
+| **Fragmented Inboxes** (3+ platforms) | Missed messages, lost leads | **Universal Inbox** — unified real-time feed |
+| **Voice Note Overload** | Key decisions overlooked | **Voice Intelligence** — auto-transcribes, summarizes, decomposes into tasks |
+| **Repetitive Questions** | Frustration, wasted engineering time | **Auto-Reply RAG** — AI replies using chat history + local documents |
+| **Lost Files & Documents** | Minutes spent digging for files | **Knowledge Vault** — semantic search, auto-indexed attachments |
+| **No Long-term Memory** | AI starts from scratch every session | **Memory** — pgvector search over conversations + documents |
+| **New Hires Onboarding** | Repetitive manual handovers | **Knowledge Vault + Auto-Reply** — searchable organizational knowledge |
+| **Lack of Team Visibility** | Overlapping work | **Daily Reports** — automated daily activity summaries |
+
+## Who It Is For
+
+| Persona | Role | Pain Point | Ghost Relay Solution |
+|---------|------|------------|----------------------|
+| **Andi** | Backend Engineer | Dislikes opening phone, listening to audio, or scrolling | Send/receive via PC UI, audio transcribed instantly |
+| **Budi** | Project Manager | Sends long audio, team repeats questions | Speaks once, AI decomposes tasks & auto-notifies division |
+| **Citra** | Frontend Engineer | Misses WA info, technical discussions on Slack | Multi-platform messages in a single clean feed |
+
+## Key Impacts
+
+- **70% coordination time saved** — no more chat scrubbing or listening to voice notes.
+- **5 minutes → 10 seconds** — time spent finding documents.
+- **90% repetitive questions eliminated** — AI auto-replies with references.
+- **100% voice notes** transcribed and summarized automatically.
+
+---
+
+## Arsitektur / Architecture
 
 ```mermaid
 graph TB
@@ -114,7 +163,7 @@ graph TB
 
 ---
 
-## Project Structure
+## Struktur Proyek / Project Structure
 
 ```
 ghost-team/
@@ -141,14 +190,14 @@ ghost-team/
 
 ---
 
-## Quick Start
+## Panduan Cepat / Quick Start
 
-### Prerequisites
+### Persyaratan / Prerequisites
 
 - **Bun** 1.1+ — `curl -fsSL https://bun.sh/install | bash`
-- **PostgreSQL 16** with pgvector (or use Docker)
+- **PostgreSQL 16** dengan pgvector (atau pakai Docker / with pgvector or Docker)
 
-### 1. Install
+### 1. Instalasi / Install
 
 ```bash
 git clone https://github.com/crediblemark-official/Ghost-Relay.git
@@ -161,22 +210,22 @@ bun run db:generate
 
 ```bash
 cp .env.example .env
-# Fill in minimum required variables (see Environment Variables below)
+# Isi variabel minimum yang dibutuhkan / Fill in the minimum required variables
 ```
 
-Or use Docker for PostgreSQL:
+Atau jalankan PostgreSQL via Docker / Or run PostgreSQL via Docker:
 
 ```bash
-docker compose up -d db    # PostgreSQL on port 5433
+docker compose up -d db    # PostgreSQL pada port 5433 / on port 5433
 ```
 
-### 3. Push Database Schema
+### 3. Migrasi Database / Push Database Schema
 
 ```bash
 bun run db:push
 ```
 
-### 4. Run Development
+### 4. Jalankan Server / Run Development
 
 ```bash
 bun dev
@@ -185,9 +234,9 @@ bun dev
 - **Backend**: http://localhost:8000
 - **Frontend**: http://localhost:5173
 
-### 5. Login
+### 5. Masuk Log / Login
 
-First user is automatically assigned `owner` role:
+Pengguna pertama otomatis ditunjuk sebagai `owner` / First user is automatically assigned `owner` role:
 
 - **Email**: `admin@ghost.local`
 - **Password**: `admin123`
@@ -204,13 +253,13 @@ docker compose up -d
 docker compose -f docker-compose.full.yml up -d
 ```
 
-### Deploy to Alibaba Cloud ECS
+### Deployment ke Alibaba Cloud / Deploy to Alibaba Cloud ECS
 
-See **[deployment.md](docs/deployment.md)** for step-by-step guide with automated script.
+Lihat **[deployment.md](docs/deployment.md)** untuk panduan langkah-demi-langkah dengan script otomatis / See **[deployment.md](docs/deployment.md)** for step-by-step guide with automated script.
 
 ---
 
-## Environment Variables
+## Variabel Lingkungan / Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
@@ -229,7 +278,7 @@ See **[deployment.md](docs/deployment.md)** for step-by-step guide with automate
 
 ---
 
-## API Endpoints
+## Endpoint API / API Endpoints
 
 <details>
 <summary><b>Auth</b></summary>
@@ -372,7 +421,7 @@ See **[deployment.md](docs/deployment.md)** for step-by-step guide with automate
 
 ---
 
-## Testing
+## Pengujian / Testing
 
 ```bash
 bun run test          # Unit tests (41 tests)
@@ -382,9 +431,9 @@ bun run lint          # Linting
 
 ---
 
-## Database Design
+## Desain Database / Database Design
 
-No foreign key constraints at database level — referential integrity enforced at application layer. This enables clean microservice decomposition later.
+Tidak ada batasan foreign key di tingkat database — integritas referensial ditegakkan di tingkat aplikasi. Hal ini memungkinkan dekomposisi microservice yang bersih di kemudian hari. / No foreign key constraints at database level — referential integrity enforced at application layer. This enables clean microservice decomposition later.
 
 ```mermaid
 erDiagram
@@ -411,22 +460,22 @@ erDiagram
     Account ||--|| User : "auth"
 ```
 
-Indexes preserved on all ID columns for query performance. Only `Session` and `Account` retain FK constraints (required by Better Auth).
+Indeks dipertahankan pada semua kolom ID untuk kinerja kueri. Hanya `Session` dan `Account` yang mempertahankan batasan FK (diperlukan oleh Better Auth). / Indexes preserved on all ID columns for query performance. Only `Session` and `Account` retain FK constraints (required by Better Auth).
 
 ---
 
-## Security
+## Keamanan / Security
 
-- **Credentials**: API keys encrypted with AES-256-GCM before storage
-- **Auth**: Session-based via Better Auth
-- **API Keys**: Masked in API responses (e.g., `sk-m***-key`)
-- **CORS**: Configurable allowed origins
-- **Body Limit**: 5MB max request size
+- **Credentials**: Kredensial API dienkripsi dengan AES-256-GCM sebelum disimpan / API keys encrypted with AES-256-GCM before storage
+- **Auth**: Berbasis sesi via Better Auth / Session-based via Better Auth
+- **API Keys**: Disamarkan dalam respons API / Masked in API responses (e.g., `sk-••••••••1234`)
+- **CORS**: Asal CORS yang diizinkan dapat dikonfigurasi / Configurable allowed origins
+- **Body Limit**: Batas ukuran permintaan maks 5MB / 5MB max request size
 - **Webhook Auth**: HMAC-SHA256 (Slack), secret token (Telegram)
-- **Access Control**: File access scope (`workspace` / `private`), workspace membership
+- **Access Control**: Cakupan akses file (`workspace` / `private`), keanggotaan workspace / File access scope (`workspace` / `private`), workspace membership
 
 ---
 
-## License
+## Lisensi / License
 
 [MIT](LICENSE)
