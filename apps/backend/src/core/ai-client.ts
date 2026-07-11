@@ -6,6 +6,7 @@ import { db } from '@ghost/database'
 import { decrypt } from './encryption.js'
 import { getAllProviders } from './models-dev.js'
 import { findWorkspaceByMember } from './workspace.js'
+import { isQwenAvailable, getQwenChatModel, getQwenEmbeddingModel } from './qwen-client.js'
 
 const providerCache = new Map<string, { data: any; expiresAt: number }>()
 const openaiClientCache = new Map<string, { data: OpenAIProvider; expiresAt: number }>()
@@ -29,8 +30,6 @@ export function makeOpenAIProvider(apiKey: string, baseURL: string): OpenAIProvi
 
 /**
  * Buat provider SDK sesuai npm package dari catalog models.dev.
- * Hanya pass baseURL jika user secara eksplisit menyetelnya.
- * Native SDK (@ai-sdk/google, @ai-sdk/anthropic) punya default URL sendiri.
  */
 function createProviderForNpm(
   npmPackage: string,
@@ -109,53 +108,95 @@ async function findActiveProvider(userId: string, providerType: string) {
 }
 
 /**
- * Dapatkan LanguageModel dari provider aktif user.
- * Mencari provider type 'chat' duluan, lalu fallback ke 'audio' (karena
- * provider audio seperti GPT-4o/Gemini juga support chat + multimodal).
- * Jatuh ke workspace default jika user tidak punya provider sendiri.
+ * Resolve user-configured provider from DB.
  */
-export async function getLanguageModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
+async function resolveDbProvider(userId: string | undefined, providerType: string) {
   if (!userId) return null
   try {
-    // Cari 'chat' provider duluan
-    let provider = await findActiveProvider(userId, 'chat')
-    // Fallback ke 'audio' provider (GPT-4o/Gemini/Qwen-audio juga bisa chat)
-    if (!provider) provider = await findActiveProvider(userId, 'audio')
-    if (provider) {
-      console.log(`[AI] getLanguageModel: found provider="${provider.name}" type=${provider.providerType} model=${provider.modelId}`)
-      const npm = await resolveNpmPackage(provider.name) ?? '@ai-sdk/openai-compatible'
-      console.log(`[AI] getLanguageModel: npm=${npm}, baseUrl=${provider.apiBaseUrl}`)
-      const sdk = createProviderForNpm(npm, decrypt(provider.apiKey), provider.apiBaseUrl)
-      return { model: sdk.chat(provider.modelId), modelId: provider.modelId }
+    let provider = await findActiveProvider(userId, providerType)
+    if (!provider && providerType === 'chat') {
+      provider = await findActiveProvider(userId, 'audio')
     }
-    console.warn(`[AI] getLanguageModel: no provider found for userId=${userId}`)
+    if (provider) {
+      const npm = await resolveNpmPackage(provider.name) ?? '@ai-sdk/openai-compatible'
+      const sdk = createProviderForNpm(npm, decrypt(provider.apiKey), provider.apiBaseUrl)
+      return { sdk, modelId: provider.modelId, provider }
+    }
   } catch (err) {
-    console.error('[AI] getLanguageModel error:', err)
-    return null
+    console.error(`[AI] resolveDbProvider(${providerType}) error:`, err)
   }
   return null
 }
 
+// ─── Public API: Qwen Cloud first, fallback to DB providers ──────────
+
 /**
- * Dapatkan EmbeddingModel dari provider aktif user.
- * Jatuh ke workspace default jika user tidak punya provider sendiri.
+ * Get LanguageModel — Qwen Cloud first, then user-configured providers.
  */
-export async function getEmbeddingModel(userId?: string): Promise<{ model: EmbeddingModel; modelId: string } | null> {
-  if (!userId) return null
-  try {
-    const provider = await findActiveProvider(userId, 'embedding')
-    if (provider) {
-      const npm = await resolveNpmPackage(provider.name) ?? '@ai-sdk/openai-compatible'
-      const sdk = createProviderForNpm(npm, decrypt(provider.apiKey), provider.apiBaseUrl)
-      if (sdk.embedding) return { model: sdk.embedding(provider.modelId), modelId: provider.modelId }
+export async function getLanguageModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
+  // 1. Qwen Cloud (built-in, just needs DASHSCOPE_API_KEY)
+  if (isQwenAvailable()) {
+    try {
+      const model = getQwenChatModel()
+      return { model, modelId: 'qwen3.7-plus' }
+    } catch (err) {
+      console.warn('[AI] Qwen Cloud unavailable, falling back to DB providers:', (err as Error).message)
     }
-  } catch { /* noop */ }
+  }
+
+  // 2. User-configured providers (DB)
+  const dbResult = await resolveDbProvider(userId, 'chat')
+  if (dbResult) {
+    return { model: dbResult.sdk.chat(dbResult.modelId), modelId: dbResult.modelId }
+  }
+
+  console.warn(`[AI] getLanguageModel: no provider found (qwen=${isQwenAvailable()}, userId=${userId})`)
   return null
 }
 
 /**
- * Cari base URL dari catalog models.dev (dipakai oleh getActiveProvider & test endpoint).
+ * Get EmbeddingModel — Qwen Cloud first, then user-configured providers.
  */
+export async function getEmbeddingModel(userId?: string): Promise<{ model: EmbeddingModel; modelId: string } | null> {
+  // 1. Qwen Cloud
+  if (isQwenAvailable()) {
+    try {
+      const model = getQwenEmbeddingModel()
+      return { model, modelId: 'text-embedding-v4' }
+    } catch (err) {
+      console.warn('[AI] Qwen Cloud embedding unavailable:', (err as Error).message)
+    }
+  }
+
+  // 2. DB providers
+  const dbResult = await resolveDbProvider(userId, 'embedding')
+  if (dbResult && dbResult.sdk.embedding) {
+    return { model: dbResult.sdk.embedding(dbResult.modelId), modelId: dbResult.modelId }
+  }
+
+  return null
+}
+
+/**
+ * Get VisionModel — same as LanguageModel (most modern LLMs support vision).
+ */
+export async function getVisionModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
+  return getLanguageModel(userId)
+}
+
+/**
+ * @deprecated Audio transcription now uses native Qwen STT API or chat model.
+ */
+export async function getAudioModel(userId?: string): Promise<{ model: TranscriptionModel; modelId: string } | null> {
+  const dbResult = await resolveDbProvider(userId, 'audio')
+  if (dbResult && dbResult.sdk.transcription) {
+    return { model: dbResult.sdk.transcription(dbResult.modelId), modelId: dbResult.modelId }
+  }
+  return null
+}
+
+// ─── Utilities ───────────────────────────────────────────────────────
+
 export async function resolveProviderBaseUrl(
   baseUrlFromUser: string | undefined | null,
   providerNameOrId?: string,
@@ -176,8 +217,7 @@ export async function resolveProviderBaseUrl(
 }
 
 /**
- * Dapatkan raw provider info (untuk audio transcription via openai SDK).
- * Jatuh ke workspace default jika user tidak punya provider sendiri.
+ * Get raw provider info for API calls.
  */
 export async function getActiveProvider(
   providerType: string,
@@ -189,32 +229,6 @@ export async function getActiveProvider(
     if (provider) {
       const baseURL = await resolveProviderBaseUrl(provider.apiBaseUrl, provider.name)
       return { apiKey: decrypt(provider.apiKey), baseURL, modelId: provider.modelId }
-    }
-  } catch { /* noop */ }
-  return null
-}
-
-/**
- * Dapatkan LanguageModel yang mendukung vision (image input).
- * Menggunakan model chat yang sama — kebanyakan LLM modern sudah support vision.
- */
-export async function getVisionModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
-  return getLanguageModel(userId)
-}
-
-/**
- * @deprecated Audio transcription now uses the multimodal chat model via getLanguageModel().
- * This function is kept only for providers that still need a dedicated transcription endpoint.
- * GPT-4o, Gemini, and Qwen-audio all handle audio natively through the chat model.
- */
-export async function getAudioModel(userId?: string): Promise<{ model: TranscriptionModel; modelId: string } | null> {
-  if (!userId) return null
-  try {
-    const provider = await findActiveProvider(userId, 'audio')
-    if (provider) {
-      const npm = await resolveNpmPackage(provider.name) ?? '@ai-sdk/openai-compatible'
-      const sdk = createProviderForNpm(npm, decrypt(provider.apiKey), provider.apiBaseUrl)
-      if (sdk.transcription) return { model: sdk.transcription(provider.modelId), modelId: provider.modelId }
     }
   } catch { /* noop */ }
   return null

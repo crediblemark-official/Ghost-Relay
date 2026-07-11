@@ -12,6 +12,7 @@ import {
   searchProviders,
   getProviderModels,
 } from '../../core/models-dev.js'
+import { isQwenAvailable, QWEN_MODELS } from '../../core/qwen-client.js'
 
 function maskKey(encrypted: string): string {
   try {
@@ -242,5 +243,16 @@ export async function handleTestProvider(req: FastifyRequest) {
   } catch (err) {
     console.error('Provider test error:', err)
     return { status: 'error', detail: 'Failed to test provider. Check credentials and URL.' }
+  }
+}
+
+/**
+ * Qwen Cloud status — built-in provider, checks DASHSCOPE_API_KEY
+ */
+export async function handleQwenStatus() {
+  const configured = isQwenAvailable()
+  return {
+    configured,
+    modelsCount: configured ? Object.keys(QWEN_MODELS).length : 0,
   }
 }

@@ -21,6 +21,63 @@ const PROVIDER_LABELS: Record<string, string> = {
 const inputCls = 'h-8 w-full rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-400 transition-colors'
 const selectCls = 'h-8 w-full appearance-none rounded-md border border-slate-200 bg-white px-3 pr-8 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-400 transition-all cursor-pointer'
 
+function QwenCloudStatus() {
+  const { data, isLoading } = useQuery<{ configured: boolean; modelsCount: number }>({
+    queryKey: ['qwen-cloud-status'],
+    queryFn: () => api.get('/ai/qwen/status', { silent: true }),
+    retry: false,
+    staleTime: 300_000,
+  })
+
+  if (isLoading) return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-4 w-4 rounded-full" />
+        <div><Skeleton className="h-4 w-32 mb-1" /><Skeleton className="h-3 w-48" /></div>
+      </div>
+    </div>
+  )
+
+  if (!data) return null
+
+  return (
+    <div className={`rounded-xl border p-4 transition-all ${
+      data.configured
+        ? 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100/50'
+        : 'border-slate-200 bg-slate-50 hover:bg-white'
+    }`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Brain className={`h-5 w-5 ${data.configured ? 'text-emerald-600' : 'text-slate-400'}`} />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-slate-800">Qwen Cloud (DashScope)</span>
+              {data.configured ? (
+                <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider rounded px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200">
+                  Built-in
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider rounded px-2 py-0.5 bg-slate-100 text-slate-500 border border-slate-200">
+                  Not Configured
+                </Badge>
+              )}
+            </div>
+            <div className="text-xs text-slate-400 mt-1">
+              {data.configured
+                ? `${data.modelsCount} models · Primary provider for chat, embedding, and audio`
+                : 'Set DASHSCOPE_API_KEY in environment to enable'
+              }
+            </div>
+          </div>
+        </div>
+        {data.configured && (
+          <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0" />
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function AIProvidersCard() {
   const queryClient = useQueryClient()
   const { data: catalog = { providers: [] } } = useModelsCatalog()
@@ -225,7 +282,10 @@ export function AIProvidersCard() {
         </Button>
       </div>
 
-      <div className="pt-2">
+      <div className="pt-2 space-y-3">
+        {/* Qwen Cloud Status — built-in default provider */}
+        <QwenCloudStatus />
+
         {isLoading ? (
           <div className="space-y-3">
             {[0, 1].map(i => (
