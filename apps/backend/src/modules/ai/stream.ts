@@ -105,7 +105,8 @@ async function createAndEmitNotification(
 }
 
 export async function handleStreamChat(req: FastifyRequest, reply: FastifyReply): Promise<void> {
-  const { messages, session_id } = req.body as StreamBody & { session_id?: string }
+  const { messages } = req.body as StreamBody
+  const session_id = (req.body as any)?.session_id || (req.query as any)?.session_id
 
   if (!messages?.length) {
     reply.status(400).send({ detail: 'messages required' })

@@ -78,17 +78,16 @@ export function useAiChat(options?: {
   sessionIdRef.current = options?.sessionId
 
   const transport = useMemo(() => new TextStreamChatTransport({
-    api: '/api/ai/chat/stream',
+    api: options?.sessionId ? `/api/ai/chat/stream?session_id=${options.sessionId}` : '/api/ai/chat/stream',
     headers: token
       ? {
           Authorization: `Bearer ${token}`,
         }
       : {},
-  }), [token])
+  }), [token, options?.sessionId])
 
   const { sendMessage: chatSend, messages, status, stop } = useChat({
     transport,
-    body: { session_id: sessionIdRef.current ?? undefined },
     onFinish: (result) => {
       const text = result.message.parts
         .filter((p): p is { type: 'text'; text: string } => p.type === 'text')

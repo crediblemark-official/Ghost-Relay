@@ -2,26 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Ghost, Shield, ArrowRight, Play, Search, FileText, Mic,
-  MessageSquare, Sparkles, Zap, Lock, Check, Server, Activity,
-  Layers, Bot, Settings, Send, Inbox, BarChart3, Brain
+  MessageSquare, Sparkles, Lock, Check, Server,
+  Layers, Bot, Send, Inbox, BarChart3, Brain
 } from 'lucide-react'
 
 export function LandingPage() {
-  const [typedQuery, setTypedQuery] = useState('')
-  const [activeTab, setActiveTab] = useState<'voice' | 'vault' | 'autoreply' | 'gateway' | 'security'>('voice')
   const [simulatorScenario, setSimulatorScenario] = useState<'vn' | 'query' | null>(null)
   const [simulatorStep, setSimulatorStep] = useState(0)
-
-  useEffect(() => {
-    const text = 'Kunci API staging server tim'
-    let index = 0
-    const interval = setInterval(() => {
-      setTypedQuery(text.slice(0, index))
-      index++
-      if (index > text.length + 5) index = 0
-    }, 180)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     if (!simulatorScenario) return
