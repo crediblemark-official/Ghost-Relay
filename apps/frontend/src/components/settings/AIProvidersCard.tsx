@@ -21,9 +21,25 @@ const PROVIDER_LABELS: Record<string, string> = {
 const inputCls = 'h-8 w-full rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-400 transition-colors'
 const selectCls = 'h-8 w-full appearance-none rounded-md border border-slate-200 bg-white px-3 pr-8 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-400 transition-all cursor-pointer'
 
+const QWEN_CHAT_OPTIONS = [
+  { id: 'qwen3.7-plus', name: 'Qwen 3.7 Plus', multimodal: false },
+  { id: 'qwen3.7-max', name: 'Qwen 3.7 Max', multimodal: false },
+  { id: 'qwen3.6-flash', name: 'Qwen 3.6 Flash', multimodal: false },
+  { id: 'qwen3.5-omni-plus', name: 'Qwen 3.5 Omni Plus 🎧 (Multimodal)', multimodal: true },
+  { id: 'qwen2-audio-instruct', name: 'Qwen 2 Audio Instruct 🎧 (Multimodal)', multimodal: true },
+  { id: 'qwen-audio-turbo', name: 'Qwen Audio Turbo 🎧 (Multimodal)', multimodal: true },
+]
+
+const QWEN_AUDIO_OPTIONS = [
+  { id: 'qwen3-asr-flash', name: 'Qwen 3 ASR Flash (Recommended)' },
+  { id: 'qwen3-omni-flash', name: 'Qwen 3 Omni Flash' },
+]
+
 function QwenCloudStatus() {
   const queryClient = useQueryClient()
   const [apiKey, setApiKey] = useState('')
+  const [chatModel, setChatModel] = useState('qwen3.7-plus')
+  const [audioModel, setAudioModel] = useState('qwen3-asr-flash')
   const [showInput, setShowInput] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -34,33 +50,35 @@ function QwenCloudStatus() {
     staleTime: 300_000,
   })
 
-  const { data: config, isLoading: loadingConfig } = useQuery<{ apiKey: string; configured: boolean }>({
+  const { data: config, isLoading: loadingConfig } = useQuery<{ apiKey: string; chatModel: string; audioModel: string; configured: boolean }>({
     queryKey: ['qwen-cloud-config'],
     queryFn: () => api.get('/ai/qwen/config', { silent: true }),
     retry: false,
   })
 
   useEffect(() => {
-    if (config?.apiKey) {
-      setApiKey(config.apiKey)
-    } else {
-      setApiKey('')
+    if (config) {
+      if (config.apiKey) setApiKey(config.apiKey)
+      if (config.chatModel) setChatModel(config.chatModel)
+      if (config.audioModel) setAudioModel(config.audioModel)
     }
   }, [config])
+
+  const isSelectedMultimodal = QWEN_CHAT_OPTIONS.find(m => m.id === chatModel)?.multimodal ?? false
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     try {
-      await api.post('/ai/qwen/config', { apiKey })
+      await api.post('/ai/qwen/config', { apiKey, chatModel, audioModel })
       queryClient.invalidateQueries({ queryKey: ['qwen-cloud-status'] })
       queryClient.invalidateQueries({ queryKey: ['qwen-cloud-config'] })
       queryClient.invalidateQueries({ queryKey: ['ai-models'] })
       queryClient.invalidateQueries({ queryKey: ['ai-providers'] })
-      toast.success(apiKey ? 'API Key Qwen berhasil disimpan!' : 'API Key Qwen berhasil dihapus!')
+      toast.success('Konfigurasi Qwen berhasil diperbarui!')
       setShowInput(false)
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyimpan API Key Qwen.')
+      toast.error(err.message || 'Gagal menyimpan konfigurasi Qwen.')
     } finally {
       setSaving(false)
     }
@@ -101,13 +119,14 @@ function QwenCloudStatus() {
             </div>
             <div className="text-xs text-slate-400 mt-1">
               {status.configured
-                ? `${status.modelsCount} models · Primary provider for chat, embedding, and audio`
+                ? `${chatModel}${isSelectedMultimodal ? ' 🎧' : ''} · Primary provider for chat, embedding, and audio`
                 : 'Tambahkan API key untuk mengaktifkan model Qwen Cloud bawaan secara langsung'
               }
             </div>
           </div>
         </div>
         <Button
+          type="button"
           variant="outline"
           size="sm"
           onClick={() => setShowInput(!showInput)}
@@ -118,59 +137,106 @@ function QwenCloudStatus() {
       </div>
 
       {showInput && (
-        <form onSubmit={handleSave} className="mt-4 pt-4 border-t border-dashed border-slate-200 flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-medium text-slate-500">DashScope API Key</label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className={inputCls}
-                />
-                <Key className="absolute right-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
-              </div>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={saving}
-                className="h-8 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
-              >
-                {saving ? 'Menyimpan...' : 'Simpan'}
-              </Button>
-              {status.configured && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  disabled={saving}
-                  onClick={async () => {
-                    if (confirm('Hapus API Key Qwen?')) {
-                      setSaving(true)
-                      try {
-                        await api.post('/ai/qwen/config', { apiKey: '' })
-                        queryClient.invalidateQueries({ queryKey: ['qwen-cloud-status'] })
-                        queryClient.invalidateQueries({ queryKey: ['qwen-cloud-config'] })
-                        queryClient.invalidateQueries({ queryKey: ['ai-models'] })
-                        queryClient.invalidateQueries({ queryKey: ['ai-providers'] })
-                        toast.success('API Key Qwen berhasil dihapus!')
-                        setApiKey('')
-                        setShowInput(false)
-                      } catch (err: any) {
-                        toast.error(err.message || 'Gagal menghapus API Key.')
-                      } finally {
-                        setSaving(false)
-                      }
-                    }
-                  }}
-                  className="h-8 px-3 text-xs"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              )}
+        <form onSubmit={handleSave} className="mt-4 pt-4 border-t border-dashed border-slate-200 flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-600">DashScope API Key</label>
+            <div className="relative">
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-..."
+                className={inputCls}
+              />
+              <Key className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-600">Qwen Model</label>
+              <div className="relative">
+                <select
+                  value={chatModel}
+                  onChange={(e) => setChatModel(e.target.value)}
+                  className={selectCls}
+                >
+                  {QWEN_CHAT_OPTIONS.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </div>
+              </div>
+            </div>
+
+            {!isSelectedMultimodal && (
+              <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                <label className="text-xs font-semibold text-slate-600">Audio/STT Model</label>
+                <div className="relative">
+                  <select
+                    value={audioModel}
+                    onChange={(e) => setAudioModel(e.target.value)}
+                    className={selectCls}
+                  >
+                    {QWEN_AUDIO_OPTIONS.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            {status.configured && (
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                disabled={saving}
+                onClick={async () => {
+                  if (confirm('Hapus konfigurasi Qwen?')) {
+                    setSaving(true)
+                    try {
+                      await api.post('/ai/qwen/config', { apiKey: '', chatModel: 'qwen3.7-plus', audioModel: 'qwen3-asr-flash' })
+                      queryClient.invalidateQueries({ queryKey: ['qwen-cloud-status'] })
+                      queryClient.invalidateQueries({ queryKey: ['qwen-cloud-config'] })
+                      queryClient.invalidateQueries({ queryKey: ['ai-models'] })
+                      queryClient.invalidateQueries({ queryKey: ['ai-providers'] })
+                      toast.success('Konfigurasi Qwen berhasil dihapus!')
+                      setApiKey('')
+                      setChatModel('qwen3.7-plus')
+                      setAudioModel('qwen3-asr-flash')
+                      setShowInput(false)
+                    } catch (err: any) {
+                      toast.error(err.message || 'Gagal menghapus konfigurasi.')
+                    } finally {
+                      setSaving(false)
+                    }
+                  }
+                }}
+                className="h-8 px-3 text-xs mr-auto"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Hapus
+              </Button>
+            )}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={saving}
+              className="h-8 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+            >
+              {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
+            </Button>
           </div>
         </form>
       )}

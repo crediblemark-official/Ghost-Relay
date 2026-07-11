@@ -8,6 +8,8 @@ import type { LanguageModel, EmbeddingModel } from 'ai'
 import { db } from '@ghost/database'
 import { decrypt } from './encryption.js'
 
+import { getSetting } from './db-settings.js'
+
 const QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
 
 export const QWEN_MODELS = {
@@ -84,7 +86,8 @@ export async function createQwenClient(apiKey?: string, userId?: string): Promis
 
 export async function getQwenChatModel(modelId?: string, userId?: string): Promise<LanguageModel> {
   const client = await createQwenClient(undefined, userId)
-  return client.chat(modelId || QWEN_MODELS.chat)
+  const resolvedModelId = modelId || await getSetting('qwen_chat_model') || QWEN_MODELS.chat
+  return client.chat(resolvedModelId)
 }
 
 export async function getQwenEmbeddingModel(modelId?: string, userId?: string): Promise<EmbeddingModel> {
@@ -93,7 +96,7 @@ export async function getQwenEmbeddingModel(modelId?: string, userId?: string): 
 }
 
 /**
- * Transcribe audio via Qwen Cloud STT (qwen3-asr-flash).
+ * Transcribe audio via Qwen Cloud STT (qwen3-asr-flash or multimodal).
  * Uses OpenAI-compatible /chat/completions with input_audio content part.
  */
 export async function qwenTranscribe(
@@ -107,6 +110,18 @@ export async function qwenTranscribe(
 
   const baseUrl = await getQwenBaseUrl(userId)
 
+  const chatModel = await getSetting('qwen_chat_model') || QWEN_MODELS.chat
+  const isMultimodal = [
+    'qwen3.5-omni-plus',
+    'qwen3.5-omni-flash',
+    'qwen2-audio-instruct',
+    'qwen-audio-turbo'
+  ].includes(chatModel)
+
+  const resolvedModel = isMultimodal
+    ? chatModel
+    : await getSetting('qwen_audio_model') || QWEN_MODELS.stt
+
   const audioBase64 = audioBuffer.toString('base64')
   const dataUri = `data:${mediaType};base64,${audioBase64}`
 
@@ -117,7 +132,7 @@ export async function qwenTranscribe(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: QWEN_MODELS.stt,
+      model: resolvedModel,
       messages: [
         {
           role: 'user',
