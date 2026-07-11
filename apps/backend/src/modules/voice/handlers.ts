@@ -55,70 +55,80 @@ export async function handleProcessVoice(req: FastifyRequest, reply: FastifyRepl
 }
 
 export async function handleVoiceCommand(req: FastifyRequest, reply: FastifyReply) {
-  const contentType = req.headers['content-type'] ?? ''
-  let text: string | null = null
+  try {
+    const contentType = req.headers['content-type'] ?? ''
+    let text: string | null = null
 
-  if (contentType.includes('multipart')) {
-    const data = await req.file()
-    if (data) {
-      const buffer = await data.toBuffer()
-      const ext = data.filename?.split('.').pop() ?? 'webm'
-      const tmpPath = join(tmpdir(), `${randomUUID()}.${ext}`)
-      await writeFile(tmpPath, buffer)
-      text = await transcribeAudio(tmpPath, req.userId)
-      await unlink(tmpPath).catch(() => {})
+    if (contentType.includes('multipart')) {
+      const data = await req.file()
+      if (data) {
+        const buffer = await data.toBuffer()
+        const ext = data.filename?.split('.').pop() ?? 'webm'
+        const tmpPath = join(tmpdir(), `${randomUUID()}.${ext}`)
+        await writeFile(tmpPath, buffer)
+        text = await transcribeAudio(tmpPath, req.userId)
+        await unlink(tmpPath).catch(() => {})
+      }
+    } else if (contentType.includes('json')) {
+      const body = req.body as { text?: string }
+      text = body.text ?? null
     }
-  } else if (contentType.includes('json')) {
-    const body = req.body as { text?: string }
-    text = body.text ?? null
-  }
 
-  if (!text) {
-    reply.status(400).send({ detail: 'No speech content' })
-    return
-  }
-
-  const intent = await extractIntent(text, req.userId)
-
-  // FP-4: voice command hanya auto-send jika diaktifkan oleh user
-  const autoSend = await getSetting('voice_command_enabled', 'false')
-  if (!intent.error && autoSend === 'true') {
-    const platform = (intent.platform ?? 'All').toLowerCase()
-    const messageText = intent.message ?? text
-    const receiver = intent.receiver ?? ''
-    if (platform !== 'all' && platform !== '') {
-      await platformService.sendMessage(platform, receiver, messageText)
+    if (!text) {
+      reply.status(400).send({ detail: 'No speech content' })
+      return
     }
-  }
 
-  reply.send({ status: 'ok', intent, original_text: text })
+    const intent = await extractIntent(text, req.userId)
+
+    // FP-4: voice command hanya auto-send jika diaktifkan oleh user
+    const autoSend = await getSetting('voice_command_enabled', 'false')
+    if (!intent.error && autoSend === 'true') {
+      const platform = (intent.platform ?? 'All').toLowerCase()
+      const messageText = intent.message ?? text
+      const receiver = intent.receiver ?? ''
+      if (platform !== 'all' && platform !== '') {
+        await platformService.sendMessage(platform, receiver, messageText)
+      }
+    }
+
+    reply.send({ status: 'ok', intent, original_text: text })
+  } catch (err) {
+    console.error(`[VOICE] Command error:`, err)
+    reply.status(500).send({ detail: 'Voice command processing failed' })
+  }
 }
 
 export async function handleVoiceCommandText(req: FastifyRequest, reply: FastifyReply) {
-  let body: { text: string }
   try {
-    body = validate(voiceCommandTextSchema, req.body)
-  } catch (err) {
-    if (err instanceof ValidationError) return sendValidationError(reply, err)
-    throw err
-  }
-  const { text } = body
-  if (!text) {
-    reply.status(400).send({ detail: 'No text provided' })
-    return
-  }
-  const intent = await extractIntent(text, req.userId)
-
-  // FP-4: voice command hanya auto-send jika diaktifkan oleh user
-  const autoSend = await getSetting('voice_command_enabled', 'false')
-  if (!intent.error && autoSend === 'true') {
-    const platform = (intent.platform ?? 'All').toLowerCase()
-    const messageText = intent.message ?? text
-    if (platform !== 'all' && platform !== '') {
-      await platformService.sendMessage(platform, intent.receiver ?? '', messageText)
+    let body: { text: string }
+    try {
+      body = validate(voiceCommandTextSchema, req.body)
+    } catch (err) {
+      if (err instanceof ValidationError) return sendValidationError(reply, err)
+      throw err
     }
+    const { text } = body
+    if (!text) {
+      reply.status(400).send({ detail: 'No text provided' })
+      return
+    }
+    const intent = await extractIntent(text, req.userId)
+
+    // FP-4: voice command hanya auto-send jika diaktifkan oleh user
+    const autoSend = await getSetting('voice_command_enabled', 'false')
+    if (!intent.error && autoSend === 'true') {
+      const platform = (intent.platform ?? 'All').toLowerCase()
+      const messageText = intent.message ?? text
+      if (platform !== 'all' && platform !== '') {
+        await platformService.sendMessage(platform, intent.receiver ?? '', messageText)
+      }
+    }
+    reply.send({ status: 'ok', intent, original_text: text })
+  } catch (err) {
+    console.error(`[VOICE] Command text error:`, err)
+    reply.status(500).send({ detail: 'Voice command processing failed' })
   }
-  reply.send({ status: 'ok', intent, original_text: text })
 }
 
 export async function handleGetVoiceStatus(req: FastifyRequest, reply: FastifyReply) {
