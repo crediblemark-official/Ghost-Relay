@@ -25,7 +25,17 @@ let cachedClient: ReturnType<typeof createOpenAI> | null = null
 let cachedApiKey = ''
 
 export async function getQwenApiKey(userId?: string): Promise<string | null> {
-  // Check DB AIProvider
+  // 1. Cek dari SystemSetting (konfigurasi mandiri Qwen Cloud)
+  try {
+    const keySetting = await getSetting('qwen_api_key')
+    if (keySetting) {
+      return decrypt(keySetting)
+    }
+  } catch (err) {
+    console.error('[QWEN] Failed to read qwen_api_key from settings:', err)
+  }
+
+  // 2. Fallback: Cek dari DB AIProvider
   try {
     const provider = await db.aIProvider.findFirst({
       where: {
