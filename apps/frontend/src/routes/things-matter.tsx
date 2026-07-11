@@ -168,7 +168,7 @@ function ThingsMatterPage() {
         </div>
       ) : (
         <div className="flex-1 p-5 bg-muted/20 overflow-y-auto">
-          <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-5 items-stretch min-h-[calc(100vh-170px)]">
+          <div className="w-full flex flex-col md:flex-row gap-5 items-stretch min-h-[calc(100vh-170px)]">
             
             {/* Left Column: Summary Info card */}
             <div className="w-full md:w-64 shrink-0 flex flex-col gap-4">
@@ -223,7 +223,7 @@ function ThingsMatterPage() {
                     <p className="text-xs">Tidak ada aktivitas pesan obrolan untuk tanggal {selectedDate}.</p>
                   </div>
                 ) : (
-                  <div className="max-w-2xl prose prose-sm prose-slate dark:prose-invert">
+                  <div className="max-w-none prose prose-sm prose-slate dark:prose-invert">
                     {renderMarkdown(data?.report || '')}
                   </div>
                 )}
