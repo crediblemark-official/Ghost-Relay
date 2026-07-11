@@ -9,7 +9,9 @@ import {
   handleBrowseProviders,
   handleBrowseProviderModels,
   handleTestProvider,
-  handleQwenStatus
+  handleQwenStatus,
+  handleGetQwenConfig,
+  handlePostQwenConfig
 } from './handlers.js'
 import { handleStreamChat } from './stream.js'
 
@@ -26,6 +28,8 @@ export async function aiModule(app: FastifyInstance): Promise<void> {
 
   // Qwen Cloud — built-in default provider
   app.get('/ai/qwen/status', { preHandler: [app.authenticate] }, handleQwenStatus)
+  app.get('/ai/qwen/config', { preHandler: [app.authenticate] }, handleGetQwenConfig)
+  app.post('/ai/qwen/config', { preHandler: [app.authenticate] }, handlePostQwenConfig)
 
   app.get('/ai/providers', { preHandler: [app.authenticate] }, handleGetProviders)
   app.post('/ai/providers', { preHandler: [app.authenticate] }, handleCreateProvider)

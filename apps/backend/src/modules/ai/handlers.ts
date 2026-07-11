@@ -12,7 +12,8 @@ import {
   searchProviders,
   getProviderModels,
 } from '../../core/models-dev.js'
-import { isQwenAvailable, QWEN_MODELS } from '../../core/qwen-client.js'
+import { isQwenAvailable, QWEN_MODELS, getQwenApiKey } from '../../core/qwen-client.js'
+import { setSetting, deleteSetting } from '../../core/db-settings.js'
 
 function maskKey(encrypted: string): string {
   try {
@@ -256,4 +257,28 @@ export async function handleQwenStatus(request: any) {
     configured,
     modelsCount: configured ? Object.keys(QWEN_MODELS).length : 0,
   }
+}
+
+export async function handleGetQwenConfig(request: any) {
+  const userId = request.user?.id
+  const key = await getQwenApiKey(userId)
+  return {
+    apiKey: key ? 'sk-••••••••' + key.slice(-4) : '',
+    configured: !!key,
+  }
+}
+
+export async function handlePostQwenConfig(request: any, reply: any) {
+  const { apiKey } = request.body as { apiKey?: string }
+  if (!apiKey) {
+    await deleteSetting('qwen_api_key')
+    return { status: 'ok', message: 'Qwen API Key deleted' }
+  }
+
+  if (apiKey.startsWith('sk-••••••••')) {
+    return { status: 'ok', message: 'No change' }
+  }
+
+  await setSetting('qwen_api_key', encrypt(apiKey))
+  return { status: 'ok', message: 'Qwen API Key updated' }
 }

@@ -22,14 +22,51 @@ const inputCls = 'h-8 w-full rounded-md border border-slate-200 bg-white px-3 te
 const selectCls = 'h-8 w-full appearance-none rounded-md border border-slate-200 bg-white px-3 pr-8 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-400 transition-all cursor-pointer'
 
 function QwenCloudStatus() {
-  const { data, isLoading } = useQuery<{ configured: boolean; modelsCount: number }>({
+  const queryClient = useQueryClient()
+  const [apiKey, setApiKey] = useState('')
+  const [showInput, setShowInput] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const { data: status, isLoading: loadingStatus } = useQuery<{ configured: boolean; modelsCount: number }>({
     queryKey: ['qwen-cloud-status'],
     queryFn: () => api.get('/ai/qwen/status', { silent: true }),
     retry: false,
     staleTime: 300_000,
   })
 
-  if (isLoading) return (
+  const { data: config, isLoading: loadingConfig } = useQuery<{ apiKey: string; configured: boolean }>({
+    queryKey: ['qwen-cloud-config'],
+    queryFn: () => api.get('/ai/qwen/config', { silent: true }),
+    retry: false,
+  })
+
+  useEffect(() => {
+    if (config?.apiKey) {
+      setApiKey(config.apiKey)
+    } else {
+      setApiKey('')
+    }
+  }, [config])
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await api.post('/ai/qwen/config', { apiKey })
+      queryClient.invalidateQueries({ queryKey: ['qwen-cloud-status'] })
+      queryClient.invalidateQueries({ queryKey: ['qwen-cloud-config'] })
+      queryClient.invalidateQueries({ queryKey: ['ai-models'] })
+      queryClient.invalidateQueries({ queryKey: ['ai-providers'] })
+      toast.success(apiKey ? 'API Key Qwen berhasil disimpan!' : 'API Key Qwen berhasil dihapus!')
+      setShowInput(false)
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal menyimpan API Key Qwen.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loadingStatus || loadingConfig) return (
     <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
       <div className="flex items-center gap-3">
         <Skeleton className="h-4 w-4 rounded-full" />
@@ -38,21 +75,21 @@ function QwenCloudStatus() {
     </div>
   )
 
-  if (!data) return null
+  if (!status) return null
 
   return (
     <div className={`rounded-xl border p-4 transition-all ${
-      data.configured
-        ? 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100/50'
+      status.configured
+        ? 'border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/50'
         : 'border-slate-200 bg-slate-50 hover:bg-white'
     }`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Brain className={`h-5 w-5 ${data.configured ? 'text-emerald-600' : 'text-slate-400'}`} />
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-3">
+          <Brain className={`h-5 w-5 mt-0.5 ${status.configured ? 'text-emerald-600' : 'text-slate-400'}`} />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-slate-800">Qwen Cloud (DashScope)</span>
-              {data.configured ? (
+              {status.configured ? (
                 <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider rounded px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200">
                   Built-in
                 </Badge>
@@ -63,17 +100,80 @@ function QwenCloudStatus() {
               )}
             </div>
             <div className="text-xs text-slate-400 mt-1">
-              {data.configured
-                ? `${data.modelsCount} models · Primary provider for chat, embedding, and audio`
-                : 'Tambahkan provider Qwen di daftar bawah untuk mengaktifkan'
+              {status.configured
+                ? `${status.modelsCount} models · Primary provider for chat, embedding, and audio`
+                : 'Tambahkan API key untuk mengaktifkan model Qwen Cloud bawaan secara langsung'
               }
             </div>
           </div>
         </div>
-        {data.configured && (
-          <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0" />
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowInput(!showInput)}
+          className="h-7 px-2 text-xs border-slate-200 hover:bg-white hover:border-slate-300"
+        >
+          {showInput ? 'Batal' : status.configured ? 'Ubah API Key' : 'Konfigurasi'}
+        </Button>
       </div>
+
+      {showInput && (
+        <form onSubmit={handleSave} className="mt-4 pt-4 border-t border-dashed border-slate-200 flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-[11px] font-medium text-slate-500">DashScope API Key</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="sk-..."
+                  className={inputCls}
+                />
+                <Key className="absolute right-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
+              </div>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={saving}
+                className="h-8 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+              >
+                {saving ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+              {status.configured && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={saving}
+                  onClick={async () => {
+                    if (confirm('Hapus API Key Qwen?')) {
+                      setSaving(true)
+                      try {
+                        await api.post('/ai/qwen/config', { apiKey: '' })
+                        queryClient.invalidateQueries({ queryKey: ['qwen-cloud-status'] })
+                        queryClient.invalidateQueries({ queryKey: ['qwen-cloud-config'] })
+                        queryClient.invalidateQueries({ queryKey: ['ai-models'] })
+                        queryClient.invalidateQueries({ queryKey: ['ai-providers'] })
+                        toast.success('API Key Qwen berhasil dihapus!')
+                        setApiKey('')
+                        setShowInput(false)
+                      } catch (err: any) {
+                        toast.error(err.message || 'Gagal menghapus API Key.')
+                      } finally {
+                        setSaving(false)
+                      }
+                    }
+                  }}
+                  className="h-8 px-3 text-xs"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </form>
+      )}
     </div>
   )
 }
