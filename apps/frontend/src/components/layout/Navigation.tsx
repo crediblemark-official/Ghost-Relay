@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Ghost, Settings, LogOut, Moon, Sun, Shield, Bell, BellRing, ExternalLink, LayoutGrid, ClipboardList } from 'lucide-react'
+import { Ghost, Settings, LogOut, Moon, Sun, Shield, Bell, BellRing, ExternalLink, LayoutGrid, ClipboardList, FileText } from 'lucide-react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
@@ -189,6 +189,13 @@ export function Navigation() {
             </button>
           </Link>
         )}
+
+        {/* Daily Reports */}
+        <Link to="/daily-reports">
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" title="Daily Reports">
+            <FileText className="h-4 w-4" />
+          </button>
+        </Link>
 
         {/* Things & Matter */}
         <Link to="/things-matter">

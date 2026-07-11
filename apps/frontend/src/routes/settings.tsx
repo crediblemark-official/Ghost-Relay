@@ -1,13 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
-  Brain, Globe, FileText, Settings as SettingsIcon, Link as LinkIcon, Bot,
+  Brain, Globe, Settings as SettingsIcon, Link as LinkIcon, Bot,
   MessageSquare, User, Bell, Shield, ArrowRight, ChevronRight
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { AIProvidersCard } from '@/components/settings/AIProvidersCard'
 import { PlatformsCard } from '@/components/settings/PlatformsCard'
-import { DailyReportsCard } from '@/components/settings/DailyReportsCard'
 import { SystemConfigCard } from '@/components/settings/SystemConfigCard'
 import { InviteCard } from '@/components/settings/InviteCard'
 import { AutoReplyCard } from '@/components/settings/AutoReplyCard'
@@ -18,12 +17,11 @@ export const Route = createFileRoute('/settings')({
 
 function SettingsPage() {
   const user = useAuthStore((s) => s.user)
-  const [activeTab, setActiveTab] = useState<'ai' | 'platforms' | 'reports' | 'invite' | 'auto-reply' | 'system'>('ai')
+  const [activeTab, setActiveTab] = useState<'ai' | 'platforms' | 'invite' | 'auto-reply' | 'system'>('ai')
 
   const tabs = [
     { id: 'ai', label: 'AI Providers', icon: Brain, description: 'LLM, embeddings, providers' },
     { id: 'platforms', label: 'Platforms', icon: Globe, description: 'Telegram, WhatsApp, Slack' },
-    { id: 'reports', label: 'Daily Reports', icon: FileText, description: 'Cron & delivery settings' },
     { id: 'invite', label: 'Team Invite', icon: LinkIcon, description: 'Share invite link' },
     { id: 'auto-reply', label: 'Auto Reply', icon: Bot, description: 'AI auto-reply toggle' },
     { id: 'system', label: 'System Config', icon: SettingsIcon, description: 'Environment variables' },
@@ -116,11 +114,6 @@ function SettingsPage() {
           {activeTab === 'platforms' && (
             <div className="animate-in fade-in slide-in-from-right-3 duration-200">
               <PlatformsCard />
-            </div>
-          )}
-          {activeTab === 'reports' && (
-            <div className="animate-in fade-in slide-in-from-right-3 duration-200">
-              <DailyReportsCard />
             </div>
           )}
           {activeTab === 'invite' && (
