@@ -5,6 +5,7 @@ import type { LanguageModel, EmbeddingModel } from 'ai'
 import { db } from '@ghost/database'
 import { decrypt } from './encryption.js'
 import { getAllProviders } from './models-dev.js'
+import { findWorkspaceByMember } from './workspace.js'
 
 const providerCache = new Map<string, { data: any; expiresAt: number }>()
 const openaiClientCache = new Map<string, { data: OpenAIProvider; expiresAt: number }>()
@@ -93,9 +94,7 @@ async function findActiveProvider(userId: string, providerType: string) {
   })
   if (provider) return provider
   // 2. workspace default
-  const ws = await db.workspace.findFirst({
-    where: { members: { some: { userId } } },
-  })
+  const ws = await findWorkspaceByMember(userId)
   if (ws) {
     provider = await db.aIProvider.findFirst({
       where: { workspaceId: ws.id, providerType, isActive: true, scope: 'workspace' },

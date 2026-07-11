@@ -5,6 +5,7 @@ import { resolveProviderBaseUrl, makeOpenAIProvider } from '../../core/ai-client
 import { validate, sendValidationError, ValidationError } from '../../core/validation.js'
 import { encrypt, decrypt } from '../../core/encryption.js'
 import { aiProviderCreateSchema, aiProviderUpdateSchema } from '@ghost/shared'
+import { findWorkspaceByMember, findWorkspaceByMemberRole } from '../../core/workspace.js'
 import {
   searchModels,
   getModelFamilies,
@@ -29,9 +30,7 @@ export async function handleGetProviders(req: FastifyRequest) {
     where: { userId: req.userId, scope: 'personal' },
   })
   // workspace providers (cari via workspaceId, bukan scope — mencover data lama)
-  const ws = await db.workspace.findFirst({
-    where: { members: { some: { userId: req.userId } } },
-  })
+  const ws = await findWorkspaceByMember(req.userId)
   const wsProviders = ws
     ? await db.aIProvider.findMany({ where: { workspaceId: ws.id } })
     : []
@@ -74,9 +73,7 @@ export async function handleCreateProvider(req: FastifyRequest, reply: FastifyRe
   // resolve workspaceId jika scope = 'workspace'
   let workspaceId: string | null = null
   if (scope === 'workspace') {
-    const ws = await db.workspace.findFirst({
-      where: { members: { some: { userId: req.userId, role: 'admin' } } },
-    })
+    const ws = await findWorkspaceByMemberRole(req.userId, 'admin')
     if (!ws) {
       reply.status(403).send({ detail: 'You are not a workspace admin.' })
       return
@@ -141,9 +138,7 @@ export async function handleUpdateProvider(req: FastifyRequest, reply: FastifyRe
   if (body.scope !== undefined) {
     updateData.scope = body.scope
     if (body.scope === 'workspace') {
-      const ws = await db.workspace.findFirst({
-        where: { members: { some: { userId: req.userId, role: 'admin' } } },
-      })
+      const ws = await findWorkspaceByMemberRole(req.userId, 'admin')
       if (!ws) {
         reply.status(403).send({ detail: 'You are not a workspace admin.' })
         return

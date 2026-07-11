@@ -7,11 +7,18 @@ export async function handleGetNotifications(req: FastifyRequest) {
     where: { userId: req.userId },
     orderBy: { createdAt: 'desc' },
     take: 50,
-    include: {
-      sender: { select: { id: true, name: true, email: true } },
-    },
   })
-  return notifications
+
+  const senderIds = [...new Set(notifications.map(n => n.senderId))]
+  const senders = senderIds.length > 0
+    ? await db.user.findMany({ where: { id: { in: senderIds } }, select: { id: true, name: true, email: true } })
+    : []
+  const senderMap = new Map(senders.map(s => [s.id, s]))
+
+  return notifications.map(n => ({
+    ...n,
+    sender: senderMap.get(n.senderId) ?? null,
+  }))
 }
 
 export async function handleGetUnreadCount(req: FastifyRequest) {

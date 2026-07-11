@@ -47,13 +47,18 @@ export async function handleGetFiles(req: FastifyRequest) {
     orderBy: { uploadedAt: 'desc' },
     skip: offset,
     take: limit,
-    include: { user: { select: { id: true, name: true, email: true } } },
   })
+
+  const userIds = [...new Set(rows.map(r => r.userId))]
+  const users = userIds.length > 0
+    ? await db.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } })
+    : []
+  const userMap = new Map(users.map(u => [u.id, u]))
 
   return rows.map(r => ({
     id: r.id,
     userId: r.userId,
-    uploaderName: r.user?.name || r.user?.email || 'Unknown',
+    uploaderName: userMap.get(r.userId)?.name || userMap.get(r.userId)?.email || 'Unknown',
     originalName: r.originalName,
     storageUrl: r.storageUrl,
     fileType: r.fileType,
@@ -151,10 +156,16 @@ export async function handleSearchFiles(req: FastifyRequest, reply: FastifyReply
       : { userId, id: { in: fileIds } }
     const fileRows = await db.file.findMany({
       where: fileFilter,
-      include: { user: { select: { id: true, name: true, email: true } } },
     })
+
+    const fUserIds = [...new Set(fileRows.map(f => f.userId))]
+    const fUsers = fUserIds.length > 0
+      ? await db.user.findMany({ where: { id: { in: fUserIds } }, select: { id: true, name: true, email: true } })
+      : []
+    const fUserMap = new Map(fUsers.map(u => [u.id, u]))
+
     for (const f of fileRows) {
-      fileMap.set(f.id, f)
+      fileMap.set(f.id, { ...f, _user: fUserMap.get(f.userId) ?? null })
     }
   }
   const currentUserId = String(userId)
@@ -168,7 +179,7 @@ export async function handleSearchFiles(req: FastifyRequest, reply: FastifyReply
         results.push({
         id: file.id,
         userId: file.userId,
-        uploaderName: file.user?.name || file.user?.email || 'Unknown',
+        uploaderName: (file as any)._user?.name || (file as any)._user?.email || 'Unknown',
         originalName: file.originalName,
         storageUrl: file.storageUrl,
         fileType: file.fileType,

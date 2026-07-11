@@ -33,11 +33,32 @@ function getCurrentUser(userId: string) {
 }
 
 async function getWorkspaceAndMembers(userId: string) {
-  const ws = await db.workspace.findFirst({
-    where: { members: { some: { userId } } },
-    include: { members: { include: { user: { select: { id: true, name: true, email: true } } } } },
+  const membership = await db.workspaceMember.findFirst({
+    where: { userId },
+    select: { workspaceId: true },
   })
-  return ws
+  if (!membership) return null
+
+  const ws = await db.workspace.findUnique({ where: { id: membership.workspaceId } })
+  if (!ws) return null
+
+  const members = await db.workspaceMember.findMany({
+    where: { workspaceId: ws.id },
+  })
+
+  const memberUserIds = members.map(m => m.userId)
+  const users = memberUserIds.length > 0
+    ? await db.user.findMany({ where: { id: { in: memberUserIds } }, select: { id: true, name: true, email: true } })
+    : []
+  const userMap = new Map(users.map(u => [u.id, u]))
+
+  return {
+    ...ws,
+    members: members.map(m => ({
+      ...m,
+      user: userMap.get(m.userId) ?? null,
+    })),
+  }
 }
 
 async function createAndEmitNotification(
@@ -100,7 +121,7 @@ export async function handleStreamChat(req: FastifyRequest, reply: FastifyReply)
 
   const user = await getCurrentUser(req.userId)
   const ws = await getWorkspaceAndMembers(req.userId)
-  const memberNames = ws?.members.map(m => ({ id: m.user.id, name: m.user.name })) || []
+  const memberNames = ws?.members.map(m => ({ id: m.user!.id, name: m.user!.name })) || []
 
   // === Conversation Memory: Summary + Vector Retrieval ===
   let sessionContext = ''
@@ -223,9 +244,9 @@ Gunakan tool yang tepat sesuai perintah user. Jangan ragu menggunakan tool — i
               const senderName = user?.name || 'Anggota Tim'
               let sent = 0
               for (const member of ws.members) {
-                if (member.user.id === req.userId) continue
+                if (member.user!.id === req.userId) continue
                 await createAndEmitNotification(
-                  member.user.id, req.userId, senderName,
+                  member.user!.id, req.userId, senderName,
                   `📢 Pengumuman dari ${senderName}`,
                   message,
                   'broadcast',

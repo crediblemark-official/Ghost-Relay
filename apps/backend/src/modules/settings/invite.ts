@@ -74,27 +74,37 @@ export async function handleAcceptInvite(req: FastifyRequest, reply: FastifyRepl
 export async function handleListMembers(req: FastifyRequest, reply: FastifyReply) {
   let ws = await db.workspace.findUnique({ where: { ownerId: req.userId } })
   if (!ws) {
-    ws = await db.workspace.findFirst({
-      where: { members: { some: { userId: req.userId } } },
+    const membership = await db.workspaceMember.findFirst({
+      where: { userId: req.userId },
+      select: { workspaceId: true },
     })
+    if (membership) {
+      ws = await db.workspace.findUnique({ where: { id: membership.workspaceId } })
+    }
   }
   if (!ws) return { workspaceName: '', members: [], myRole: '' }
   const members = await db.workspaceMember.findMany({
     where: { workspaceId: ws.id },
-    include: { user: { select: { id: true, name: true, email: true, image: true, role: true } } },
     orderBy: { joinedAt: 'asc' },
   })
+
+  const userIds = [...new Set(members.map(m => m.userId))]
+  const users = userIds.length > 0
+    ? await db.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true, image: true, role: true } })
+    : []
+  const userMap = new Map(users.map(u => [u.id, u]))
+
   const myMembership = members.find(m => m.userId === req.userId)
   return {
     workspaceName: ws.name,
     myRole: myMembership?.role ?? '',
     members: members.map(m => ({
-      id: m.user.id,
-      name: m.user.name,
-      email: m.user.email,
-      image: m.user.image,
+      id: m.userId,
+      name: userMap.get(m.userId)?.name ?? '',
+      email: userMap.get(m.userId)?.email ?? '',
+      image: userMap.get(m.userId)?.image ?? null,
       role: m.role,
-      platformRole: m.user.role,
+      platformRole: userMap.get(m.userId)?.role ?? 'user',
       joinedAt: m.joinedAt,
     })),
   }

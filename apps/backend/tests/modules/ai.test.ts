@@ -40,6 +40,10 @@ vi.mock('@ghost/database', () => ({
   db: {
     workspace: {
       findFirst: vi.fn().mockResolvedValue(null),
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
+    workspaceMember: {
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     user: {
       findUnique: vi.fn().mockResolvedValue({ id: 1, role: 'user' }),

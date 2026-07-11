@@ -11,16 +11,34 @@ export async function handleGetSessions(req: FastifyRequest, reply: FastifyReply
     const sessions = await db.chatSession.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
-      include: {
-        messages: {
-          orderBy: { timestamp: 'desc' },
-          take: 1,
-          select: { content: true, timestamp: true },
-        },
-        _count: { select: { messages: true } },
-      },
     })
-    return { sessions }
+
+    const sessionIds = sessions.map(s => s.id)
+    if (sessionIds.length === 0) return { sessions: [] }
+
+    const lastMessages = await db.$queryRaw<{ session_id: string; content: string; timestamp: Date }[]>`
+      SELECT DISTINCT ON (session_id) session_id, content, timestamp
+      FROM messages
+      WHERE session_id IN (${sessionIds.join(',')})
+      ORDER BY session_id, timestamp DESC
+    `
+    const lastMsgMap = new Map(lastMessages.map(m => [m.session_id, m]))
+
+    const counts = await db.$queryRaw<{ session_id: string; count: bigint }[]>`
+      SELECT session_id, COUNT(*)::bigint as count
+      FROM messages
+      WHERE session_id IN (${sessionIds.join(',')})
+      GROUP BY session_id
+    `
+    const countMap = new Map(counts.map(c => [c.session_id, Number(c.count)]))
+
+    return {
+      sessions: sessions.map(s => ({
+        ...s,
+        messages: lastMsgMap.has(s.id) ? [lastMsgMap.get(s.id)] : [],
+        _count: { messages: countMap.get(s.id) ?? 0 },
+      })),
+    }
   } catch (err) {
     reply.status(500).send({ detail: 'Failed to fetch sessions' })
   }
@@ -97,21 +115,20 @@ export async function handleGenerateTitle(req: FastifyRequest, reply: FastifyRep
     const { id } = req.params as { id: string }
     const session = await db.chatSession.findFirst({
       where: { id, userId },
-      include: {
-        messages: {
-          where: { isOutgoing: true },
-          orderBy: { timestamp: 'asc' },
-          take: 3,
-          select: { content: true },
-        },
-      },
     })
     if (!session) {
       reply.status(404).send({ detail: 'Session not found' })
       return
     }
 
-    const userMessages = session.messages
+    const messages = await db.message.findMany({
+      where: { sessionId: id, isOutgoing: true },
+      orderBy: { timestamp: 'asc' },
+      take: 3,
+      select: { content: true },
+    })
+
+    const userMessages = messages
       .filter(m => m.content)
       .map(m => m.content)
       .join('\n')
@@ -155,23 +172,23 @@ export async function handleSummarizeSession(req: FastifyRequest, reply: Fastify
     const { id } = req.params as { id: string }
     const session = await db.chatSession.findFirst({
       where: { id, userId },
-      include: {
-        messages: {
-          orderBy: { timestamp: 'asc' },
-          select: { content: true, senderName: true, isOutgoing: true, senderId: true },
-        },
-      },
     })
     if (!session) {
       reply.status(404).send({ detail: 'Session not found' })
       return
     }
 
-    if (session.messages.length < 2) {
+    const messages = await db.message.findMany({
+      where: { sessionId: id },
+      orderBy: { timestamp: 'asc' },
+      select: { content: true, senderName: true, isOutgoing: true, senderId: true },
+    })
+
+    if (messages.length < 2) {
       return { summary: null }
     }
 
-    const conversation = session.messages
+    const conversation = messages
       .filter(m => m.content)
       .map(m => {
         const role = m.senderId === 'ai-assistant' ? 'AI' : (m.senderName || 'User')
