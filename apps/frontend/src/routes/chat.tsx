@@ -218,7 +218,15 @@ function ChatPage() {
 
   const handleVoice = async (blob: Blob) => {
     try {
-      await voiceCommandMutation.mutateAsync(blob)
+      const res = await voiceCommandMutation.mutateAsync(blob)
+      if (res && res.original_text) {
+        if (res.intent && !res.intent.error) {
+          toast.success(`Voice Command Terdeteksi: ${res.intent.intent}`, {
+            description: `Mengirim ke ${res.intent.platform} untuk ${res.intent.receiver || 'penerima'}: "${res.intent.message}"`
+          })
+        }
+        handleSend(res.original_text)
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 422) {
         toast.error('AI provider tidak dikonfigurasi', {
