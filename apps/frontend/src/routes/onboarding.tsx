@@ -6,13 +6,12 @@ import { Loader2, ArrowRight, ArrowLeft, Check, Sparkles } from 'lucide-react'
 import { StepWorkspace } from '@/components/onboarding/StepWorkspace'
 import { StepPersonalize } from '@/components/onboarding/StepPersonalize'
 import { StepInvite } from '@/components/onboarding/StepInvite'
-import { StepAIProvider } from '@/components/onboarding/StepAIProvider'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingPage,
 })
 
-const TOTAL_STEPS = 4
+const TOTAL_STEPS = 3
 
 function OnboardingPage() {
   const navigate = useNavigate()
@@ -24,11 +23,6 @@ function OnboardingPage() {
   // Step 2
   const [workspacePurpose, setWorkspacePurpose] = useState('Sinkronisasi Tim & Koordinasi Developer')
   const [workspaceContext, setWorkspaceContext] = useState('')
-  // Step 4
-  const [aiState, setAiState] = useState({
-    provider: '', apiKey: '', model: '', embeddingModel: '', audioModel: '', baseUrl: '',
-  })
-  const [fetchedModels, setFetchedModels] = useState<string[]>([])
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -37,12 +31,6 @@ function OnboardingPage() {
         workspaceName,
         workspacePurpose,
         workspaceContext,
-        aiProvider: aiState.provider,
-        aiApiKey: aiState.apiKey,
-        aiModel: aiState.model,
-        aiEmbeddingModel: aiState.embeddingModel,
-        aiAudioModel: aiState.audioModel,
-        aiBaseUrl: aiState.baseUrl,
       })
       navigate({ to: '/chat' })
     } catch (err) {
@@ -61,14 +49,6 @@ function OnboardingPage() {
       />
     ),
     3: <StepInvite />,
-    4: (
-      <StepAIProvider
-        state={aiState}
-        onChange={patch => setAiState(prev => ({ ...prev, ...patch }))}
-        fetchedModels={fetchedModels}
-        onFetchedModels={setFetchedModels}
-      />
-    ),
   }
 
   return (
@@ -125,7 +105,7 @@ function OnboardingPage() {
           ) : (
             <Button
               onClick={handleSubmit}
-              disabled={loading || !aiState.apiKey}
+              disabled={loading}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold ml-auto"
             >
               {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Memproses...</> : <>Selesaikan Setup <Check className="h-4 w-4 ml-2" /></>}
