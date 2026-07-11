@@ -16,6 +16,7 @@ RUN bun x turbo build
 
 # ---- Stage 2: Runtime ----
 FROM oven/bun:1-alpine
+RUN apk add --no-cache ffmpeg
 WORKDIR /app
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
