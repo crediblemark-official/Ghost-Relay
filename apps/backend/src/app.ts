@@ -76,6 +76,10 @@ export async function buildApp() {
     max: env.ENVIRONMENT === 'test' ? 10000 : 100,
     timeWindow: '1 minute',
     keyGenerator: (req) => req.ip,
+    allowList: (req: any) => {
+      const url = req.raw.url || ''
+      return !url.startsWith('/api') && !url.startsWith('/ws')
+    }
   })
 
   await app.register(multipart, {
