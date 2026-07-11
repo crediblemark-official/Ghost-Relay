@@ -253,3 +253,91 @@ export async function handleSearchMessages(req: FastifyRequest, reply: FastifyRe
     reply.status(500).send({ detail: 'Failed to search messages' })
   }
 }
+
+export async function handleGetTasks(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userId = req.userId
+    const messages = await db.message.findMany({
+      where: {
+        userId,
+        messageType: 'voice_processed',
+      },
+      orderBy: { timestamp: 'desc' },
+    })
+
+    const tasks: any[] = []
+
+    for (const msg of messages) {
+      const meta = msg.metadata as any
+      if (meta && meta.tasks && Array.isArray(meta.tasks.daftar_tugas)) {
+        meta.tasks.daftar_tugas.forEach((task: any, index: number) => {
+          tasks.push({
+            id: `${msg.id}-${index}`,
+            messageId: msg.id,
+            taskIndex: index,
+            divisi: task.divisi || 'general',
+            deskripsi: task.deskripsi || '',
+            prioritas: task.prioritas || 'sedang',
+            status: task.status || 'todo',
+            deadline: meta.tasks.tanggal_deadline || null,
+            senderName: msg.senderName || 'System',
+            timestamp: msg.timestamp,
+          })
+        })
+      }
+    }
+
+    return { tasks }
+  } catch (err) {
+    reply.status(500).send({ detail: 'Failed to fetch tasks' })
+  }
+}
+
+export async function handleUpdateTaskStatus(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userId = req.userId
+    const { messageId, taskIndex, status } = req.body as {
+      messageId: number
+      taskIndex: number
+      status: 'todo' | 'in_progress' | 'done'
+    }
+
+    if (typeof messageId !== 'number' || typeof taskIndex !== 'number' || !['todo', 'in_progress', 'done'].includes(status)) {
+      reply.status(400).send({ detail: 'Invalid parameters' })
+      return
+    }
+
+    const msg = await db.message.findFirst({
+      where: { id: messageId, userId },
+    })
+
+    if (!msg) {
+      reply.status(404).send({ detail: 'Message not found' })
+      return
+    }
+
+    const meta = msg.metadata as any
+    if (!meta || !meta.tasks || !Array.isArray(meta.tasks.daftar_tugas) || !meta.tasks.daftar_tugas[taskIndex]) {
+      reply.status(404).send({ detail: 'Task not found in message metadata' })
+      return
+    }
+
+    // Update status
+    meta.tasks.daftar_tugas[taskIndex].status = status
+
+    await db.message.update({
+      where: { id: messageId },
+      data: {
+        metadata: meta,
+      },
+    })
+
+    try {
+      emitToUser(String(userId), 'task:updated', { messageId, taskIndex, status })
+    } catch { /* ws skip */ }
+
+    return { status: 'ok', task: meta.tasks.daftar_tugas[taskIndex] }
+  } catch (err) {
+    reply.status(500).send({ detail: 'Failed to update task status' })
+  }
+}

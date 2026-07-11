@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { setSocketIO, handleGetMessages, handleSendMessage, handleSearchMessages, handleClearMessages, handleDeleteMessage } from './handlers.js'
+import { setSocketIO, handleGetMessages, handleSendMessage, handleSearchMessages, handleClearMessages, handleDeleteMessage, handleGetTasks, handleUpdateTaskStatus } from './handlers.js'
 import { handleGetSessions, handleCreateSession, handleDeleteSession, handleRenameSession, handleGenerateTitle, handleSummarizeSession } from './sessions.js'
 
 export async function messagesModule(app: FastifyInstance): Promise<void> {
@@ -19,4 +19,8 @@ export async function messagesModule(app: FastifyInstance): Promise<void> {
   app.post('/messages/search', { preHandler: [app.authenticate] }, handleSearchMessages)
   app.post('/messages/clear', { preHandler: [app.authenticate] }, handleClearMessages)
   app.delete('/messages/:id', { preHandler: [app.authenticate] }, handleDeleteMessage)
+
+  // Task routes
+  app.get('/tasks', { preHandler: [app.authenticate] }, handleGetTasks)
+  app.put('/tasks/status', { preHandler: [app.authenticate] }, handleUpdateTaskStatus)
 }
