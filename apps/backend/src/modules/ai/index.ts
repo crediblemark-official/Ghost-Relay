@@ -11,7 +11,8 @@ import {
   handleTestProvider,
   handleQwenStatus,
   handleGetQwenConfig,
-  handlePostQwenConfig
+  handlePostQwenConfig,
+  handleGetQwenModels
 } from './handlers.js'
 import { handleStreamChat } from './stream.js'
 
@@ -30,6 +31,7 @@ export async function aiModule(app: FastifyInstance): Promise<void> {
   app.get('/ai/qwen/status', { preHandler: [app.authenticate] }, handleQwenStatus)
   app.get('/ai/qwen/config', { preHandler: [app.authenticate] }, handleGetQwenConfig)
   app.post('/ai/qwen/config', { preHandler: [app.authenticate] }, handlePostQwenConfig)
+  app.get('/ai/qwen/models', { preHandler: [app.authenticate] }, handleGetQwenModels)
 
   app.get('/ai/providers', { preHandler: [app.authenticate] }, handleGetProviders)
   app.post('/ai/providers', { preHandler: [app.authenticate] }, handleCreateProvider)

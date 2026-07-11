@@ -12,7 +12,7 @@ import {
   searchProviders,
   getProviderModels,
 } from '../../core/models-dev.js'
-import { isQwenAvailable, QWEN_MODELS, getQwenApiKey } from '../../core/qwen-client.js'
+import { isQwenAvailable, QWEN_MODELS, getQwenApiKey, getQwenBaseUrl } from '../../core/qwen-client.js'
 import { setSetting, deleteSetting } from '../../core/db-settings.js'
 
 function maskKey(encrypted: string): string {
@@ -269,16 +269,54 @@ export async function handleGetQwenConfig(request: any) {
 }
 
 export async function handlePostQwenConfig(request: any, reply: any) {
-  const { apiKey } = request.body as { apiKey?: string }
-  if (!apiKey) {
-    await deleteSetting('qwen_api_key')
-    return { status: 'ok', message: 'Qwen API Key deleted' }
+  const { apiKey, chatModel, audioModel } = request.body as { apiKey?: string; chatModel?: string; audioModel?: string }
+
+  if (apiKey !== undefined) {
+    if (apiKey === '') {
+      await deleteSetting('qwen_api_key')
+    } else if (!apiKey.startsWith('sk-••••••••')) {
+      await setSetting('qwen_api_key', encrypt(apiKey))
+    }
   }
 
-  if (apiKey.startsWith('sk-••••••••')) {
-    return { status: 'ok', message: 'No change' }
+  if (chatModel !== undefined) {
+    await setSetting('qwen_chat_model', chatModel)
   }
 
-  await setSetting('qwen_api_key', encrypt(apiKey))
-  return { status: 'ok', message: 'Qwen API Key updated' }
+  if (audioModel !== undefined) {
+    await setSetting('qwen_audio_model', audioModel)
+  }
+
+  return { status: 'ok', message: 'Qwen configuration updated' }
+}
+
+export async function handleGetQwenModels(request: any) {
+  const userId = request.user?.id
+  const key = await getQwenApiKey(userId)
+  const fallbackModels = Object.values(QWEN_MODELS)
+  if (!key) {
+    return { models: fallbackModels }
+  }
+
+  const baseUrl = await getQwenBaseUrl(userId)
+  try {
+    const url = baseUrl.endsWith('/') ? `${baseUrl}models` : `${baseUrl}/models`
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${key}`
+      }
+    })
+    if (!res.ok) {
+      throw new Error(`Status ${res.status}`)
+    }
+    const data = await res.json() as any
+    const models = data.data ? data.data.map((m: any) => m.id) : []
+
+    // Gabungkan dengan fallback models dan urutkan
+    const uniqueModels = Array.from(new Set([...models, ...fallbackModels]))
+    return { models: uniqueModels }
+  } catch (err) {
+    console.warn('[QWEN] Failed to fetch live models list from DashScope:', err)
+    return { models: fallbackModels }
+  }
 }

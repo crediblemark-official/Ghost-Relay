@@ -59,6 +59,15 @@ function QwenCloudStatus() {
     retry: false,
   })
 
+  const { data: modelsData } = useQuery<{ models: string[] }>({
+    queryKey: ['qwen-cloud-models', status?.configured],
+    queryFn: () => api.get('/ai/qwen/models', { silent: true }),
+    enabled: !!status?.configured,
+    retry: false,
+  })
+
+  const qwenModelsList = modelsData?.models || QWEN_CHAT_OPTIONS
+
   useEffect(() => {
     if (config) {
       if (config.apiKey) setApiKey(config.apiKey)
@@ -172,7 +181,7 @@ function QwenCloudStatus() {
                   placeholder="Ketik atau pilih model Qwen..."
                 />
                 <datalist id="qwen-models">
-                  {QWEN_CHAT_OPTIONS.map(m => (
+                  {qwenModelsList.map(m => (
                     <option key={m} value={m} />
                   ))}
                 </datalist>
