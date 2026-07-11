@@ -262,14 +262,23 @@ export async function handleQwenStatus(request: any) {
 export async function handleGetQwenConfig(request: any) {
   const userId = request.user?.id
   const key = await getQwenApiKey(userId)
+  const { getSetting } = await import('../../core/db-settings.js')
+  const scope = await getSetting('qwen_scope') || 'international'
+  const chatModel = await getSetting('qwen_chat_model') || QWEN_MODELS.chat
+  const audioModel = await getSetting('qwen_audio_model') || QWEN_MODELS.stt
   return {
     apiKey: key ? 'sk-••••••••' + key.slice(-4) : '',
     configured: !!key,
+    scope,
+    chatModel,
+    audioModel,
   }
 }
 
 export async function handlePostQwenConfig(request: any, reply: any) {
-  const { apiKey, chatModel, audioModel } = request.body as { apiKey?: string; chatModel?: string; audioModel?: string }
+  const { apiKey, chatModel, audioModel, scope } = request.body as {
+    apiKey?: string; chatModel?: string; audioModel?: string; scope?: string
+  }
 
   if (apiKey !== undefined) {
     if (apiKey === '') {
@@ -285,6 +294,10 @@ export async function handlePostQwenConfig(request: any, reply: any) {
 
   if (audioModel !== undefined) {
     await setSetting('qwen_audio_model', audioModel)
+  }
+
+  if (scope !== undefined) {
+    await setSetting('qwen_scope', scope)
   }
 
   return { status: 'ok', message: 'Qwen configuration updated' }

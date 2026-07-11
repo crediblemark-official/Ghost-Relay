@@ -43,6 +43,7 @@ function QwenCloudStatus() {
   const [apiKey, setApiKey] = useState('')
   const [chatModel, setChatModel] = useState('qwen3.7-plus')
   const [audioModel, setAudioModel] = useState('qwen3-asr-flash')
+  const [scope, setScope] = useState<'openai' | 'anthropic'>('openai')
   const [showInput, setShowInput] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -53,7 +54,7 @@ function QwenCloudStatus() {
     staleTime: 300_000,
   })
 
-  const { data: config, isLoading: loadingConfig } = useQuery<{ apiKey: string; chatModel: string; audioModel: string; configured: boolean }>({
+  const { data: config, isLoading: loadingConfig } = useQuery<{ apiKey: string; chatModel: string; audioModel: string; scope: string; configured: boolean }>({
     queryKey: ['qwen-cloud-config'],
     queryFn: () => api.get('/ai/qwen/config', { silent: true }),
     retry: false,
@@ -73,6 +74,7 @@ function QwenCloudStatus() {
       if (config.apiKey) setApiKey(config.apiKey)
       if (config.chatModel) setChatModel(config.chatModel)
       if (config.audioModel) setAudioModel(config.audioModel)
+      if (config.scope) setScope(config.scope as 'openai' | 'anthropic')
     }
   }, [config])
 
@@ -87,7 +89,7 @@ function QwenCloudStatus() {
     e.preventDefault()
     setSaving(true)
     try {
-      await api.post('/ai/qwen/config', { apiKey, chatModel, audioModel })
+      await api.post('/ai/qwen/config', { apiKey, chatModel, audioModel, scope })
       queryClient.invalidateQueries({ queryKey: ['qwen-cloud-status'] })
       queryClient.invalidateQueries({ queryKey: ['qwen-cloud-config'] })
       queryClient.invalidateQueries({ queryKey: ['ai-models'] })
@@ -133,6 +135,13 @@ function QwenCloudStatus() {
                   Not Configured
                 </Badge>
               )}
+              <Badge variant="outline" className={`text-[10px] font-bold tracking-wider rounded px-2 py-0.5 ${
+                scope === 'anthropic'
+                  ? 'bg-purple-50 text-purple-600 border border-purple-200'
+                  : 'bg-sky-50 text-sky-600 border border-sky-200'
+              }`}>
+                {scope === 'anthropic' ? '🦉 Anthropic Compat' : '🌐 OpenAI Compat'}
+              </Badge>
             </div>
             <div className="text-xs text-slate-400 mt-1">
               {status.configured
@@ -169,7 +178,23 @@ function QwenCloudStatus() {
             </div>
           </div>
 
+          {/* Scope + Model dalam 1 grid */}
           <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-600">Scope / Compatibility</label>
+              <div className="relative">
+                <select
+                  value={scope}
+                  onChange={(e) => setScope(e.target.value as 'openai' | 'anthropic')}
+                  className={selectCls}
+                >
+                  <option value="openai">🌐 OpenAI Compatible (compatible-mode)</option>
+                  <option value="anthropic">🦉 Anthropic Compatible (apps/anthropic)</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+              </div>
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-600">Qwen Model</label>
               <div className="relative">

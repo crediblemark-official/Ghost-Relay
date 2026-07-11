@@ -10,7 +10,11 @@ import { decrypt } from './encryption.js'
 
 import { getSetting } from './db-settings.js'
 
-const QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+const QWEN_BASE_URL_INTL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+const QWEN_BASE_URL_CN   = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+
+// Default ke international
+const QWEN_BASE_URL = QWEN_BASE_URL_INTL
 
 export const QWEN_MODELS = {
   chat: 'qwen3.7-plus',
@@ -63,6 +67,18 @@ export async function isQwenAvailable(userId?: string): Promise<boolean> {
 }
 
 export async function getQwenBaseUrl(userId?: string): Promise<string> {
+  // Cek scope setting dulu
+  try {
+    const scope = await getSetting('qwen_scope')
+    if (scope === 'china') {
+      return QWEN_BASE_URL_CN
+    }
+    if (scope === 'international') {
+      return QWEN_BASE_URL_INTL
+    }
+  } catch {}
+
+  // Fallback: cek dari DB provider
   try {
     const provider = await db.aIProvider.findFirst({
       where: {
