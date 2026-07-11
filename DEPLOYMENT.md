@@ -21,12 +21,18 @@ Dokumen ini menjelaskan langkah-langkah komprehensif untuk mendeploy aplikasi **
 
 ---
 
-## 🔑 2. Dapatkan API Key Qwen Cloud (DashScope)
+## 🔑 2. Dapatkan API Key AI Provider
 
-Ghost Relay terintegrasi secara bawaan dengan ekosistem model AI Qwen milik Alibaba Cloud:
-1. Masuk ke **[Alibaba Cloud DashScope Console](https://dashscope.console.aliyun.com/)**.
-2. Buat API Key baru.
-3. API Key ini akan dimasukkan sebagai nilai `DASHSCOPE_API_KEY` dan `OPENAI_API_KEY` pada file `.env`.
+Ghost Relay mendukung multiple AI providers. Siapkan minimal satu:
+
+| Provider | Console | Env Variable |
+|----------|---------|--------------|
+| OpenAI | [platform.openai.com](https://platform.openai.com) | `OPENAI_API_KEY` |
+| Google Gemini | [aistudio.google.com](https://aistudio.google.com) | `GEMINI_API_KEY` |
+| Anthropic | [console.anthropic.com](https://console.anthropic.com) | `ANTHROPIC_API_KEY` |
+| Alibaba Qwen | [dashscope.console.aliyun.com](https://dashscope.console.aliyun.com) | `DASHSCOPE_API_KEY` |
+
+Masukkan API key yang dipilih ke file `.env`.
 
 ---
 
@@ -130,8 +136,8 @@ Semua perintah berikut dijalankan di dalam direktori `/opt/ghost-relay`:
   docker compose restart ghost-relay
   ```
 
-### API Key Qwen Bermasalah
-- Pastikan API Key di `.env` sudah benar dan terdaftar pada region yang didukung (misalnya internasional). Periksa log backend untuk error API:
+### API Key Bermasalah
+- Pastikan API Key di `.env` sudah benar. Periksa log backend untuk error API:
   ```bash
   docker compose logs ghost-relay | grep ai
   ```

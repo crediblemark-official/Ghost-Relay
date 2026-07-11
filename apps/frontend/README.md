@@ -1,32 +1,34 @@
-# React + TypeScript + Vite
+# Ghost Relay — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19 SPA dengan TanStack Router, Tailwind CSS v4, dan shadcn/ui.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+bun install
+bun dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Frontend runs on http://localhost:5173 with API proxy to backend at port 8000.
+
+## Tech Stack
+
+- **Framework**: React 19 + TypeScript
+- **Build**: Vite 8
+- **Routing**: TanStack Router (type-safe)
+- **Server State**: TanStack Query v5
+- **Client State**: Zustand v5
+- **Styling**: Tailwind CSS v4 + shadcn/ui
+- **Real-time**: Socket.io-client
+
+## Structure
+
+```
+src/
+├── routes/          # TanStack Router pages
+├── components/      # UI components (shadcn/ui, ai-elements)
+├── hooks/           # TanStack Query hooks
+├── stores/          # Zustand stores (auth, ui)
+├── lib/             # API client, socket, utilities
+└── integrations/    # shadcn/ui components
+```

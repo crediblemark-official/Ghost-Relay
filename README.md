@@ -1,90 +1,138 @@
 # Ghost Relay 👻
 
-**Pusat komunikasi multi-platform + AI.** Satu dashboard untuk mengelola pesan dari Telegram, WhatsApp, Slack, dan Web — dengan dukungan AI untuk transkripsi voice note, auto-reply berbasis memori, dan knowledge vault.
+**Multi-platform communication hub + AI.** Satu dashboard untuk mengelola pesan dari WhatsApp, Telegram, Slack, dan Web — dengan AI untuk voice processing, auto-reply berbasis RAG, dan knowledge vault.
 
 ---
 
-## ✨ Fitur Utama
+## Architecture
 
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Universal Inbox** | Satukan chat dari WhatsApp, Telegram, Slack, dan Web dalam satu feed |
-| **Smart Voice Processing** | Voice note → transkripsi → ringkasan → task decomposition otomatis |
-| **Auto-Reply RAG** | Jawab pertanyaan berulang dengan referensi dari histori chat |
-| **Knowledge Vault** | File otomatis terindeks + semantic search + folder grouping |
-| **Voice Command** | Bicara ke mikrofon di PC, pesan terkirim ke grup WhatsApp tanpa sentuh HP |
-| **AI Provider Agnostic** | Bebas pilih LLM (OpenAI, Qwen, Claude, Gemini, Groq, dll) |
+```mermaid
+graph TB
+    subgraph Client["Frontend (React 19 + Vite)"]
+        A[TanStack Router]
+        B[TanStack Query]
+        C[Zustand]
+        D[Socket.io]
+    end
+
+    subgraph API["Backend (Fastify v5 — Modular Monolith)"]
+        E[Auth Module]
+        F[Messages Module]
+        G[Voice Module]
+        H[Files Module]
+        I[AI Module]
+        J[Platforms Module]
+        K[Notifications]
+        L[Reports]
+        M[Settings]
+    end
+
+    subgraph Core["Core Services"]
+        N[AI Client<br/>Multi-provider]
+        O[Memory Store<br/>pgvector]
+        P[Task Queue<br/>Redis / In-Memory]
+        Q[Event Bus]
+        R[Encryption<br/>AES-256-GCM]
+    end
+
+    subgraph Data["Data Layer"]
+        S[(PostgreSQL 16<br/>+ pgvector)]
+        T[(Redis)]
+    end
+
+    subgraph External["External Platforms"]
+        U[WhatsApp<br/>Baileys]
+        V[Telegram<br/>Bot API]
+        W[Slack<br/>Bolt SDK]
+    end
+
+    Client -->|REST + WebSocket| API
+    API --> Core
+    API --> Data
+    API --> External
+    O --> S
+    P --> T
+```
 
 ---
 
-## 🏗️ Tech Stack
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Universal Inbox** | Chat dari WhatsApp, Telegram, Slack, Web dalam satu feed |
+| **AI Chat** | Streaming chat dengan AI provider pilihan (OpenAI, Gemini, Claude, Qwen, dll) |
+| **Smart Voice** | Voice note → transkripsi → task decomposition otomatis |
+| **Auto-Reply RAG** | Jawab pertanyaan berulang dengan referensi dari knowledge vault + histori chat |
+| **Knowledge Vault** | File otomatis terindeks + semantic search via pgvector |
+| **Voice Command** | Bicara ke mic → pesan terkirim ke platform tanpa buka HP |
+| **Multi-Workspace** | Team workspace dengan invite code + role-based access |
+| **AI Provider Agnostic** | Bebas pilih LLM provider, model, dan base URL |
+| **Real-time** | WebSocket untuk notifikasi, typing indicator, online status |
+
+---
+
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | React 19 + TypeScript + Vite + Tailwind CSS v4 + shadcn/ui |
+| **Frontend** | React 19, TypeScript, Vite 8, Tailwind CSS v4, shadcn/ui |
 | **Routing** | TanStack Router (type-safe) |
 | **Server State** | TanStack Query v5 |
 | **Client State** | Zustand v5 |
-| **Backend** | Node.js 22+ + Fastify v5 + TypeScript |
-| **Database** | PostgreSQL + Prisma ORM |
-| **Vector Store** | PostgreSQL JSONB + Cosine Similarity (in-memory) |
-| **Task Queue** | BullMQ + Redis (fallback local `setImmediate`) |
+| **Backend** | Fastify v5, TypeScript, Bun runtime |
+| **Database** | PostgreSQL 16 + Prisma ORM |
+| **Vector Search** | pgvector (`vector(3072)`) — native PostgreSQL extension |
+| **Task Queue** | BullMQ + Redis (fallback: in-memory `setImmediate`) |
 | **Real-time** | Socket.io (server + client) |
-| **AI SDK** | Vercel AI SDK (`ai` + `@ai-sdk/openai`) — multi-provider |
-| **Chat Platform** | Chat SDK (`@chat-adapter/*`: Slack, Telegram, WhatsApp) |
-| **Auth** | Better Auth + JWT |
-| **Encryption** | AES-256-GCM untuk credentials |
+| **AI SDK** | Vercel AI SDK (`ai` + `@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/anthropic`) |
+| **Auth** | Better Auth (session-based) |
+| **Encryption** | AES-256-GCM |
 | **Package Manager** | Bun (workspace monorepo) + Turborepo |
-| **Runtime** | Bun (package manager), Node.js (runtime) |
+| **Container** | Docker + Docker Compose |
 
 ---
 
-## 📁 Struktur Monorepo
+## Project Structure
 
 ```
 ghost-team/
 ├── apps/
-│   ├── backend/          # Fastify API server
-│   │   ├── src/
-│   │   │   ├── core/     # AI, encryption, memory store, task queue
-│   │   │   ├── modules/  # auth, messages, voice, files, platforms, dll
-│   │   │   └── plugins/  # auth, socket
-│   │   └── tests/
-│   └── frontend/         # React SPA
+│   ├── backend/              # Fastify API server
+│   │   └── src/
+│   │       ├── core/         # AI, encryption, memory, workspace, task queue
+│   │       ├── modules/      # Domain modules (auth, messages, voice, files, etc.)
+│   │       └── plugins/      # Fastify plugins (auth, socket)
+│   └── frontend/             # React SPA
 │       └── src/
-│           ├── routes/       # TanStack Router
-│           ├── components/   # shadcn/ui + ai-elements
+│           ├── routes/       # TanStack Router pages
+│           ├── components/   # UI components (shadcn/ui, ai-elements)
 │           ├── hooks/        # TanStack Query hooks
-│           └── stores/       # Zustand
+│           └── stores/       # Zustand stores
 ├── packages/
-│   ├── database/         # Prisma schema + client
-│   ├── shared/           # Zod schemas + TypeScript types
-│   └── config/           # Zod-validated env variables
-├── docker-compose.yml    # PostgreSQL + app
-└── Dockerfile            # Multi-stage build
+│   ├── database/             # Prisma schema + client
+│   ├── shared/               # Zod schemas + shared TypeScript types
+│   └── config/               # Zod-validated env variables
+├── docker-compose.yml        # PostgreSQL (pgvector) + app
+├── docker-compose.full.yml   # PostgreSQL + Redis + app
+└── Dockerfile                # Multi-stage build (Bun)
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### Prasyarat
+### Prerequisites
 
-- **Node.js** 22+
-- **Bun** 1.1+ (sebagai runtime & package manager — instal via `curl -fsSL https://bun.sh/install | bash`)
-- **PostgreSQL** 16 (atau via Docker)
-- **Docker** + Docker Compose (opsional)
+- **Bun** 1.1+ — `curl -fsSL https://bun.sh/install | bash`
+- **PostgreSQL 16** with pgvector (or use Docker)
 
-### 1. Clone & Install
+### 1. Install
 
 ```bash
 git clone https://github.com/crediblemark-official/Ghost-Relay.git
 cd Ghost-Relay
-
-# Install semua dependencies (workspace)
 bun install
-
-# Generate Prisma client
 bun run db:generate
 ```
 
@@ -92,149 +140,272 @@ bun run db:generate
 
 ```bash
 cp .env.example .env
-# Isi minimal:
-# DATABASE_URL=postgresql://ghost:changeme@localhost:5432/ghost_relay
-# JWT_SECRET_KEY=<random-string>
-# ENCRYPTION_KEY=<random-32-char>
-# CRYPTO_SALT=<random-string>
+# Fill in minimum required variables (see Environment Variables below)
 ```
 
-Atau jalankan PostgreSQL via Docker:
+Or use Docker for PostgreSQL:
 
 ```bash
-docker compose up -d db
-# PostgreSQL akan berjalan di port 5433
+docker compose up -d db    # PostgreSQL on port 5433
 ```
 
-### 3. Database Migration
+### 3. Push Database Schema
 
 ```bash
-bun run db:push     # Push schema ke database
-# atau
-bun run db:migrate  # Migrasi dengan history
+bun run db:push
 ```
 
-### 4. Jalankan Development
+### 4. Run Development
 
 ```bash
 bun dev
 ```
 
-Ini akan menjalankan:
-- **Backend**: http://localhost:8000 (Fastify, hot-reload via tsx)
-- **Frontend**: http://localhost:5173 (Vite, HMR)
-
-Atau secara terpisah:
-
-```bash
-# Terminal 1 — Backend
-bun --filter @ghost/backend run dev
-
-# Terminal 2 — Frontend
-bun --filter frontend run dev
-```
+- **Backend**: http://localhost:8000
+- **Frontend**: http://localhost:5173
 
 ### 5. Login
 
-Seeder otomatis membuat admin saat pertama kali database kosong:
+First user is automatically assigned `owner` role:
 
 - **Email**: `admin@ghost.local`
 - **Password**: `admin123`
 
 ---
 
-## 🐳 Docker (Production) & Cloud Deployment
+## Docker
 
-Untuk menjalankan secara lokal dalam mode production:
 ```bash
-# Build & jalankan semua service (PostgreSQL + app)
+# Production (PostgreSQL + app)
 docker compose up -d
 
-# Akses di http://localhost:8000
-```
-
-Untuk development dengan Redis:
-```bash
+# Full stack (PostgreSQL + Redis + app)
 docker compose -f docker-compose.full.yml up -d
 ```
 
-### ☁️ Deployment ke Alibaba Cloud ECS
-Kami telah menyediakan panduan langkah-demi-langkah lengkap beserta script otomasi untuk mendeploy aplikasi ini ke **Alibaba Cloud ECS**. Silakan baca:
-👉 **[Panduan Deployment Alibaba Cloud (DEPLOYMENT.md)](DEPLOYMENT.md)**
+### Deploy to Alibaba Cloud ECS
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for step-by-step guide with automated script.
 
 ---
 
-## 🔧 Environment Variables
+## Environment Variables
 
-| Variable | Default | Keterangan |
-|----------|---------|------------|
-| `DATABASE_URL` | `postgresql://ghost:changeme@localhost:5432/ghost_relay` | Koneksi PostgreSQL |
-| `REDIS_URL` | `""` | Redis URL (kosong = task runner built-in) |
-| `JWT_SECRET_KEY` | **required** | Secret key untuk JWT |
-| `ENCRYPTION_KEY` | **required** | Key enkripsi AES-256-GCM |
-| `CRYPTO_SALT` | **required** | Salt untuk key derivation |
-| `CORS_ORIGINS` | `["*"]` | Origin yang diizinkan |
-| `ADMIN_EMAIL` | `admin@ghost.local` | Email admin seeder |
-| `ADMIN_PASSWORD` | `admin123` | Password admin seeder |
-| `ENVIRONMENT` | `production` | `development` / `production` / `test` |
-| `OPENAI_API_KEY` | — | API key untuk AI provider default |
-| `TELEGRAM_BOT_TOKEN` | — | Token bot Telegram |
-| `SLACK_BOT_TOKEN` | — | Token bot Slack |
-| `WHATSAPP_ACCESS_TOKEN` | — | Token API WhatsApp |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `JWT_SECRET_KEY` | Yes | — | Secret for JWT signing (min 32 chars) |
+| `BETTER_AUTH_SECRET` | Yes | — | Secret for Better Auth sessions |
+| `ENCRYPTION_KEY` | Yes | — | AES-256-GCM encryption key |
+| `CRYPTO_SALT` | Yes | — | Salt for key derivation |
+| `REDIS_URL` | No | `""` | Redis URL (empty = in-memory fallback) |
+| `CORS_ORIGINS` | No | `["*"]` | Allowed CORS origins |
+| `ENVIRONMENT` | No | `production` | `development` / `production` / `test` |
+| `ADMIN_EMAIL` | No | `admin@ghost.local` | Admin seeder email |
+| `ADMIN_PASSWORD` | No | `admin123` | Admin seeder password |
+| `DASHSCOPE_API_KEY` | No | — | Alibaba DashScope / Qwen API key |
+| `TELEGRAM_BOT_TOKEN` | No | — | Telegram bot token |
 
 ---
 
-## 📖 API Endpoints
+## API Endpoints
 
-| Method | Endpoint | Deskripsi |
-|--------|----------|-----------|
-| `POST` | `/api/auth/*` | Better Auth (login, register, session) |
-| `GET` | `/api/messages` | Histori chat (paginated) |
-| `POST` | `/api/messages/send` | Kirim pesan |
-| `POST` | `/api/messages/search` | Cari pesan |
-| `POST` | `/api/voice/process` | Upload voice note (async) |
-| `POST` | `/api/voice/command` | Voice command → transcribe + intent → kirim |
-| `GET` | `/api/voice/status/:id` | Cek status processing |
-| `GET` | `/api/files` | List file di Knowledge Vault |
-| `POST` | `/api/files/upload` | Upload file |
-| `GET` | `/api/files/download/:id` | Download file |
-| `POST` | `/api/files/search` | Semantic search file |
-| `GET` | `/api/settings/platforms` | Platform connections |
-| `POST` | `/api/ai/providers` | CRUD AI providers |
-| `GET` | `/api/ai/providers/browse` | Browse models.dev catalog |
+<details>
+<summary><b>Auth</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/auth/sign-up/email` | Register new user |
+| `POST` | `/api/auth/sign-in/email` | Login |
+| `POST` | `/api/auth/sign-out` | Logout |
+| `GET` | `/api/auth/get-session` | Get current session |
+
+</details>
+
+<details>
+<summary><b>Messages & Sessions</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/sessions` | List chat sessions |
+| `POST` | `/api/sessions` | Create session |
+| `DELETE` | `/api/sessions/:id` | Delete session |
+| `PATCH` | `/api/sessions/:id` | Rename session |
+| `POST` | `/api/sessions/:id/generate-title` | Auto-generate title |
+| `POST` | `/api/sessions/:id/summarize` | Summarize session |
+| `GET` | `/api/messages` | Get messages (paginated) |
+| `POST` | `/api/messages/send` | Send message |
+| `POST` | `/api/messages/search` | Search messages |
+| `DELETE` | `/api/messages/:id` | Delete message |
+
+</details>
+
+<details>
+<summary><b>AI</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
 | `POST` | `/api/ai/chat/stream` | Streaming chat (SSE) |
+| `GET` | `/api/ai/providers` | List providers |
+| `POST` | `/api/ai/providers` | Create provider |
+| `PUT` | `/api/ai/providers/:id` | Update provider |
+| `DELETE` | `/api/ai/providers/:id` | Delete provider |
+| `GET` | `/api/ai/providers/models` | List models across providers |
+| `GET` | `/api/ai/models/browse` | Browse available models |
+| `GET` | `/api/ai/providers/browse` | Browse supported providers |
+| `POST` | `/api/ai/providers/test` | Test provider connection |
+
+</details>
+
+<details>
+<summary><b>Voice</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/voice/process` | Process voice note |
+| `POST` | `/api/voice/command` | Voice command (audio) |
+| `POST` | `/api/voice/command-text` | Voice command (text) |
+| `GET` | `/api/voice/status/:id` | Check processing status |
+
+</details>
+
+<details>
+<summary><b>Files (Knowledge Vault)</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/files` | List files |
+| `POST` | `/api/files/upload` | Upload file |
+| `POST` | `/api/files/search` | Semantic search |
+| `GET` | `/api/files/download/:fileId` | Download file |
+| `PATCH` | `/api/files/:fileId/access` | Update access scope |
+| `DELETE` | `/api/files/:fileId` | Delete file |
+
+</details>
+
+<details>
+<summary><b>Settings & Workspace</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/settings/workspace` | Get workspace name |
+| `GET` | `/api/settings/workspace/members` | List workspace members |
+| `POST` | `/api/settings/invite/generate` | Generate invite code |
+| `POST` | `/api/settings/invite/regenerate` | Regenerate invite code |
+| `GET` | `/api/settings/invite/:code` | Get invite info (public) |
+| `POST` | `/api/settings/invite/accept` | Accept invite |
+| `POST` | `/api/settings/onboarding` | Complete onboarding |
+| `GET` | `/api/settings/platforms` | List platform connections |
+| `POST` | `/api/settings/platforms` | Create platform connection |
+| `PUT` | `/api/settings/platforms/:id` | Update platform |
+| `DELETE` | `/api/settings/platforms/:id` | Delete platform |
+| `POST` | `/api/settings/platforms/test` | Test platform connection |
+| `GET/POST` | `/api/settings/auto-reply` | Auto-reply toggle |
+
+</details>
+
+<details>
+<summary><b>Notifications</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/notifications` | List notifications |
+| `GET` | `/api/notifications/unread-count` | Unread count |
+| `POST` | `/api/notifications/:id/read` | Mark as read |
+| `POST` | `/api/notifications/send` | Send notification |
+
+</details>
+
+<details>
+<summary><b>Reports</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/reports/daily` | Get daily report |
+| `POST` | `/api/reports/generate` | Generate report |
+| `POST` | `/api/reports/email` | Email report |
+
+</details>
+
+<details>
+<summary><b>Admin</b> (owner only)</summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/admin/check` | Check user role |
+| `GET` | `/api/admin/workspaces` | List all workspaces |
+| `GET` | `/api/admin/users` | List all users |
+
+</details>
+
+<details>
+<summary><b>Webhooks</b></summary>
+
+| Method | Path | Description |
+|--------|------|-------------|
 | `POST` | `/api/webhook/telegram` | Telegram webhook |
-| `GET/POST` | `/api/webhook/whatsapp` | WhatsApp webhook |
+| `GET/POST` | `/api/webhook/whatsapp` | WhatsApp (Baileys) |
 | `POST` | `/api/webhook/slack` | Slack webhook |
 
+</details>
+
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
-# Backend tests
-bun --filter @ghost/backend run test
-
-# Type checking
-bun --filter @ghost/backend run typecheck
-bun --filter frontend run typecheck
-
-# Linting
-bun run lint
+bun run test          # Unit tests (41 tests)
+bun run typecheck     # TypeScript type checking
+bun run lint          # Linting
 ```
 
 ---
 
-## 🔐 Security
+## Database Design
 
-- **Credentials**: API keys platform dienkripsi AES-256-GCM sebelum disimpan
-- **Auth**: Session-based JWT via Better Auth
-- **Rate Limit**: 100 req/min per IP
-- **Webhook Signature**: HMAC-SHA256 (WhatsApp, Slack), secret token (Telegram)
+No foreign key constraints at database level — referential integrity enforced at application layer. This enables clean microservice decomposition later.
+
+```mermaid
+erDiagram
+    User ||--o{ WorkspaceMember : "is member of"
+    User ||--o{ Workspace : "owns"
+    User ||--o{ Message : "sends"
+    User ||--o{ File : "uploads"
+    User ||--o{ Notification : "receives"
+    User ||--o{ AIProvider : "configures"
+    User ||--o{ ChatSession : "creates"
+
+    Workspace ||--o{ WorkspaceMember : "has"
+    Workspace ||--o{ AIProvider : "has"
+    Workspace ||--o{ File : "contains"
+
+    ChatSession ||--o{ Message : "contains"
+
+    Message }o--o| File : "attaches"
+
+    Embedding ||--|| File : "indexes"
+    Embedding ||--|| Message : "indexes"
+
+    Session ||--|| User : "auth"
+    Account ||--|| User : "auth"
+```
+
+Indexes preserved on all ID columns for query performance. Only `Session` and `Account` retain FK constraints (required by Better Auth).
 
 ---
 
-## 📝 Lisensi
+## Security
 
-Proyek ini dilisensikan di bawah [Lisensi MIT](LICENSE). Anda bebas menggunakan, memodifikasi, dan mendistribusikan kode ini untuk kebutuhan hackathon maupun keperluan lainnya.
+- **Credentials**: API keys encrypted with AES-256-GCM before storage
+- **Auth**: Session-based via Better Auth
+- **API Keys**: Masked in API responses (e.g., `sk-m***-key`)
+- **CORS**: Configurable allowed origins
+- **Body Limit**: 5MB max request size
+- **Webhook Auth**: HMAC-SHA256 (Slack), secret token (Telegram)
+- **Access Control**: File access scope (`workspace` / `private`), workspace membership
 
+---
+
+## License
+
+[MIT](LICENSE)
