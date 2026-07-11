@@ -15,8 +15,7 @@
 **Dan masalah ini semakin besar ketika tim bekerja dari mana-mana:**
 
 - Tim remote di timezone berbeda — pesan masuk tengah malam, tidak ada yang merespon sampai besok. Pelanggan sudah kabur ke kompetitor.
-- Konteks hilang antar platform. Klien bicara di WhatsApp, lanjut di Slack, follow-up via email — tidak ada yang tahu cerita lengkapnya.
-- Tim baru gabung tapi tidak tahu riwayat percakapan sebelumnya. Harus tanya satu per satu, menunggu jawaban, mengulang hal yang sama.
+- Tidak ada riwayat yang bisa diakses bersama. Tim baru gabung, tidak tahu apa yang sudah dibicarakan sebelumnya. Harus tanya satu per satu, menunggu jawaban, mengulang penjelasan yang sama.
 - Voice note dari rapat remote menumpuk. Terlalu banyak untuk didengar, tapi keputusan penting ada di dalamnya.
 - Tidak ada yang tahu apa yang sedang dikerjakan tim lain. Pekerjaan tumpang tindih, atau malah ada yang kosong.
 
