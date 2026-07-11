@@ -110,12 +110,17 @@ async function findActiveProvider(userId: string, providerType: string) {
 
 /**
  * Dapatkan LanguageModel dari provider aktif user.
+ * Mencari provider type 'chat' duluan, lalu fallback ke 'audio' (karena
+ * provider audio seperti GPT-4o/Gemini juga support chat + multimodal).
  * Jatuh ke workspace default jika user tidak punya provider sendiri.
  */
 export async function getLanguageModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
   if (!userId) return null
   try {
-    const provider = await findActiveProvider(userId, 'chat')
+    // Cari 'chat' provider duluan
+    let provider = await findActiveProvider(userId, 'chat')
+    // Fallback ke 'audio' provider (GPT-4o/Gemini/Qwen-audio juga bisa chat)
+    if (!provider) provider = await findActiveProvider(userId, 'audio')
     if (provider) {
       const npm = await resolveNpmPackage(provider.name) ?? '@ai-sdk/openai-compatible'
       const sdk = createProviderForNpm(npm, decrypt(provider.apiKey), provider.apiBaseUrl)
