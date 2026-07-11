@@ -10,11 +10,11 @@ import { decrypt } from './encryption.js'
 
 import { getSetting } from './db-settings.js'
 
-const QWEN_BASE_URL_INTL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
-const QWEN_BASE_URL_CN   = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+const QWEN_BASE_URL_OPENAI = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+const QWEN_BASE_URL_ANTHROPIC = 'https://dashscope-intl.aliyuncs.com/apps/anthropic'
 
-// Default ke international
-const QWEN_BASE_URL = QWEN_BASE_URL_INTL
+// Default ke OpenAI Compatible
+const QWEN_BASE_URL = QWEN_BASE_URL_OPENAI
 
 export const QWEN_MODELS = {
   chat: 'qwen3.7-plus',
@@ -70,11 +70,11 @@ export async function getQwenBaseUrl(userId?: string): Promise<string> {
   // Cek scope setting dulu
   try {
     const scope = await getSetting('qwen_scope')
-    if (scope === 'china') {
-      return QWEN_BASE_URL_CN
+    if (scope === 'openai') {
+      return QWEN_BASE_URL_OPENAI
     }
-    if (scope === 'international') {
-      return QWEN_BASE_URL_INTL
+    if (scope === 'anthropic') {
+      return QWEN_BASE_URL_ANTHROPIC
     }
   } catch {}
 
