@@ -40,7 +40,19 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
     const audioBuffer = fs.readFileSync(audioPath)
     const base64Audio = audioBuffer.toString('base64')
     const ext = audioPath.split('.').pop()?.toLowerCase() ?? 'webm'
+    
+    let mimeType = 'audio/wav'
+    if (ext === 'webm') mimeType = 'audio/webm'
+    else if (ext === 'mp3') mimeType = 'audio/mpeg'
+    else if (ext === 'ogg') mimeType = 'audio/ogg'
+    else if (ext === 'wav') mimeType = 'audio/wav'
+
     const format = ext === 'mp3' ? 'mp3' : ext === 'wav' ? 'wav' : 'wav'
+
+    const isDashScope = provider.baseURL.includes('dashscope') || provider.baseURL.includes('aliyuncs.com')
+    const audioData = isDashScope
+      ? `data:${mimeType};base64,${base64Audio}`
+      : base64Audio
 
     const response = await client.chat.completions.create({
       model: provider.modelId,
@@ -54,10 +66,14 @@ export async function transcribeAudio(audioPath: string, userId?: string): Promi
             },
             {
               type: 'input_audio',
-              input_audio: {
-                data: base64Audio,
-                format: format as any,
-              },
+              input_audio: isDashScope
+                ? {
+                    data: audioData,
+                  }
+                : {
+                    data: audioData,
+                    format: format as any,
+                  },
             },
           ],
         },
