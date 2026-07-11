@@ -12,7 +12,15 @@
 - Dokumen dan file berserakan — di Drive, di chat, di email. Butuh waktu lama untuk menemukan yang dicari.
 - Tidak ada ingatan. AI mulai dari nol setiap percakapan. Tidak tahu konteks, tidak tahu riwayat.
 
-**Ghost Relay mengatasi semuanya.**
+**Dan masalah ini semakin besar ketika tim bekerja dari mana-mana:**
+
+- Tim remote di timezone berbeda — pesan masuk tengah malam, tidak ada yang merespon sampai besok. Pelanggan sudah kabur ke kompetitor.
+- Konteks hilang antar platform. Klien bicara di WhatsApp, lanjut di Slack, follow-up via email — tidak ada yang tahu cerita lengkapnya.
+- Tim baru gabung tapi tidak tahu riwayat percakapan sebelumnya. Harus tanya satu per satu, menunggu jawaban, mengulang hal yang sama.
+- Voice note dari rapat remote menumpuk. Terlalu banyak untuk didengar, tapi keputusan penting ada di dalamnya.
+- Tidak ada yang tahu apa yang sedang dikerjakan tim lain. Pekerjaan tumpang tindih, atau malah ada yang kosong.
+
+**Ghost Relay mengatasi semuanya — untuk tim yang bekerja dari mana-mana.**
 
 ## Solusi
 
@@ -20,14 +28,14 @@ Satu dashboard yang menghubungkan semua platform komunikasi — dengan AI yang b
 
 | Fitur | Apa yang Dilakukan |
 |-------|-------------------|
-| **Universal Inbox** | Semua pesan dari WhatsApp, Telegram, Slack, dan Web dalam satu feed real-time. Tidak ada yang terlewat. |
-| **Auto-Reply RAG** | AI menjawab pertanyaan berulang menggunakan dokumen dan riwayat chat Anda sendiri. Bukan jawaban generik — jawaban yang spesifik untuk bisnis Anda. |
-| **Knowledge Vault** | Upload dokumen, PDF, atau file apapun. Otomatis terindeks dan bisa dicari secara semantik. Tidak perlu ingat di mana file berada. |
-| **Voice Intelligence** | Voice note masuk → otomatis ditranskripsikan, diringkas, dan dijadikan tindakan. Cukup dengar yang penting. |
+| **Universal Inbox** | Semua pesan dari WhatsApp, Telegram, Slack, dan Web dalam satu feed real-time. Tidak ada yang terlewat, di timezone manapun. |
+| **Auto-Reply RAG** | AI menjawab pertanyaan berulang menggunakan dokumen dan riwayat chat Anda sendiri. Tim tidak perlu bangun tengah malam untuk hal yang sama. |
+| **Knowledge Vault** | Upload dokumen, PDF, atau file apapun. Otomatis terindeks dan bisa dicari secara semantik. Tim baru langsung punya akses ke semua pengetahuan. |
+| **Voice Intelligence** | Voice note masuk → otomatis ditranskripsikan, diringkas, dan dijadikan tindakan. Rapat remote jadi mudah diikuti tanpa mendengar semuanya. |
 | **Voice Command** | Bicara ke mic, pesan terkirim ke WhatsApp/Telegram tanpa buka HP. Ideal untuk di jalan atau sedang sibuk. |
 | **AI Chat** | Chat dengan AI yang sudah mengerti konteks bisnis Anda. Multi-provider — pilih model yang cocok (GPT, Gemini, Claude, Qwen). |
-| **Team Workspace** | Bekerja dalam tim. Satu workspace, beberapa anggota, role-based access. Tanpa ribet sharing akun. |
-| **Daily Reports** | Laporan aktivitas harian otomatis. Tahu apa yang terjadi tanpa harus cek satu per satu. |
+| **Team Workspace** | Bekerja dalam tim. Satu workspace, beberapa anggota, role-based access. Semua orang lihat hal yang sama, dari mana pun mereka berada. |
+| **Daily Reports** | Laporan aktivitas harian otomatis. Tim lead tahu apa yang terjadi tanpa harus meeting satu per satu. |
 
 ---
 
