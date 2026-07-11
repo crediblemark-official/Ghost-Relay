@@ -182,3 +182,11 @@ export async function getActiveProvider(
   } catch { /* noop */ }
   return null
 }
+
+/**
+ * Dapatkan LanguageModel yang mendukung vision (image input).
+ * Menggunakan model chat yang sama — kebanyakan LLM modern sudah support vision.
+ */
+export async function getVisionModel(userId?: string): Promise<{ model: LanguageModel; modelId: string } | null> {
+  return getLanguageModel(userId)
+}

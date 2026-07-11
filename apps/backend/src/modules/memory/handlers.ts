@@ -14,9 +14,10 @@ export async function handleSearchMemory(req: FastifyRequest, reply: FastifyRepl
   }
   const { query, top_k = 3 } = body
   const queryEmbedding = await generateEmbedding(query, req.userId)
-  const matches = await memoryStore.searchChat(queryEmbedding, Math.min(top_k, 50), {
-    userId: String(req.userId),
-  })
+  const searchWhere: Record<string, string> = req.workspaceId
+    ? { workspaceId: req.workspaceId }
+    : { userId: String(req.userId) }
+  const matches = await memoryStore.searchChat(queryEmbedding, Math.min(top_k, 50), searchWhere)
   const results = matches.map(m => ({
     content: m.content,
     sender: m.metadata.sender ?? '',

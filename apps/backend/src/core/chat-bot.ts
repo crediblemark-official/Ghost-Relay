@@ -17,6 +17,7 @@ import { memoryStore } from './memory-store.js'
 import { eventBus } from './event-bus.js'
 import { getSetting } from './db-settings.js'
 import { socketIO } from '../modules/webhook/shared.js'
+import { resolveWorkspaceId } from './workspace.js'
 
 let _bot: Chat | null = null
 
@@ -144,7 +145,8 @@ async function triggerBotAutoReply(
     const enabled = await getSetting('auto_reply_enabled', 'false')
     if (enabled !== 'true') return
 
-    const result = await ragSearchAndReply(question, userId)
+    const workspaceId = await resolveWorkspaceId(userId)
+    const result = await ragSearchAndReply(question, userId, workspaceId || undefined)
     if (!result.hasMatch) return
     await thread.post(result.cited)
   } catch (err) {

@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Globe, Plus, RefreshCw, Check, Copy, Loader2, ChevronDown, Trash2, AlertTriangle, Smartphone } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { api } from '@/lib/api'
+import { toast } from 'sonner'
 import { getSocket, connectSocket } from '@/lib/socket'
 import type { PlatformConnection } from '@/types'
 
@@ -103,7 +104,7 @@ function PlatformRow({
             </Badge>
           )}
           <button className="text-xs" onClick={onToggleActive}>
-            <Badge className={`text-[10px] uppercase font-bold tracking-wider rounded px-2 py-0.5 border $              {p.isActive ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+            <Badge className={`text-[10px] uppercase font-bold tracking-wider rounded px-2 py-0.5 border ${p.isActive ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
               {p.isActive ? 'active' : 'inactive'}
             </Badge>
           </button>
@@ -309,7 +310,7 @@ export function PlatformsCard() {
     } catch (e: any) {
       setPairingLoading(null)
       setWhatsAppStatus('disconnected')
-      alert(e.message || 'Gagal memulai pairing WhatsApp')
+      toast.error(e.message || 'Gagal memulai pairing WhatsApp')
     }
   }
 
@@ -341,9 +342,9 @@ export function PlatformsCard() {
             onClick={async () => {
               try {
                 const result = await migrateMutation.mutateAsync()
-                alert(result.message)
+                toast.success(result.message)
               } catch (e: any) {
-                alert(e.response?.data?.detail || e.message || 'Gagal melakukan migrasi.')
+                toast.error(e.response?.data?.detail || e.message || 'Gagal melakukan migrasi.')
               }
             }}
           >
@@ -520,7 +521,7 @@ export function PlatformsCard() {
                       platform_user_id: newPlatformUserId || undefined,
                     })
                   } catch (e: any) {
-                    alert(e.response?.data?.detail || e.message || 'Gagal menghubungkan platform.')
+                    toast.error(e.response?.data?.detail || e.message || 'Gagal menghubungkan platform.')
                   }
                 }}
               >

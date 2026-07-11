@@ -8,7 +8,6 @@ import { useMessages, useSendMessage, useUploadVoice, useVoiceCommand } from '@/
 import { api } from '@/lib/api'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useSocketEvents } from '@/hooks/useSocketEvents'
 import { useAiChat } from '@/hooks/useAiChat'
 import { VoiceRecorder } from '@/components/chat/VoiceRecorder'
 import { MemorySearch } from '@/components/chat/MemorySearch'
@@ -22,12 +21,15 @@ export const Route = createFileRoute('/chat')({
 
 function ChatPage() {
   const [activeChannel, setActiveChannel] = useState('all')
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
   const [showRecorder, setShowRecorder] = useState(false)
   const [clearingChat, setClearingChat] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const queryClient = useQueryClient()
+
   const {
     data,
     isLoading,
@@ -38,13 +40,17 @@ function ChatPage() {
   } = useMessages(
     activeChannel !== 'all' ? activeChannel : undefined,
     searchQuery,
+    activeChannel === 'web' ? activeSessionId : undefined,
   )
   const messages = data?.pages.flatMap((p) => p.messages) ?? []
 
-  const queryClient = useQueryClient()
+  // Track whether title has been generated for this session
+  const titleGeneratedRef = useRef<Set<string>>(new Set())
 
   // AI streaming chat — persist AI response setelah streaming selesai
+  const ragSourcesRef = useRef<string[]>([])
   const aiChat = useAiChat({
+    sessionId: activeSessionId,
     onFinish: (content) => {
       if (!content) return
       queryClient.invalidateQueries({ queryKey: ['messages'] })
@@ -52,13 +58,23 @@ function ChatPage() {
         platform: 'web',
         receiver_id: '',
         content,
+        session_id: activeSessionId ?? undefined,
         sender_id: 'ai-assistant',
         sender_name: 'Asisten AI',
         is_outgoing: false,
-        rag_sources: aiChat.ragSources,
+        rag_sources: ragSourcesRef.current,
       })
+
+      // Generate AI title for first exchange in session
+      if (activeSessionId && !titleGeneratedRef.current.has(activeSessionId)) {
+        titleGeneratedRef.current.add(activeSessionId)
+        api.post(`/sessions/${activeSessionId}/generate-title`, {}).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['sessions'] })
+        }).catch(() => {})
+      }
     },
   })
+  ragSourcesRef.current = aiChat.ragSources
 
   // Gabungkan pesan reguler dengan streaming AI message
   const displayMessages: Message[] = aiChat.isStreaming
@@ -81,7 +97,7 @@ function ChatPage() {
 
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // Scroll ke pesan spesifik dari URL hash (misal #message-123 dari notifikasi)
+  // Scroll ke pesan spesifik dari URL hash
   useEffect(() => {
     if (messages.length === 0) return
     const hash = window.location.hash
@@ -116,37 +132,88 @@ function ChatPage() {
   const sendMutation = useSendMessage()
   const voiceMutation = useUploadVoice()
   const voiceCommandMutation = useVoiceCommand()
-  useSocketEvents()
+
+  // Create new session
+  const handleNewSession = useCallback(async () => {
+    try {
+      const res = await api.post<{ id: string }>('/sessions', {})
+      setActiveSessionId(res.id)
+      setActiveChannel('web')
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+    } catch {
+      // fallback: just reset
+      setActiveSessionId(null)
+      setActiveChannel('web')
+    }
+  }, [queryClient])
+
+  // Select existing session
+  const handleSelectSession = useCallback((sessionId: string | null) => {
+    setActiveSessionId(sessionId)
+    if (sessionId) setActiveChannel('web')
+  }, [])
+
+  // Select channel (not session)
+  const handleSelectChannel = useCallback((channelId: string) => {
+    if (channelId !== 'web') {
+      setActiveSessionId(null)
+    }
+    setActiveChannel(channelId)
+  }, [])
 
   const handleClearChat = useCallback(async () => {
-    if (!window.confirm('Hapus semua pesan di chat ini? Tindakan ini tidak bisa dibatalkan.')) return
+    const msg = activeSessionId
+      ? 'Hapus semua pesan di sesi ini?'
+      : 'Hapus semua pesan di chat ini? Tindakan ini tidak bisa dibatalkan.'
+    if (!window.confirm(msg)) return
     setClearingChat(true)
     try {
-      await api.post('/messages/clear', {}, { silent: true })
+      if (activeSessionId) {
+        // Delete the whole session
+        await api.delete(`/sessions/${activeSessionId}`, { silent: true })
+        setActiveSessionId(null)
+        queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      } else {
+        await api.post('/messages/clear', {}, { silent: true })
+      }
       queryClient.invalidateQueries({ queryKey: ['messages'] })
-      toast.success('Semua pesan berhasil dihapus')
+      toast.success(activeSessionId ? 'Sesi berhasil dihapus' : 'Semua pesan berhasil dihapus')
     } catch {
       // error sudah di-handle oleh api.ts
     } finally {
       setClearingChat(false)
     }
-  }, [queryClient, setClearingChat])
+  }, [queryClient, setClearingChat, activeSessionId])
 
   const handleSend = useCallback(
-    (content: string) => {
+    (content: string, files?: File[]) => {
       const platform = activeChannel === 'all' ? 'web' : activeChannel
 
-      // 1. Simpan pesan user ke backend
+      // 1. Upload files first if any
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const fd = new FormData()
+          fd.append('file', file)
+          fetch('/api/files/upload', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${localStorage.getItem('ghost_token')?.replace(/^"|"$/g, '') || ''}` },
+            body: fd,
+          }).catch(() => {})
+        }
+      }
+
+      // 2. Simpan pesan user ke backend
       sendMutation.mutate({
         platform,
         receiver_id: platform === 'web' ? '' : '1',
         content,
+        session_id: activeSessionId ?? undefined,
       })
 
-      // 2. Kirim ke AI streaming endpoint untuk response
+      // 3. Kirim ke AI streaming endpoint untuk response
       aiChat.sendMessage(content)
     },
-    [activeChannel, sendMutation, aiChat],
+    [activeChannel, activeSessionId, sendMutation, aiChat],
   )
 
   const handleVoice = async (blob: Blob) => {
@@ -160,15 +227,24 @@ function ChatPage() {
 
   // Label channel aktif
   const channelLabel =
-    activeChannel === 'all'
-      ? 'Semua Pesan'
-      : activeChannel === 'web'
-        ? 'AI Assistant'
-        : activeChannel.charAt(0).toUpperCase() + activeChannel.slice(1)
+    activeSessionId
+      ? 'AI Assistant'
+      : activeChannel === 'all'
+        ? 'Semua Pesan'
+        : activeChannel === 'web'
+          ? 'AI Assistant'
+          : activeChannel.charAt(0).toUpperCase() + activeChannel.slice(1)
 
   return (
     <>
-      <ChannelList activeId={activeChannel} onSelect={setActiveChannel} collapsed={leftCollapsed} onNewSession={handleClearChat} />
+      <ChannelList
+        activeId={activeChannel}
+        activeSessionId={activeSessionId}
+        onSelect={handleSelectChannel}
+        onSelectSession={handleSelectSession}
+        collapsed={leftCollapsed}
+        onNewSession={handleNewSession}
+      />
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* ===== Chat Header ===== */}
         <div className="flex h-14 items-center justify-between border-b border-border bg-card/90 backdrop-blur-sm px-4 gap-3 shrink-0">
@@ -235,7 +311,7 @@ function ChatPage() {
               onClick={handleClearChat}
               disabled={clearingChat || messages.length === 0}
               className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30"
-              title="Hapus semua pesan"
+              title={activeSessionId ? 'Hapus sesi ini' : 'Hapus semua pesan'}
             >
               {clearingChat ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

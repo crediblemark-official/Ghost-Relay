@@ -13,18 +13,18 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().default(8000),
 
-  DATABASE_URL: z.string().default('postgresql://ghost:changeme@localhost:5432/ghost_relay'),
+  DATABASE_URL: z.string().default('postgresql://ghost:changeme@localhost:5433/ghost_relay'),
   REDIS_URL: z.string().default(''),
 
-  JWT_SECRET_KEY: z.string().min(1, 'JWT_SECRET_KEY is required'),
+  JWT_SECRET_KEY: z.string().min(32, 'JWT_SECRET_KEY must be at least 32 characters'),
   JWT_ALGORITHM: z.string().default('HS256'),
   JWT_ACCESS_TOKEN_EXPIRE_MINUTES: z.coerce.number().default(1440),
 
-  BETTER_AUTH_SECRET: z.string().default('change-me-in-production-secret-key-better-auth-12345'),
+  BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET must be at least 32 characters'),
   BETTER_AUTH_URL: z.string().default('http://localhost:8000'),
 
-  ENCRYPTION_KEY: z.string().min(1, 'ENCRYPTION_KEY is required'),
-  CRYPTO_SALT: z.string().min(1, 'CRYPTO_SALT is required'),
+  ENCRYPTION_KEY: z.string().min(16, 'ENCRYPTION_KEY must be at least 16 characters'),
+  CRYPTO_SALT: z.string().min(8, 'CRYPTO_SALT must be at least 8 characters'),
 
   CORS_ORIGINS: z.string().default('["*"]'),
 
@@ -47,6 +47,10 @@ const envSchema = z.object({
 
   ADMIN_EMAIL: z.string().default('admin@ghost.local'),
   ADMIN_PASSWORD: z.string().default('admin123'),
+
+  RESEND_API_KEY: z.string().default(''),
+  SENDGRID_API_KEY: z.string().default(''),
+  EMAIL_FROM: z.string().default(''),
 
   FRONTEND_DIR: z.string().default(''),
   PUBLIC_URL: z.string().default(''),

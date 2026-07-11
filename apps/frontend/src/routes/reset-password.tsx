@@ -1,9 +1,8 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { authClient } from '@/lib/auth-client'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Ghost } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { AuthLayout } from '@/components/auth/AuthLayout'
 
 export const Route = createFileRoute('/reset-password')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -22,13 +21,17 @@ function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <Card className="w-full max-w-sm">
-          <CardContent className="pt-6">
-            <p className="text-sm text-destructive text-center">Invalid reset link.</p>
-          </CardContent>
-        </Card>
-      </div>
+      <AuthLayout
+        title="Invalid link"
+        subtitle="This password reset link is invalid or expired."
+        footer={
+          <Link to="/login" className="text-violet-600 hover:underline font-medium">
+            ← Back to sign in
+          </Link>
+        }
+      >
+        <div className="text-center text-xs text-red-500">Token tidak valid.</div>
+      </AuthLayout>
     )
   }
 
@@ -49,49 +52,64 @@ function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <Card className="w-full max-w-sm">
-          <CardContent className="pt-6 space-y-4">
-            <p className="text-sm text-emerald-600 text-center">Password berhasil direset!</p>
-            <Button className="w-full" onClick={() => navigate({ to: '/login' })}>
-              Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <AuthLayout
+        title="Password reset!"
+        subtitle="Your password has been successfully reset."
+        footer={
+          <button
+            onClick={() => navigate({ to: '/login' })}
+            className="text-violet-600 hover:underline font-medium"
+          >
+            Sign in →
+          </button>
+        }
+      >
+        <div className="text-center text-xs text-emerald-600">
+          Password berhasil direset! Silakan masuk dengan password baru Anda.
+        </div>
+      </AuthLayout>
     )
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Ghost className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">Ghost Relay</span>
+    <AuthLayout
+      title="Reset your password"
+      subtitle="Enter your new password below."
+      footer={
+        <Link to="/login" className="text-violet-600 hover:underline font-medium">
+          ← Back to sign in
+        </Link>
+      }
+    >
+      <form onSubmit={handleReset} className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-slate-700">New Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-violet-400 focus:ring-1 focus:ring-violet-200 transition-all"
+            required
+            minLength={6}
+          />
+        </div>
+
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-600">
+            <span className="shrink-0 mt-0.5">⚠</span>
+            {error}
           </div>
-          <CardTitle className="text-center">Reset Password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleReset} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">New Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring"
-                required
-                minLength={6}
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Please wait...' : 'Reset Password'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="relative w-full h-9 rounded-lg bg-slate-900 text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-60"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reset Password'}
+        </button>
+      </form>
+    </AuthLayout>
   )
 }

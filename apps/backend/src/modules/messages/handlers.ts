@@ -8,31 +8,37 @@ import { memoryStore } from '../../core/memory-store.js'
 import { validate, sendValidationError, ValidationError } from '../../core/validation.js'
 import { messageCreateSchema, messageSearchSchema } from '@ghost/shared'
 import { decrypt } from '../../core/encryption.js'
+import { handleSummarizeSession } from './sessions.js'
 export let socketIO: SocketIOServer
 
 export function setSocketIO(io: SocketIOServer) {
   socketIO = io
 }
 
-export async function handleGetMessages(req: FastifyRequest) {
-  const { page = '1', page_size = '50', platform } = req.query as Record<string, string>
-  const pageNum = Math.max(1, Number(page))
-  const limit = Math.min(200, Math.max(1, Number(page_size)))
-  const offset = (pageNum - 1) * limit
-  const userId = req.userId
+export async function handleGetMessages(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { page = '1', page_size = '50', platform, session_id } = req.query as Record<string, string>
+    const pageNum = Math.max(1, Number(page))
+    const limit = Math.min(200, Math.max(1, Number(page_size)))
+    const offset = (pageNum - 1) * limit
+    const userId = req.userId
 
-  const filter: any = { userId }
-  if (platform) filter.platform = platform
+    const filter: any = { userId }
+    if (platform) filter.platform = platform
+    if (session_id) filter.sessionId = session_id
 
-  const total = await db.message.count({ where: filter })
-  const rows = await db.message.findMany({
-    where: filter,
-    orderBy: { timestamp: 'desc' },
-    skip: offset,
-    take: limit,
-  })
+    const total = await db.message.count({ where: filter })
+    const rows = await db.message.findMany({
+      where: filter,
+      orderBy: { timestamp: 'desc' },
+      skip: offset,
+      take: limit,
+    })
 
-  return { messages: rows, total, page: pageNum, pageSize: limit }
+    return { messages: rows, total, page: pageNum, pageSize: limit }
+  } catch (err) {
+    reply.status(500).send({ detail: 'Failed to fetch messages' })
+  }
 }
 
 export async function handleSendMessage(req: FastifyRequest, reply: FastifyReply) {
@@ -40,6 +46,7 @@ export async function handleSendMessage(req: FastifyRequest, reply: FastifyReply
     platform: string
     receiver_id: string
     content: string
+    session_id?: string
     message_type?: string
     sender_id?: string
     sender_name?: string
@@ -52,13 +59,14 @@ export async function handleSendMessage(req: FastifyRequest, reply: FastifyReply
     if (err instanceof ValidationError) return sendValidationError(reply, err)
     throw err
   }
-  const { platform, receiver_id, content, message_type = 'text', sender_id, sender_name, is_outgoing, rag_sources } = body
+  const { platform, receiver_id, content, session_id, message_type = 'text', sender_id, sender_name, is_outgoing, rag_sources } = body
   const userId = req.userId
   const user = await db.user.findFirst({ where: { id: userId } })
 
   const msg = await db.message.create({
     data: {
       userId,
+      ...(session_id ? { sessionId: session_id } : {}),
       platform,
       senderId: sender_id ?? String(userId),
       senderName: sender_name ?? (user?.name ?? ''),
@@ -130,74 +138,110 @@ export async function handleSendMessage(req: FastifyRequest, reply: FastifyReply
 
   // Embed ke RAG memory untuk semantic search & auto-reply
   if (content) {
+    // Fetch session title untuk metadata
+    let sessionTitle = ''
+    if (session_id) {
+      const sess = await db.chatSession.findUnique({ where: { id: session_id }, select: { title: true } }).catch(() => null)
+      sessionTitle = sess?.title || ''
+    }
     generateEmbedding(content, userId).then(embedding => {
       return memoryStore.addChat(String(msg.id), embedding, content, {
         sender: msg.senderName ?? 'unknown',
         platform,
         timestamp: String(msg.timestamp),
         userId: String(userId),
+        ...(session_id ? { sessionId: session_id, sessionTitle } : {}),
+        ...(req.workspaceId ? { workspaceId: req.workspaceId } : {}),
       })
     }).catch(() => { /* memory skip */ })
+  }
+
+  // Auto-summarize: trigger setiap 10 pesan dalam sesi
+  if (session_id && platform === 'web') {
+    db.message.count({ where: { sessionId: session_id } }).then(count => {
+      if (count > 0 && count % 10 === 0) {
+        // Summarize di background, jangan block response
+        handleSummarizeSession(
+          { userId, params: { id: session_id }, server: req.server } as any,
+          { status: () => ({ send: () => {} }) } as any,
+        ).catch(() => {})
+      }
+    }).catch(() => {})
   }
 
   reply.status(201).send(msg)
 }
 
 export async function handleDeleteMessage(req: FastifyRequest, reply: FastifyReply) {
-  const { id } = req.params as { id: string }
-  const msg = await db.message.findFirst({
-    where: { id: Number(id), userId: req.userId },
-  })
-  if (!msg) {
-    reply.status(404).send({ detail: 'Message not found' })
-    return
-  }
-  await db.message.delete({
-    where: { id: Number(id) },
-  })
   try {
-    socketIO.to(`user:${req.userId}`).emit('new_message', {})
-  } catch { /* ws skip */ }
-  return { status: 'ok' }
+    const { id } = req.params as { id: string }
+    const msg = await db.message.findFirst({
+      where: { id: Number(id), userId: req.userId },
+    })
+    if (!msg) {
+      reply.status(404).send({ detail: 'Message not found' })
+      return
+    }
+    await db.message.delete({
+      where: { id: Number(id) },
+    })
+    try {
+      socketIO.to(`user:${req.userId}`).emit('message:deleted', { id: Number(id) })
+    } catch { /* ws skip */ }
+    return { status: 'ok' }
+  } catch (err) {
+    reply.status(500).send({ detail: 'Failed to delete message' })
+  }
 }
 
-export async function handleClearMessages(req: FastifyRequest) {
-  const userId = req.userId
-  const result = await db.message.deleteMany({
-    where: { userId },
-  })
-  return { status: 'ok', deletedCount: result.count }
+export async function handleClearMessages(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userId = req.userId
+    const { session_id } = (req.body ?? {}) as { session_id?: string }
+    const filter: any = { userId }
+    if (session_id) filter.sessionId = session_id
+    const result = await db.message.deleteMany({
+      where: filter,
+    })
+    return { status: 'ok', deletedCount: result.count }
+  } catch (err) {
+    reply.status(500).send({ detail: 'Failed to clear messages' })
+  }
 }
 
 export async function handleSearchMessages(req: FastifyRequest, reply: FastifyReply) {
-  let body: { query: string; page?: number; page_size?: number }
   try {
-    body = validate(messageSearchSchema, req.body)
-  } catch (err) {
-    if (err instanceof ValidationError) return sendValidationError(reply, err)
-    throw err
-  }
-  const { query, page = 1, page_size = 50 } = body
-  const userId = req.userId
-  const pageNum = Math.max(1, Number(page))
-  const limit = Math.min(200, Math.max(1, Number(page_size)))
-  const offset = (pageNum - 1) * limit
-
-  const filter = {
-    userId,
-    content: {
-      contains: query,
-      mode: 'insensitive' as any,
+    let body: { query: string; page?: number; page_size?: number }
+    try {
+      body = validate(messageSearchSchema, req.body)
+    } catch (err) {
+      if (err instanceof ValidationError) return sendValidationError(reply, err)
+      throw err
     }
+    const { query, page = 1, page_size = 50 } = body
+    const userId = req.userId
+    const pageNum = Math.max(1, Number(page))
+    const limit = Math.min(200, Math.max(1, Number(page_size)))
+    const offset = (pageNum - 1) * limit
+
+    const filter = {
+      userId,
+      content: {
+        contains: query,
+        mode: 'insensitive' as any,
+      }
+    }
+
+    const total = await db.message.count({ where: filter })
+    const rows = await db.message.findMany({
+      where: filter,
+      orderBy: { timestamp: 'desc' },
+      skip: offset,
+      take: limit,
+    })
+
+    return { messages: rows, total, page: pageNum, pageSize: limit }
+  } catch (err) {
+    reply.status(500).send({ detail: 'Failed to search messages' })
   }
-
-  const total = await db.message.count({ where: filter })
-  const rows = await db.message.findMany({
-    where: filter,
-    orderBy: { timestamp: 'desc' },
-    skip: offset,
-    take: limit,
-  })
-
-  return { messages: rows, total, page: pageNum, pageSize: limit }
 }

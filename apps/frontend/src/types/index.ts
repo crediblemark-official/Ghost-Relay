@@ -1,6 +1,7 @@
 export interface Message {
   id: string
   userId: string
+  sessionId?: string
   platform: string
   senderId: string
   senderName: string
@@ -9,6 +10,16 @@ export interface Message {
   timestamp: Date
   isOutgoing: boolean
   ragSources?: string[]
+}
+
+export interface ChatSession {
+  id: string
+  userId: string
+  title: string
+  createdAt: Date
+  updatedAt: Date
+  messages?: { content: string; timestamp: Date }[]
+  _count?: { messages: number }
 }
 
 export interface MessageListResponse {
@@ -21,6 +32,7 @@ export interface MessageListResponse {
 export interface File {
   id: string
   userId: string
+  uploaderName: string
   originalName: string
   storageUrl: string
   fileType: string
@@ -28,6 +40,7 @@ export interface File {
   sizeBytes: number
   uploadedAt: Date
   extractedText?: string
+  accessScope: string
 }
 
 export interface VoiceNote {

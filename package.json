@@ -26,9 +26,6 @@
     "turbo": "^2.5.0",
     "typescript": "~6.0.2"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": ["*"]
-  },
   "engines": {
     "node": ">=22"
   }

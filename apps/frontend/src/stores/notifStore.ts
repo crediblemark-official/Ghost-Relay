@@ -33,18 +33,21 @@ export const useNotifStore = create<NotifState>((set) => ({
   addNotification: (notif) => {
     set((s) => ({
       notifications: [notif, ...s.notifications].slice(0, 50),
-      unreadCount: s.unreadCount + 1,
+      unreadCount: s.unreadCount + (notif.readAt ? 0 : 1),
     }))
   },
 
   markRead: async (id) => {
     await api.post(`/notifications/${id}/read`, {}, { silent: true })
-    set((s) => ({
-      notifications: s.notifications.map((n) =>
-        n.id === id ? { ...n, readAt: new Date().toISOString() } : n,
-      ),
-      unreadCount: Math.max(0, s.unreadCount - 1),
-    }))
+    set((s) => {
+      const target = s.notifications.find(n => n.id === id && !n.readAt)
+      return {
+        notifications: s.notifications.map((n) =>
+          n.id === id ? { ...n, readAt: new Date().toISOString() } : n,
+        ),
+        unreadCount: Math.max(0, s.unreadCount - (target ? 1 : 0)),
+      }
+    })
   },
 
   markAllRead: async () => {

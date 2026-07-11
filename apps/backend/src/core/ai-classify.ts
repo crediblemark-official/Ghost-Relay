@@ -1,6 +1,6 @@
-import { generateObject } from 'ai'
+import { generateObject, generateText } from 'ai'
 import { z } from 'zod'
-import { getLanguageModel } from './ai-client.js'
+import { getLanguageModel, getVisionModel } from './ai-client.js'
 import { chatCompletion } from './ai-chat.js'
 
 const VALID_FOLDERS = ['Kontrak', 'Desain', 'Dokumen_Teknis', 'Laporan', 'Lainnya'] as const
@@ -87,5 +87,38 @@ ${text}`,
     return object
   } catch {
     return { ringkasan: '', tanggal_deadline: null, daftar_tugas: [] }
+  }
+}
+
+export async function captionImage(
+  imageBase64: string,
+  mimeType: string,
+  userId?: string,
+): Promise<string> {
+  try {
+    const vision = await getVisionModel(userId)
+    if (!vision) return ''
+
+    const { text } = await generateText({
+      model: vision.model,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              image: `data:${mimeType};base64,${imageBase64}`,
+            },
+            {
+              type: 'text',
+              text: 'Buatkan caption singkat (1-2 kalimat) untuk gambar ini dalam Bahasa Indonesia. Fokus pada isi utama gambar.',
+            },
+          ],
+        },
+      ],
+    })
+    return text.trim()
+  } catch {
+    return ''
   }
 }

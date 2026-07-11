@@ -5,6 +5,7 @@ import { memoryStore } from '../../core/memory-store.js'
 import { loadSlackCredentials } from '../../core/platform-credentials.js'
 import { getUserIdForPlatform, processFileWebhook, triggerAutoReply, socketIO } from './shared.js'
 import { timingSafeEqual, createHmac } from 'node:crypto'
+import { resolveWorkspaceId } from '../../core/workspace.js'
 
 function safeCompare(a: string, b: string): boolean {
   try {
@@ -83,11 +84,13 @@ export async function handleSlackWebhook(req: FastifyRequest, reply: FastifyRepl
 
     try {
       const embedding = await generateEmbedding(text, userId)
+      const wsId = await resolveWorkspaceId(userId)
       await memoryStore.addChat(String(message.id), embedding, text, {
         sender,
         platform: 'slack',
         timestamp: (event.ts as string) ?? '',
         userId: String(userId),
+        ...(wsId ? { workspaceId: wsId } : {}),
       })
     } catch { /* memory skip */ }
 

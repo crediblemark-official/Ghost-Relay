@@ -5,6 +5,7 @@ import { memoryStore } from '../../core/memory-store.js'
 import { transcribeAudio } from '../../core/ai-audio.js'
 import { loadTelegramCredentials } from '../../core/platform-credentials.js'
 import { getUserIdForPlatform, processFileWebhook, triggerAutoReply, socketIO } from './shared.js'
+import { resolveWorkspaceId } from '../../core/workspace.js'
 
 export async function handleTelegramWebhook(req: FastifyRequest, reply: FastifyReply) {
   const body = req.body as Record<string, unknown>
@@ -118,11 +119,13 @@ export async function handleTelegramWebhook(req: FastifyRequest, reply: FastifyR
                     // Embed transkrip ke memory store
                     try {
                       const emb = await generateEmbedding(transcription, userId)
+                      const wsId = await resolveWorkspaceId(userId)
                       await memoryStore.addChat(String(msg.id), emb, transcription, {
                         sender: String(sender.first_name ?? 'unknown'),
                         platform: 'telegram',
                         timestamp: String(update.date ?? ''),
                         userId: String(userId),
+                        ...(wsId ? { workspaceId: wsId } : {}),
                       })
                     } catch { /* memory skip */ }
 
@@ -146,11 +149,13 @@ export async function handleTelegramWebhook(req: FastifyRequest, reply: FastifyR
 
   try {
     const embedding = await generateEmbedding(text || '', userId)
+    const wsId = await resolveWorkspaceId(userId)
     await memoryStore.addChat(String(msg.id), embedding, text || '', {
       sender: String(sender.first_name ?? 'unknown'),
       platform: 'telegram',
       timestamp: String(update.date ?? ''),
       userId: String(userId),
+      ...(wsId ? { workspaceId: wsId } : {}),
     })
   } catch { /* memory skip */ }
 

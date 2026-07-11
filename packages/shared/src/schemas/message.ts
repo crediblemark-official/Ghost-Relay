@@ -4,6 +4,7 @@ export const messageCreateSchema = z.object({
   platform: z.string().min(1).max(50),
   receiver_id: z.string(),
   content: z.string().min(1).max(10000),
+  session_id: z.string().optional(),
   message_type: z.string().default('text'),
   sender_id: z.string().optional(),
   sender_name: z.string().optional(),
@@ -13,7 +14,7 @@ export const messageCreateSchema = z.object({
 
 export const messageResponseSchema = z.object({
   id: z.number(),
-  userId: z.number(),
+  userId: z.string(),
   platform: z.string(),
   senderId: z.string(),
   senderName: z.string().nullable(),
@@ -23,7 +24,7 @@ export const messageResponseSchema = z.object({
   platformMessageId: z.string().nullable(),
   isOutgoing: z.boolean(),
   timestamp: z.string(),
-  ragSources: z.array(z.string()).nullable(),
+  ragSources: z.union([z.array(z.any()), z.null()]).nullable(),
 })
 
 export const messageListResponseSchema = z.object({

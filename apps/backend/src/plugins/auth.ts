@@ -2,9 +2,11 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import fp from 'fastify-plugin'
 import { fromNodeHeaders } from 'better-auth/node'
 import { auth } from '../core/auth.js'
+import { resolveWorkspaceId } from '../core/workspace.js'
 
 export async function authPlugin(app: FastifyInstance): Promise<void> {
   app.decorateRequest('userId', '')
+  app.decorateRequest('workspaceId', '')
 
   app.decorate('authenticate', async function (request: FastifyRequest, reply: FastifyReply) {
     try {
@@ -16,6 +18,7 @@ export async function authPlugin(app: FastifyInstance): Promise<void> {
         return
       }
       request.userId = session.user.id
+      request.workspaceId = (await resolveWorkspaceId(session.user.id)) || ''
     } catch {
       reply.status(401).send({ detail: 'Authentication failed' })
     }

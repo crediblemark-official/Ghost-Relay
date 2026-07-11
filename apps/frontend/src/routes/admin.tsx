@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
@@ -6,6 +6,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Users, Building2, Calendar, MessageSquare, Settings, ArrowRight, Shield } from 'lucide-react'
 
 export const Route = createFileRoute('/admin')({
+  beforeLoad: () => {
+    const user = useAuthStore.getState().user
+    if (user?.role !== 'owner') throw redirect({ to: '/chat' })
+  },
   component: AdminPage,
 })
 

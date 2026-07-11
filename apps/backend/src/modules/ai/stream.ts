@@ -15,6 +15,7 @@ interface StreamMessage {
 
 interface StreamBody {
   messages: StreamMessage[]
+  session_id?: string
 }
 
 function normalizeMessages(messages: StreamMessage[]) {
@@ -83,7 +84,7 @@ async function createAndEmitNotification(
 }
 
 export async function handleStreamChat(req: FastifyRequest, reply: FastifyReply): Promise<void> {
-  const { messages } = req.body as StreamBody
+  const { messages, session_id } = req.body as StreamBody & { session_id?: string }
 
   if (!messages?.length) {
     reply.status(400).send({ detail: 'messages required' })
@@ -101,12 +102,50 @@ export async function handleStreamChat(req: FastifyRequest, reply: FastifyReply)
   const ws = await getWorkspaceAndMembers(req.userId)
   const memberNames = ws?.members.map(m => ({ id: m.user.id, name: m.user.name })) || []
 
-  const systemPrompt = `Kamu adalah asisten pribadi di perusahaan ini. Kepribadianmu:
+  // === Conversation Memory: Summary + Vector Retrieval ===
+  let sessionContext = ''
+
+  if (session_id) {
+    // 1. Fetch session summary
+    const session = await db.chatSession.findUnique({
+      where: { id: session_id },
+      select: { summary: true, title: true },
+    }).catch(() => null)
+
+    if (session?.summary) {
+      sessionContext += `\n\n## Ringkasan Percakapan Sebelumnya\n${session.summary}\n`
+    }
+
+    // 2. Vector retrieval: cari pesan relevan dari session lain
+    try {
+      const { retrieveRelevantMessages } = await import('../messages/sessions.js')
+      const lastUserMsg = normalized.filter((m: any) => m.role === 'user').pop()
+      if (lastUserMsg?.content) {
+        const relevant = await retrieveRelevantMessages(
+          req.userId,
+          session_id,
+          lastUserMsg.content,
+          3,
+        )
+        if (relevant.length > 0) {
+          sessionContext += `\n## Pesan Relevan dari Percakapan Lain\n`
+          for (const r of relevant) {
+            sessionContext += `- [${r.title || 'Tanpa Judul'}]: ${r.content}\n`
+          }
+          sessionContext += `\nGunakan informasi di atas sebagai referensi tambahan jika relevan dengan pertanyaan user.\n`
+        }
+      }
+    } catch { /* skip vector retrieval */ }
+  }
+
+  const systemPrompt = `Kamu adalah asisten pribadi di perusahaan ini. Kepribadianmu:${sessionContext}
 
 ## Peran
 - Kamu adalah perantara dua arah antara user (bos) dan anggota tim lainnya.
 - Kamu bisa mengirim pesan, pengumuman, dan tugas ke anggota tim.
-- Kamu juga bisa menjawab pertanyaan berdasarkan pengetahuan dan konteks yang ada.
+- Kamu punya akses ke Knowledge Vault — dokumen-dokumen yang diunggah oleh tim (kontrak, desain, laporan, dll).
+- Ketika ada informasi dari Knowledge Vault di pesan user, GUNAKAN untuk menjawab pertanyaan secara lengkap dan spesifik.
+- Jika tidak ada konteks dokumen yang relevan, jawab dengan pengetahuan umum dan katakan jika kamu tidak punya data spesifik.
 
 ## Gaya Komunikasi
 - Profesional, hangat, dan efisien — seperti asisten pribadi sungguhan.

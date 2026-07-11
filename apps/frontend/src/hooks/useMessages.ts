@@ -4,9 +4,9 @@ import type { Message, MessageListResponse } from '@/types'
 
 const PAGE_SIZE = 30
 
-export function useMessages(platform?: string, search?: string) {
+export function useMessages(platform?: string, search?: string, sessionId?: string | null) {
   return useInfiniteQuery<MessageListResponse>({
-    queryKey: ['messages', platform, search],
+    queryKey: ['messages', platform, search, sessionId],
     queryFn: async ({ pageParam }) => {
       const page = pageParam as number
       if (search) {
@@ -21,6 +21,7 @@ export function useMessages(platform?: string, search?: string) {
       params.set('page', String(page))
       params.set('page_size', String(PAGE_SIZE))
       if (platform) params.set('platform', platform)
+      if (sessionId) params.set('session_id', sessionId)
       const res = await api.get<MessageListResponse>(`/messages?${params}`)
       return res
     },
@@ -39,9 +40,11 @@ export function useSendMessage() {
       platform: string
       receiver_id: string
       content: string
+      session_id?: string
     }) => api.post<Message>('/messages/send', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages'] })
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
   })
 }

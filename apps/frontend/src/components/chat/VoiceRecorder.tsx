@@ -49,7 +49,6 @@ export function VoiceRecorder({ onComplete }: VoiceRecorderProps) {
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop()
-    setState('idle')
   }
 
   return (

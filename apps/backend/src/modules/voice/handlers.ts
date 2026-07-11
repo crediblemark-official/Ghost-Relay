@@ -13,6 +13,7 @@ import { writeFile, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { randomUUID } from 'node:crypto'
+import { resolveWorkspaceId } from '../../core/workspace.js'
 import { eventBus } from '../../core/event-bus.js'
 import { getSetting } from '../../core/db-settings.js'
 
@@ -165,7 +166,19 @@ export async function processVoiceNote(userId: string, messageId: number, audioP
 
     await db.message.update({
       where: { id: messageId },
-      data: { content: display, messageType: 'voice_processed' },
+      data: {
+        content: display,
+        messageType: 'voice_processed',
+        metadata: {
+          transcription: rawText,
+          summary: summary || null,
+          tasks: taskList.length > 0 ? {
+            ringkasan: tasks?.ringkasan || summary || '',
+            tanggal_deadline: tasks?.tanggal_deadline || null,
+            daftar_tugas: taskList,
+          } : null,
+        } as any,
+      },
     })
 
     try {
@@ -174,13 +187,35 @@ export async function processVoiceNote(userId: string, messageId: number, audioP
 
     eventBus.emit('voice:processed', { id: messageId, status: 'completed', transcription: rawText, summary })
 
+    // FP-5: Send per-division notifications for decomposed tasks
+    const taskItems = (tasks?.daftar_tugas as Record<string, string>[]) ?? []
+    if (taskItems.length > 0) {
+      const divisionChannelSetting = await getSetting('division_notification_channels', '{}') ?? '{}'
+      let divisionChannels: Record<string, string> = {}
+      try { divisionChannels = JSON.parse(divisionChannelSetting) } catch { /* noop */ }
+
+      for (const task of taskItems) {
+        const division = task.divisi ?? 'general'
+        const channel = divisionChannels[division]
+        if (channel) {
+          const priorityEmoji = task.prioritas === 'tinggi' ? '🔴' : task.prioritas === 'sedang' ? '🟡' : '🟢'
+          const notifText = `${priorityEmoji} [${division.toUpperCase()}] ${task.deskripsi}\nDeadline: ${tasks?.tanggal_deadline || 'Tidak ditentukan'}`
+          try {
+            await platformService.sendMessage(channel, '', notifText)
+          } catch { /* platform skip */ }
+        }
+      }
+    }
+
     try {
       const embedding = await generateEmbedding(rawText, userId)
+      const wsId = await resolveWorkspaceId(userId)
       await memoryStore.addChat(String(messageId), embedding, rawText, {
         sender: 'User',
         platform: 'web',
         timestamp: String(Date.now()),
         userId: String(userId),
+        ...(wsId ? { workspaceId: wsId } : {}),
       })
     } catch { /* memory skip */ }
   } catch (err) {

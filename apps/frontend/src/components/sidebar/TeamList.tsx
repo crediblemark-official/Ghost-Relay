@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
-import { getSocket } from '@/lib/socket'
+import { getSocket, connectSocket } from '@/lib/socket'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Users } from 'lucide-react'
@@ -41,7 +41,7 @@ export function TeamList({ collapsed, searchQuery = '' }: { collapsed?: boolean;
         return next
       })
     }
-    const s = getSocket()
+    const s = getSocket() ?? connectSocket()
     if (!s) return
     const handleOnlineList = (userIds: string[]) => setOnlineIds(new Set(userIds))
     s.on('user:online_list', handleOnlineList)

@@ -13,7 +13,7 @@ export const platformConnectionUpdateSchema = z.object({
 
 export const platformConnectionResponseSchema = z.object({
   id: z.number(),
-  userId: z.number(),
+  userId: z.string(),
   platform: z.string(),
   platformUserId: z.string().nullable(),
   isActive: z.boolean(),

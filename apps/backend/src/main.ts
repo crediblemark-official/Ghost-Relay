@@ -9,17 +9,24 @@ async function main() {
 
   // Warn about default/placeholder secrets in production
   if (env.ENVIRONMENT === 'production') {
+    const fatalErrors: string[] = []
     if (env.ADMIN_PASSWORD === 'admin123') {
-      console.warn('⚠  ADMIN_PASSWORD is still set to the default value. Change it via environment variable for security.')
+      fatalErrors.push('ADMIN_PASSWORD is still set to the default value "admin123"')
     }
     if (env.JWT_SECRET_KEY === 'change-me-in-production') {
-      console.warn('⚠  JWT_SECRET_KEY is still set to a placeholder. Generate a strong random secret for production.')
+      fatalErrors.push('JWT_SECRET_KEY is still set to the placeholder "change-me-in-production"')
     }
     if (env.ENCRYPTION_KEY === 'change-me-in-production') {
-      console.warn('⚠  ENCRYPTION_KEY is still set to a placeholder. Generate a strong random key for production.')
+      fatalErrors.push('ENCRYPTION_KEY is still set to the placeholder "change-me-in-production"')
     }
     if (env.CRYPTO_SALT === 'change-me-in-production') {
-      console.warn('⚠  CRYPTO_SALT is still set to a placeholder. Generate a random salt for production.')
+      fatalErrors.push('CRYPTO_SALT is still set to the placeholder "change-me-in-production"')
+    }
+    if (fatalErrors.length > 0) {
+      console.error('FATAL: Refusing to start with default/placeholder secrets in production:')
+      fatalErrors.forEach(e => console.error(`  - ${e}`))
+      console.error('Set proper values via environment variables and restart.')
+      process.exit(1)
     }
   }
 

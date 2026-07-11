@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { db } from '@ghost/database'
+import { resolveAllWorkspaceIds } from '../../core/workspace.js'
 
 export async function handleGetNotifications(req: FastifyRequest) {
   const notifications = await db.notification.findMany({
@@ -51,6 +52,31 @@ export async function handleSendNotification(req: FastifyRequest, reply: Fastify
     message?: string
     link?: string
   }
+
+  // Input validation
+  if (!targetUserId || typeof targetUserId !== 'string') {
+    reply.status(400).send({ detail: 'userId is required' })
+    return
+  }
+  if (!title || typeof title !== 'string' || title.length > 200) {
+    reply.status(400).send({ detail: 'title is required (max 200 chars)' })
+    return
+  }
+  const allowedTypes = ['info', 'broadcast', 'task', 'mention']
+  if (type && !allowedTypes.includes(type)) {
+    reply.status(400).send({ detail: `type must be one of: ${allowedTypes.join(', ')}` })
+    return
+  }
+
+  // Authorization: target user must be in the same workspace
+  const senderWorkspaces = await resolveAllWorkspaceIds(req.userId)
+  const targetWorkspaces = await resolveAllWorkspaceIds(targetUserId)
+  const sharedWorkspace = senderWorkspaces.some(ws => targetWorkspaces.includes(ws))
+  if (!sharedWorkspace && req.userId !== targetUserId) {
+    reply.status(403).send({ detail: 'Cannot send notifications to users outside your workspace' })
+    return
+  }
+
   const targetUser = await db.user.findUnique({ where: { id: targetUserId } })
   if (!targetUser) {
     reply.status(404).send({ detail: 'Target user not found' })

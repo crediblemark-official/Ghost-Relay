@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { setSocketIO, handleGetFiles, handleUploadFile, handleSearchFiles, handleDownloadFile } from './handlers.js'
+import { setSocketIO, handleGetFiles, handleUploadFile, handleSearchFiles, handleDownloadFile, handleUpdateFileAccess, handleDeleteFile } from './handlers.js'
 
 export async function filesModule(app: FastifyInstance): Promise<void> {
   setSocketIO(app.io)
@@ -8,4 +8,6 @@ export async function filesModule(app: FastifyInstance): Promise<void> {
   app.post('/files/upload', { preHandler: [app.authenticate] }, handleUploadFile)
   app.post('/files/search', { preHandler: [app.authenticate] }, handleSearchFiles)
   app.get('/files/download/:fileId', { preHandler: [app.authenticate] }, handleDownloadFile)
+  app.patch('/files/:fileId/access', { preHandler: [app.authenticate] }, handleUpdateFileAccess)
+  app.delete('/files/:fileId', { preHandler: [app.authenticate] }, handleDeleteFile)
 }

@@ -1,5 +1,6 @@
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
+import { disconnectSocket } from '@/lib/socket'
 
 const BASE_URL = import.meta.env.VITE_API_URL || ''
 
@@ -38,11 +39,15 @@ async function request<T>(
   method: string,
   path: string,
   body?: unknown,
-  options?: { silent?: boolean },
+  options?: { silent?: boolean; headers?: Record<string, string> },
 ): Promise<T> {
   const url = `${BASE_URL}${normalizePath(path)}`
   const hasBody = body !== undefined && !(body instanceof FormData)
-  const reqOptions: RequestInit = { method, headers: getHeaders(hasBody) }
+  const baseHeaders = getHeaders(hasBody)
+  const reqHeaders = options?.headers
+    ? { ...baseHeaders, ...options.headers }
+    : baseHeaders
+  const reqOptions: RequestInit = { method, headers: reqHeaders }
 
   if (body instanceof FormData) {
     reqOptions.body = body
@@ -63,8 +68,9 @@ async function request<T>(
       })
     }
 
-    // 401 → auth expired, redirect ke login
+    // 401 → auth expired, disconnect socket & redirect ke login
     if (error.status === 401) {
+      disconnectSocket()
       useAuthStore.getState().logout()
       window.location.href = '/login'
       throw new Error('Sesi telah berakhir. Silakan login kembali.')
@@ -81,12 +87,14 @@ async function request<T>(
 }
 
 export const api = {
-  get: <T>(path: string, options?: { silent?: boolean }) =>
+  get: <T>(path: string, options?: { silent?: boolean; headers?: Record<string, string> }) =>
     request<T>('GET', path, undefined, options),
-  post: <T>(path: string, body?: unknown, options?: { silent?: boolean }) =>
+  post: <T>(path: string, body?: unknown, options?: { silent?: boolean; headers?: Record<string, string> }) =>
     request<T>('POST', path, body, options),
-  put: <T>(path: string, body?: unknown, options?: { silent?: boolean }) =>
+  put: <T>(path: string, body?: unknown, options?: { silent?: boolean; headers?: Record<string, string> }) =>
     request<T>('PUT', path, body, options),
-  delete: <T>(path: string, options?: { silent?: boolean }) =>
+  patch: <T>(path: string, body?: unknown, options?: { silent?: boolean; headers?: Record<string, string> }) =>
+    request<T>('PATCH', path, body, options),
+  delete: <T>(path: string, options?: { silent?: boolean; headers?: Record<string, string> }) =>
     request<T>('DELETE', path, undefined, options),
 }

@@ -27,7 +27,7 @@ export function connectSocket(): Socket | null {
   })
 
   socket.on('connect', () => {
-    console.log('Socket connected')
+    if (import.meta.env.DEV) console.log('Socket connected')
   })
 
   socket.on('connect_error', (err) => {
@@ -35,7 +35,7 @@ export function connectSocket(): Socket | null {
   })
 
   socket.on('disconnect', (reason) => {
-    console.log('Socket disconnected:', reason)
+    if (import.meta.env.DEV) console.log('Socket disconnected:', reason)
   })
 
   return socket
@@ -51,7 +51,7 @@ export function disconnectSocket(): void {
 }
 
 useAuthStore.subscribe((state, prev) => {
-  if (state.token !== prev.token) {
+  if (state.token && state.token !== prev.token) {
     connectSocket()
   }
 })

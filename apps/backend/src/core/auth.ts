@@ -3,13 +3,13 @@ import { prismaAdapter } from '@better-auth/prisma-adapter'
 import { db } from '@ghost/database'
 import { bearer } from 'better-auth/plugins'
 import { randomUUID } from 'node:crypto'
-import { env } from '@ghost/config'
+import { env, getCorsOrigins } from '@ghost/config'
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
     provider: 'postgresql',
   }),
-  trustedOrigins: ['http://localhost:5173'],
+  trustedOrigins: getCorsOrigins(),
   advanced: {
     database: {
       generateId: () => randomUUID(),

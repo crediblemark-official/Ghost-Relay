@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Brain, Globe, Key, Plus, Trash2, CheckCircle, XCircle, RefreshCw, ChevronDown, Zap, AlertTriangle, Pencil } from 'lucide-react'
 import { api } from '@/lib/api'
+import { toast } from 'sonner'
 import { useModelsCatalog } from '@/hooks/useModelsCatalog'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -78,7 +79,7 @@ export function AIProvidersCard() {
       setDeleteTarget(null)
     },
     onError: (err: any) => {
-      alert(err.message || 'Gagal menghapus provider.')
+      toast.error(err.message || 'Gagal menghapus provider.')
     }
   })
 
@@ -108,12 +109,12 @@ export function AIProvidersCard() {
         model_id: p.modelId,
       })
       if (res.status === 'ok') {
-        alert(`Koneksi sukses! Berhasil terhubung ke provider "${p.name}". Ditemukan ${res.modelsCount ?? res.models?.length ?? 0} model.`)
+        toast.success(`Koneksi sukses! Berhasil terhubung ke provider "${p.name}". Ditemukan ${res.modelsCount ?? res.models?.length ?? 0} model.`)
       } else {
-        alert(`Koneksi gagal: ${res.detail || 'Kredensial tidak valid.'}`)
+        toast.error(`Koneksi gagal: ${res.detail || 'Kredensial tidak valid.'}`)
       }
     } catch (e: any) {
-      alert(`Error koneksi: ${e.message || 'Gagal terhubung ke provider.'}`)
+      toast.error(`Error koneksi: ${e.message || 'Gagal terhubung ke provider.'}`)
     } finally {
       setTestingProviderId(null)
     }
@@ -130,15 +131,15 @@ export function AIProvidersCard() {
         model_id: form.modelId,
       })
       if (res.status === 'ok') {
-        alert(`Koneksi sukses! Berhasil terhubung ke provider "${form.name}". Ditemukan ${res.modelsCount ?? res.models?.length ?? 0} model.`)
+        toast.success(`Koneksi sukses! Berhasil terhubung ke provider "${form.name}". Ditemukan ${res.modelsCount ?? res.models?.length ?? 0} model.`)
         if (res.models && res.models.length > 0) {
           setLiveModels(res.models)
         }
       } else {
-        alert(`Koneksi gagal: ${res.detail || 'Kredensial tidak valid.'}`)
+        toast.error(`Koneksi gagal: ${res.detail || 'Kredensial tidak valid.'}`)
       }
     } catch (e: any) {
-      alert(`Error koneksi: ${e.message || 'Gagal terhubung ke provider.'}`)
+      toast.error(`Error koneksi: ${e.message || 'Gagal terhubung ke provider.'}`)
     } finally {
       setTestingForm(false)
     }
@@ -176,10 +177,10 @@ export function AIProvidersCard() {
       if (res.status === 'ok' && res.models) {
         setLiveModels(res.models)
       } else {
-        alert(res.detail || 'Gagal mengambil daftar model. Periksa API Key dan Base URL.')
+        toast.error(res.detail || 'Gagal mengambil daftar model. Periksa API Key dan Base URL.')
       }
     } catch (e: any) {
-      alert(e.message || 'Gagal terhubung ke provider.')
+      toast.error(e.message || 'Gagal terhubung ke provider.')
     } finally {
       setFetchingLiveModels(false)
     }

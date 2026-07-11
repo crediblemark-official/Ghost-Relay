@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, Bot, Search, Plus, X } from 'lucide-react'
+import { AlertCircle, Bot, Search, Plus, X, MessageSquare, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TeamList } from './TeamList'
+import type { ChatSession } from '@/types'
 
 interface PlatformConnection {
   id: number
@@ -15,12 +16,13 @@ interface PlatformConnection {
 
 interface ChannelListProps {
   activeId?: string
+  activeSessionId?: string | null
   onSelect?: (id: string) => void
+  onSelectSession?: (id: string | null) => void
   collapsed?: boolean
   onNewSession?: () => void
 }
 
-// Warna platform yang konsisten
 const PLATFORM_COLORS: Record<string, { dot: string; badge: string }> = {
   whatsapp: { dot: 'bg-emerald-500', badge: 'text-emerald-500 bg-emerald-500/10' },
   telegram: { dot: 'bg-sky-500', badge: 'text-sky-500 bg-sky-500/10' },
@@ -55,7 +57,33 @@ function formatTimeShort(date: Date | string): string {
   }
 }
 
-export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSession }: ChannelListProps) {
+function groupSessionsByDate(sessions: ChatSession[]): { label: string; items: ChatSession[] }[] {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const weekAgo = new Date(today.getTime() - 7 * 86400000)
+  const monthAgo = new Date(today.getTime() - 30 * 86400000)
+
+  const groups: Record<string, ChatSession[]> = {
+    'Hari ini': [],
+    'Minggu ini': [],
+    'Bulan ini': [],
+    'Lebih lama': [],
+  }
+
+  for (const s of sessions) {
+    const d = new Date(s.updatedAt)
+    if (d >= today) groups['Hari ini'].push(s)
+    else if (d >= weekAgo) groups['Minggu ini'].push(s)
+    else if (d >= monthAgo) groups['Bulan ini'].push(s)
+    else groups['Lebih lama'].push(s)
+  }
+
+  return Object.entries(groups)
+    .filter(([_, items]) => items.length > 0)
+    .map(([label, items]) => ({ label, items }))
+}
+
+export function ChannelList({ activeId = 'all', activeSessionId, onSelect, onSelectSession, collapsed, onNewSession }: ChannelListProps) {
   const [search, setSearch] = useState('')
   const { data: connections = [], isLoading, isError } = useQuery<PlatformConnection[]>({
     queryKey: ['platforms'],
@@ -63,27 +91,22 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
     staleTime: 30000,
   })
 
-  // Fetch riwayat percakapan AI (pesan user outgoing ke web)
-  const { data: aiHistoryData } = useQuery<{
-    messages: { id: string; content: string; timestamp: Date; isOutgoing: boolean }[]
-  }>({
-    queryKey: ['messages', 'web', undefined],
-    queryFn: () => api.get('/messages?platform=web&page=1&page_size=20', { silent: true }),
-    staleTime: 30000,
+  // Fetch chat sessions
+  const { data: sessionsData, isLoading: sessionsLoading } = useQuery<{ sessions: ChatSession[] }>({
+    queryKey: ['sessions'],
+    queryFn: () => api.get('/sessions', { silent: true }),
+    staleTime: 10000,
     enabled: !collapsed,
   })
 
-  // Ambil hanya pesan outgoing user (bukan AI response) sebagai "topik" riwayat
-  const aiHistory = (aiHistoryData?.messages ?? [])
-    .filter((m) => m.isOutgoing)
-    .slice(0, 5)
+  const sessions = (sessionsData?.sessions ?? []).filter(s =>
+    s.title.toLowerCase().includes(search.toLowerCase())
+  )
+  const groupedSessions = groupSessionsByDate(sessions)
 
   const activeConnections = connections.filter((c: PlatformConnection) => c.isActive)
   const filteredConnections = activeConnections.filter(c =>
     (c.platformUserId || getPlatformLabel(c.platform)).toLowerCase().includes(search.toLowerCase())
-  )
-  const filteredAiHistory = aiHistory.filter(m =>
-    m.content.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -155,11 +178,11 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
             ) : (
               filteredConnections.map((conn: PlatformConnection) => {
                 const colors = PLATFORM_COLORS[conn.platform.toLowerCase()] || DEFAULT_PLATFORM
-                const isActive = activeId === conn.platform
+                const isActive = activeId === conn.platform && !activeSessionId
                 return (
                   <button
                     key={conn.id}
-                    onClick={() => onSelect?.(conn.platform)}
+                    onClick={() => { onSelect?.(conn.platform); onSelectSession?.(null) }}
                     className={cn(
                       'sidebar-active-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150',
                       isActive
@@ -167,12 +190,10 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
                         : 'text-foreground hover:bg-sidebar-accent/70 hover:text-foreground'
                     )}
                   >
-                    {/* Status dot */}
                     <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', colors.dot)} />
                     <span className="truncate flex-1 text-[13px]">
                       {conn.platformUserId || getPlatformLabel(conn.platform)}
                     </span>
-                    {/* Platform badge pill */}
                     <span className={cn(
                       'text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide shrink-0',
                       colors.badge
@@ -195,53 +216,70 @@ export function ChannelList({ activeId = 'all', onSelect, collapsed, onNewSessio
         {/* Divider */}
         <div className="h-px bg-border/60 mx-1" />
 
-        {/* === Asisten AI + History === */}
+        {/* === Asisten AI === */}
         <div className="space-y-1">
-          <div className="space-y-0.5">
-            {/* Tombol utama AI */}
-            <button
-              onClick={() => onSelect?.('web')}
-              className={cn(
-                'sidebar-active-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-all duration-150',
-                activeId === 'web'
-                  ? 'bg-primary/8 text-foreground font-semibold'
-                  : 'text-foreground hover:bg-sidebar-accent/70 hover:text-foreground'
-              )}
-            >
-              <Bot className={cn("h-4 w-4 shrink-0", activeId === 'web' ? 'text-primary' : 'text-foreground')} />
-              <span className="flex-1 truncate">AI Assistant</span>
-              {/* Online indicator */}
-              <span
-                className="h-1.5 w-1.5 rounded-full bg-primary shrink-0"
-                style={{ boxShadow: '0 0 6px oklch(0.6 0.22 264 / 70%)' }}
-              />
-            </button>
-
-            {/* Riwayat percakapan AI */}
-            {filteredAiHistory.length > 0 && (
-              <div className="pl-2 mt-1 space-y-0.5">
-                {filteredAiHistory.map((msg) => (
-                  <button
-                    key={msg.id}
-                    onClick={() => onSelect?.('web')}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left transition-colors hover:bg-sidebar-accent/50 group"
-                    title={msg.content}
-                  >
-                    {/* Garis kiri penanda riwayat */}
-                    <div className="h-3 w-px bg-border/80 shrink-0 group-hover:bg-primary/30 transition-colors" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-foreground truncate leading-tight group-hover:text-foreground transition-colors">
-                        {msg.content}
-                      </p>
-                    </div>
-                    <span className="text-[9px] text-muted-foreground shrink-0">
-                      {formatTimeShort(msg.timestamp)}
-                    </span>
-                  </button>
-                ))}
-              </div>
+          {/* Tombol utama AI */}
+          <button
+            onClick={() => { onSelect?.('web'); onSelectSession?.(null) }}
+            className={cn(
+              'sidebar-active-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-all duration-150',
+              activeId === 'web' && !activeSessionId
+                ? 'bg-primary/8 text-foreground font-semibold'
+                : 'text-foreground hover:bg-sidebar-accent/70 hover:text-foreground'
             )}
-          </div>
+          >
+            <Bot className={cn("h-4 w-4 shrink-0", activeId === 'web' && !activeSessionId ? 'text-primary' : 'text-foreground')} />
+            <span className="flex-1 truncate">AI Assistant</span>
+            <span
+              className="h-1.5 w-1.5 rounded-full bg-primary shrink-0"
+              style={{ boxShadow: '0 0 6px oklch(0.6 0.22 264 / 70%)' }}
+            />
+          </button>
+
+          {/* Sesi percakapan AI */}
+          {sessionsLoading ? (
+            <div className="pl-2 mt-1 space-y-0.5">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5">
+                  <Skeleton className="h-3 w-3 rounded" />
+                  <Skeleton className="h-3 flex-1" />
+                </div>
+              ))}
+            </div>
+          ) : groupedSessions.length > 0 ? (
+            <div className="mt-1 space-y-3">
+              {groupedSessions.map((group) => (
+                <div key={group.label} className="space-y-0.5">
+                  <p className="px-3 text-[9px] font-semibold tracking-widest text-muted-foreground/60 uppercase">
+                    {group.label}
+                  </p>
+                  {group.items.map((session) => (
+                    <button
+                      key={session.id}
+                      onClick={() => { onSelect?.('web'); onSelectSession?.(session.id) }}
+                      className={cn(
+                        'group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left transition-colors',
+                        activeSessionId === session.id
+                          ? 'bg-primary/8 text-foreground'
+                          : 'text-foreground hover:bg-sidebar-accent/50'
+                      )}
+                    >
+                      <MessageSquare className={cn(
+                        "h-3 w-3 shrink-0",
+                        activeSessionId === session.id ? 'text-primary' : 'text-muted-foreground/50'
+                      )} />
+                      <span className="flex-1 truncate text-[11px] leading-tight">
+                        {session.title}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground shrink-0">
+                        {formatTimeShort(session.updatedAt)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     </aside>

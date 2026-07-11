@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +21,14 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(''), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [message])
 
   const handleSaveName = async () => {
     if (!name.trim()) return
@@ -29,8 +37,10 @@ function ProfilePage() {
       await api.post('/auth/update-user', { name })
       setUser({ ...user!, name })
       setMessage('Profile updated')
+      setMessageType('success')
     } catch (e: any) {
       setMessage(e.message || 'Failed to update profile')
+      setMessageType('error')
     }
     setSaving(false)
   }
@@ -44,10 +54,12 @@ function ProfilePage() {
         newPassword,
       })
       setMessage('Password changed')
+      setMessageType('success')
       setCurrentPassword('')
       setNewPassword('')
     } catch (e: any) {
       setMessage(e.message || 'Failed to change password')
+      setMessageType('error')
     }
     setChangingPassword(false)
   }
@@ -64,7 +76,11 @@ function ProfilePage() {
           </div>
 
           {message && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <div className={`rounded-xl border px-4 py-3 text-sm ${
+              messageType === 'error'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            }`}>
               {message}
             </div>
           )}

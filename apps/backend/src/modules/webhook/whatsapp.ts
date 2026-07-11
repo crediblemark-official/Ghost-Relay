@@ -43,8 +43,8 @@ export async function handleWhatsAppStatus(req: FastifyRequest, reply: FastifyRe
  * Body: { connectionId?: number, userId?: string }
  */
 export async function handleWhatsAppPair(req: FastifyRequest, reply: FastifyReply) {
-  const body = req.body as { connectionId?: number; userId?: string } | null
-  const userId = body?.userId ?? req.userId
+  const body = req.body as { connectionId?: number } | null
+  const userId = req.userId
 
   if (!userId) {
     reply.status(400).send({ detail: 'userId required' })

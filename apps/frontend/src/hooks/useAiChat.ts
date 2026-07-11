@@ -2,7 +2,7 @@ import { useChat } from '@ai-sdk/react'
 import { TextStreamChatTransport } from 'ai'
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/lib/api'
-import { useState } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import type { ChatStatus } from 'ai'
 
 export interface AiChatState {
@@ -67,28 +67,34 @@ async function enrichWithRagContext(content: string): Promise<{ text: string; so
  */
 export function useAiChat(options?: {
   onFinish?: (content: string) => void
+  sessionId?: string | null
 }): AiChatState {
   const token = useAuthStore((s) => s.token)
   const [ragSources, setRagSources] = useState<string[]>([])
+  const optionsRef = useRef(options)
+  optionsRef.current = options
 
-  const transport = new TextStreamChatTransport({
+  const sessionIdRef = useRef(options?.sessionId)
+  sessionIdRef.current = options?.sessionId
+
+  const transport = useMemo(() => new TextStreamChatTransport({
     api: '/api/ai/chat/stream',
     headers: token
       ? {
           Authorization: `Bearer ${token}`,
         }
       : {},
-  })
+  }), [token])
 
   const { sendMessage: chatSend, messages, status, stop } = useChat({
     transport,
+    body: { session_id: sessionIdRef.current ?? undefined },
     onFinish: (result) => {
-      // Ekstrak teks dari parts pesan assistant terakhir
       const text = result.message.parts
         .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
         .map((p) => p.text)
         .join('')
-      options?.onFinish?.(text || '')
+      optionsRef.current?.onFinish?.(text || '')
     },
   })
 

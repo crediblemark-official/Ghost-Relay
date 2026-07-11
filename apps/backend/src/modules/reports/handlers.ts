@@ -7,7 +7,7 @@ export async function handleGetDailyReport(req: FastifyRequest) {
   const now = new Date()
   const reportDate = date
     ? new Date(date + 'T00:00:00.000Z')
-    : new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   const nextDay = new Date(reportDate)
   nextDay.setDate(nextDay.getDate() + 1)
 
@@ -52,7 +52,7 @@ export async function handleGetDailyReport(req: FastifyRequest) {
 
 export async function handleGenerateReport(req: FastifyRequest) {
   const now = new Date()
-  const reportDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const reportDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   const nextDay = new Date(reportDate)
   nextDay.setDate(nextDay.getDate() + 1)
 
@@ -81,4 +81,45 @@ export async function handleGenerateReport(req: FastifyRequest) {
   } catch { /* use raw log */ }
 
   return { report, messageCount: rows.length }
+}
+
+export async function handleEmailReport(req: FastifyRequest) {
+  const { date, report } = req.body as { date?: string; report?: string }
+  if (!report) {
+    return { success: false, error: 'No report content' }
+  }
+
+  const user = await db.user.findUnique({ where: { id: req.userId } })
+  if (!user?.email) {
+    return { success: false, error: 'No email configured for user' }
+  }
+
+  // Build email content
+  const reportDate = date || new Date().toISOString().slice(0, 10)
+  const subject = `Ghost Relay - Laporan Harian ${reportDate}`
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #e11d48;">Ghost Relay Daily Report</h2>
+      <p style="color: #64748b;">${reportDate}</p>
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
+      <div style="white-space: pre-wrap; line-height: 1.6; color: #334155;">${report}</div>
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
+      <p style="color: #94a3b8; font-size: 12px;">Dikirim otomatis oleh Ghost Relay</p>
+    </div>
+  `
+
+  try {
+    // Try email service if configured
+    if (process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY) {
+      // Use available email provider
+      const { sendEmail } = await import('../../core/email.js').catch(() => ({ sendEmail: null }))
+      if (sendEmail) {
+        await sendEmail({ to: user.email, subject, html })
+        return { success: true }
+      }
+    }
+    return { success: false, error: 'Email service not configured' }
+  } catch (err) {
+    return { success: false, error: 'Failed to send email' }
+  }
 }

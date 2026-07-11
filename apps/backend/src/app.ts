@@ -15,6 +15,26 @@ import { socketPlugin } from './plugins/socket.js'
 import { eventBus } from './core/event-bus.js'
 import { seedDatabase } from './core/seeder.js'
 
+// Singleton Redis for health checks (avoids creating new connections per request)
+let healthRedis: any = null
+async function getHealthRedis(): Promise<any> {
+  if (!env.REDIS_URL) return null
+  if (healthRedis) return healthRedis
+  try {
+    const IORedis = (await import('ioredis')).default
+    healthRedis = new IORedis(env.REDIS_URL, {
+      lazyConnect: true,
+      maxRetriesPerRequest: 0,
+      retryStrategy: () => null,
+    })
+    await healthRedis.connect()
+    return healthRedis
+  } catch {
+    healthRedis = null
+    return null
+  }
+}
+
 import { authModule } from './modules/auth/index.js'
 import { messagesModule } from './modules/messages/index.js'
 import { voiceModule } from './modules/voice/index.js'
@@ -42,13 +62,14 @@ export async function buildApp() {
         ? { target: 'pino-pretty', options: { colorize: true } }
         : undefined,
     },
+    bodyLimit: 5 * 1024 * 1024,
   })
 
   await app.register(cors, {
     origin: getCorsOrigins(),
     credentials: true,
-    methods: ['*'],
-    allowedHeaders: ['*'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 
   await app.register(rateLimit, {
@@ -106,19 +127,16 @@ export async function buildApp() {
       checks.database = 'error'
     }
 
-    // Redis ping (optional — hanya jika REDIS_URL dikonfigurasi)
+    // Redis ping (optional — singleton connection)
     if (env.REDIS_URL) {
       try {
-        const IORedis = (await import('ioredis')).default
-        const redis = new IORedis(env.REDIS_URL, {
-          lazyConnect: true,
-          maxRetriesPerRequest: 0,
-          retryStrategy: () => null,
-        })
-        await redis.connect()
-        await redis.ping()
-        await redis.quit()
-        checks.redis = 'ok'
+        const redis = await getHealthRedis()
+        if (redis) {
+          await redis.ping()
+          checks.redis = 'ok'
+        } else {
+          checks.redis = 'error'
+        }
       } catch {
         checks.redis = 'error'
       }

@@ -56,7 +56,7 @@ export async function webhookModule(app: FastifyInstance): Promise<void> {
   }
 
   // WhatsApp — pake Baileys (WebSocket), bukan HTTP webhook
-  app.get('/webhook/whatsapp', handleWhatsAppStatus)
+  app.get('/webhook/whatsapp', { preHandler: [app.authenticate] }, handleWhatsAppStatus)
   app.post('/webhook/whatsapp', { preHandler: [app.authenticate] }, handleWhatsAppPair)
 
   // Init Baileys connections untuk WhatsApp

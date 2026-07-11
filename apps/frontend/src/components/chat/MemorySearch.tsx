@@ -26,6 +26,7 @@ export function MemorySearch() {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100)
     } else {
+      clearTimeout(debounceRef.current)
       setQuery('')
       setResults([])
       setSearched(false)

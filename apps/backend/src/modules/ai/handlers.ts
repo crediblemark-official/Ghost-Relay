@@ -12,6 +12,17 @@ import {
   getProviderModels,
 } from '../../core/models-dev.js'
 
+function maskKey(encrypted: string): string {
+  try {
+    const plain = decrypt(encrypted)
+    if (!plain) return ''
+    if (plain.length <= 8) return '***'
+    return plain.slice(0, 4) + '***' + plain.slice(-4)
+  } catch {
+    return '***'
+  }
+}
+
 export async function handleGetProviders(req: FastifyRequest) {
   // personal providers
   const personal = await db.aIProvider.findMany({
@@ -31,13 +42,13 @@ export async function handleGetProviders(req: FastifyRequest) {
 
   const seen = new Set(personal.map(p => `${p.providerType}:${p.name}`))
   const merged = [
-    ...personal.map(p => ({ ...p, apiKey: decrypt(p.apiKey), scope: 'personal' as const })),
+    ...personal.map(p => ({ ...p, apiKey: maskKey(p.apiKey), scope: 'personal' as const })),
     ...globalProviders
       .filter(p => !seen.has(`${p.providerType}:${p.name}`))
-      .map(p => ({ ...p, apiKey: decrypt(p.apiKey), scope: 'global' as const })),
+      .map(p => ({ ...p, apiKey: maskKey(p.apiKey), scope: 'global' as const })),
     ...wsProviders
       .filter(p => !seen.has(`${p.providerType}:${p.name}`))
-      .map(p => ({ ...p, apiKey: decrypt(p.apiKey), scope: 'workspace' as const })),
+      .map(p => ({ ...p, apiKey: maskKey(p.apiKey), scope: 'workspace' as const })),
   ]
   return merged
 }
@@ -87,7 +98,7 @@ export async function handleCreateProvider(req: FastifyRequest, reply: FastifyRe
         workspaceId,
       }
     })
-    reply.status(201).send({ ...provider, apiKey: decrypt(provider.apiKey) })
+    reply.status(201).send({ ...provider, apiKey: maskKey(provider.apiKey) })
   } catch (dbErr) {
     console.error('DATABASE ERROR IN handleCreateProvider:', dbErr)
     throw dbErr
@@ -144,10 +155,10 @@ export async function handleUpdateProvider(req: FastifyRequest, reply: FastifyRe
   }
 
   const updated = await db.aIProvider.update({
-    where: { id: Number(id) },
+    where: isOwner ? { id: Number(id) } : { id: Number(id), userId: req.userId },
     data: updateData,
   })
-  reply.send({ ...updated, apiKey: decrypt(updated.apiKey) })
+  reply.send({ ...updated, apiKey: maskKey(updated.apiKey) })
 }
 
 export async function handleDeleteProvider(req: FastifyRequest, reply: FastifyReply) {
@@ -162,7 +173,7 @@ export async function handleDeleteProvider(req: FastifyRequest, reply: FastifyRe
     return
   }
   await db.aIProvider.delete({
-    where: { id: Number(id) },
+    where: isOwner ? { id: Number(id) } : { id: Number(id), userId: req.userId },
   })
   reply.status(204).send()
 }
@@ -234,6 +245,7 @@ export async function handleTestProvider(req: FastifyRequest) {
       models: models.slice(0, 10).map((m) => m.id),
     }
   } catch (err) {
-    return { status: 'error', detail: String(err) }
+    console.error('Provider test error:', err)
+    return { status: 'error', detail: 'Failed to test provider. Check credentials and URL.' }
   }
 }

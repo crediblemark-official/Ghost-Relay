@@ -26,6 +26,8 @@ model User {
   memberships     WorkspaceMember[]
   notifications    Notification[]
   notificationsSent Notification[] @relation("NotificationSender")
+  autoReplyLogs    AutoReplyLog[]
+  chatSessions     ChatSession[]
 
   @@map("users")
 }
@@ -39,6 +41,7 @@ model Workspace {
   createdAt  DateTime @default(now()) @map("created_at")
   members    WorkspaceMember[]
   aiProviders AIProvider[]
+  files      File[]
 
   @@map("workspaces")
 }
@@ -53,6 +56,7 @@ model WorkspaceMember {
   joinedAt    DateTime @default(now()) @map("joined_at")
 
   @@unique([workspaceId, userId])
+  @@index([userId])
   @@map("workspace_members")
 }
 
@@ -67,6 +71,7 @@ model Session {
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([expiresAt])
   @@map("sessions")
 }
 
@@ -86,6 +91,7 @@ model Account {
   createdAt             DateTime  @map("created_at")
   updatedAt             DateTime  @map("updated_at")
 
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -94,28 +100,51 @@ model Verification {
   identifier String
   value      String
   expiresAt  DateTime  @map("expires_at")
-  createdAt  DateTime? @map("created_at")
-  updatedAt  DateTime? @map("updated_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
+  @@index([identifier])
   @@map("verifications")
 }
 
-model Message {
-  id                Int      @id @default(autoincrement())
-  userId            String   @map("user_id")
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platform          String
-  senderId          String   @map("sender_id")
-  senderName        String?  @map("sender_name")
-  content           String?
-  messageType       String   @default("text") @map("message_type")
-  fileId            Int?     @map("file_id")
-  file              File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
-  platformMessageId String?  @map("platform_message_id")
-  isOutgoing        Boolean  @default(false) @map("is_outgoing")
-  timestamp         DateTime @default(now())
-  ragSources        Json?    @map("rag_sources")
+model ChatSession {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String    @default("New Chat")
+  summary   String?   @db.Text
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  messages  Message[]
 
+  @@index([userId])
+  @@map("chat_sessions")
+}
+
+model Message {
+  id                Int         @id @default(autoincrement())
+  userId            String      @map("user_id")
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId         String?     @map("session_id")
+  session           ChatSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  platform          String
+  senderId          String      @map("sender_id")
+  senderName        String?     @map("sender_name")
+  content           String?
+  messageType       String      @default("text") @map("message_type")
+  fileId            Int?        @map("file_id")
+  file              File?       @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  platformMessageId String?     @map("platform_message_id")
+  isOutgoing        Boolean     @default(false) @map("is_outgoing")
+  timestamp         DateTime    @default(now())
+  ragSources        Json?       @map("rag_sources")
+  metadata          Json?       @map("metadata")
+
+  @@index([userId])
+  @@index([userId, timestamp])
+  @@index([sessionId])
+  @@index([platformMessageId])
+  @@index([timestamp])
   @@map("messages")
 }
 
@@ -123,6 +152,8 @@ model File {
   id            Int       @id @default(autoincrement())
   userId        String    @map("user_id")
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId   String?   @map("workspace_id")
+  workspace     Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   originalName  String    @map("original_name")
   storageUrl    String    @map("storage_url")
   fileType      String    @map("file_type")
@@ -130,8 +161,12 @@ model File {
   sizeBytes     BigInt    @map("size_bytes")
   uploadedAt    DateTime  @default(now()) @map("uploaded_at")
   extractedText String?   @map("extracted_text")
+  accessScope   String    @default("all") @map("access_scope")
   messages      Message[]
 
+  @@index([userId])
+  @@index([userId, uploadedAt])
+  @@index([workspaceId])
   @@map("files")
 }
 
@@ -144,6 +179,8 @@ model PlatformConnection {
   platformUserId       String? @map("platform_user_id")
   isActive             Boolean @default(true) @map("is_active")
 
+  @@index([userId])
+  @@index([userId, platform])
   @@map("platform_connections")
 }
 
@@ -162,6 +199,8 @@ model AIProvider {
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  @@index([userId])
+  @@index([userId, scope])
   @@map("ai_providers")
 }
 
@@ -180,11 +219,12 @@ model Embedding {
   referenceId String   @map("reference_id")
   collection  String
   document    String
-  embedding   Json
+  embedding   Unsupported("vector(3072)")?
   metadata    Json?
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@unique([referenceId, collection])
+  @@index([collection, userId])
   @@map("embeddings")
 }
 
@@ -201,5 +241,21 @@ model Notification {
   readAt    DateTime? @map("read_at")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([userId])
+  @@index([userId, readAt])
   @@map("notifications")
+}
+
+model AutoReplyLog {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String
+  source    String?
+  similarity Float   @map("similarity")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("auto_reply_logs")
 }

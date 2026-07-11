@@ -25,6 +25,7 @@ import { mkdir } from 'node:fs/promises'
 import { generateEmbedding } from './ai-embedding.js'
 import { memoryStore } from './memory-store.js'
 import { triggerAutoReply } from '../modules/webhook/shared.js'
+import { resolveWorkspaceId } from './workspace.js'
 
 interface BaileysConnection {
   socket: WASocket
@@ -204,11 +205,13 @@ export async function startBaileysForUser(
         // Embed ke memory store untuk RAG
         try {
           const embedding = await generateEmbedding(textContent, userId)
+          const wsId = await resolveWorkspaceId(userId)
           await memoryStore.addChat(String(saved.id), embedding, textContent, {
             sender: 'Me',
             platform: 'whatsapp',
             timestamp: String(msg.messageTimestamp ?? Date.now()),
             userId: String(userId),
+            ...(wsId ? { workspaceId: wsId } : {}),
           })
         } catch { /* memory skip */ }
 

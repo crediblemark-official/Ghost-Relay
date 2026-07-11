@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Users, Sparkles, Loader2, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { api } from '@/lib/api'
 
 interface InviteInfo {
   valid: boolean
@@ -22,13 +23,12 @@ function InvitePage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch(`/api/settings/invite/${code}`)
-      .then(res => res.json())
+    api.get<InviteInfo>(`/settings/invite/${code}`, { silent: true })
       .then(data => {
         if (data.valid) {
           setInfo(data)
         } else {
-          setError(data.detail || 'Invite tidak valid')
+          setError('Invite tidak valid')
         }
       })
       .catch(() => setError('Gagal memuat undangan'))
@@ -53,7 +53,7 @@ function InvitePage() {
           <h1 className="text-xl font-bold text-slate-900">Undangan Tidak Valid</h1>
           <p className="text-sm text-slate-500 mt-2">{error || 'Tautan undangan tidak ditemukan atau sudah kedaluwarsa.'}</p>
           <Link to="/login" className="mt-6 inline-block text-sm text-indigo-600 hover:underline">
-            Kembali ke halaman login
+            Kembali ke halaman masuk
           </Link>
         </div>
       </div>
@@ -93,11 +93,11 @@ function InvitePage() {
           <Button
             onClick={() => {
               sessionStorage.setItem('pending_invite', code)
-              navigate({ to: '/login' })
+              navigate({ to: '/register' })
             }}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium w-full"
           >
-            Daftar / Login <ExternalLink className="h-4 w-4 ml-2" />
+            Daftar / Masuk <ExternalLink className="h-4 w-4 ml-2" />
           </Button>
         </div>
       </div>

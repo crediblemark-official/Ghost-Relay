@@ -2,12 +2,13 @@ import { Server as SocketIOServer } from 'socket.io'
 import type { FastifyInstance } from 'fastify'
 import fp from 'fastify-plugin'
 import { auth } from '../core/auth.js'
+import { getCorsOrigins } from '@ghost/config'
 
 const userSockets = new Map<string, Set<string>>()
 
 export async function socketPlugin(app: FastifyInstance): Promise<void> {
   const io = new SocketIOServer(app.server, {
-    cors: { origin: '*', methods: ['GET', 'POST'] },
+    cors: { origin: getCorsOrigins(), methods: ['GET', 'POST'], credentials: true },
     path: '/ws/socket.io',
   })
 

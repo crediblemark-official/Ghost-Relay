@@ -2,12 +2,12 @@ import { z } from 'zod'
 
 export const fileResponseSchema = z.object({
   id: z.number(),
-  userId: z.number(),
+  userId: z.string(),
   originalName: z.string(),
   storageUrl: z.string(),
   fileType: z.string(),
   folder: z.string().nullable(),
-  sizeBytes: z.number(),
+  sizeBytes: z.union([z.number(), z.string()]),
   uploadedAt: z.string(),
   extractedText: z.string().nullable(),
 })

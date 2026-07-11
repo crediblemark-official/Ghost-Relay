@@ -22,8 +22,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/backend/node_modules ./apps/backend/node_modules
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
-COPY --from=builder /app/apps/frontend/dist /app/frontend/dist
-ENV FRONTEND_DIR=/app/frontend/dist
+COPY --from=builder /app/apps/frontend/dist /app/apps/frontend/dist
+ENV FRONTEND_DIR=/app/apps/frontend/dist
 ENV NODE_ENV=production
 EXPOSE 8000
 CMD ["bun", "run", "apps/backend/dist/main.js"]

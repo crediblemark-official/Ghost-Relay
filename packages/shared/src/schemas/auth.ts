@@ -12,7 +12,7 @@ export const loginSchema = z.object({
 })
 
 export const userResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   email: z.string(),
   name: z.string(),
 })

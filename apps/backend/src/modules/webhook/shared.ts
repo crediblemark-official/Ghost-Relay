@@ -6,6 +6,7 @@ import { writeFile, mkdir } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { ragSearchAndReply } from '../../core/auto-reply.js'
 import { getSetting } from '../../core/db-settings.js'
+import { resolveWorkspaceId } from '../../core/workspace.js'
 
 export let socketIO: SocketIOServer
 
@@ -42,13 +43,17 @@ export async function processFileWebhook(
     if (!resp.ok) return null
     const content = Buffer.from(await resp.arrayBuffer())
     const ext = originalName.split('.').pop() ?? 'bin'
-    const storageDir = join(env.STORAGE_DIR, String(userId))
+    const workspaceId = await resolveWorkspaceId(userId)
+    const storageDir = workspaceId
+      ? join(env.STORAGE_DIR, workspaceId, String(userId))
+      : join(env.STORAGE_DIR, String(userId))
     await mkdir(storageDir, { recursive: true })
     const storagePath = join(storageDir, `${randomUUID().replace(/-/g, '')}.${ext}`)
     await writeFile(storagePath, content)
     const file = await db.file.create({
       data: {
         userId,
+        workspaceId: workspaceId || null,
         originalName,
         storageUrl: storagePath,
         fileType,
@@ -74,7 +79,8 @@ export async function triggerAutoReply(
     const enabled = await getSetting('auto_reply_enabled', 'false')
     if (enabled !== 'true') return
 
-    const result = await ragSearchAndReply(question, userId)
+    const workspaceId = await resolveWorkspaceId(userId)
+    const result = await ragSearchAndReply(question, userId, workspaceId || undefined)
     if (!result.hasMatch) return
 
     const autoReplyData = {

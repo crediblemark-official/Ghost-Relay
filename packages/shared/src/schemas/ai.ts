@@ -4,7 +4,7 @@ export const aiProviderCreateSchema = z.object({
   provider_type: z.string().min(1).max(20),
   name: z.string().min(1).max(255),
   api_base_url: z.string().url().max(500),
-  api_key: z.string().default(''),
+  api_key: z.string().min(1, 'API key is required'),
   model_id: z.string().min(1).max(255),
   is_active: z.boolean().default(true),
   scope: z.enum(['personal', 'workspace', 'global']).default('personal'),
@@ -12,7 +12,7 @@ export const aiProviderCreateSchema = z.object({
 
 export const aiProviderResponseSchema = z.object({
   id: z.number(),
-  userId: z.number(),
+  userId: z.string(),
   providerType: z.string(),
   name: z.string(),
   apiBaseUrl: z.string(),

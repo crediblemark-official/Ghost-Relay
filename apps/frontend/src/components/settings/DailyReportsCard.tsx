@@ -3,8 +3,9 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { FileText, BarChart3, Send, Inbox, Mic, Loader2, Brain, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
+import { FileText, BarChart3, Send, Inbox, Mic, Loader2, Brain, ChevronLeft, ChevronRight, AlertCircle, Copy, Check, Mail } from 'lucide-react'
 import { api } from '@/lib/api'
+import { toast } from 'sonner'
 
 interface DailyStats {
   date: string
@@ -48,6 +49,7 @@ function formatDateID(dateStr: string): string {
 export function DailyReportsCard() {
   const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()))
   const [reportContent, setReportContent] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const { data: stats, isLoading, isError } = useQuery<DailyStats>({
     queryKey: ['daily-report', selectedDate],
@@ -60,6 +62,27 @@ export function DailyReportsCard() {
       setReportContent(data.report)
     },
   })
+
+  const emailMutation = useMutation({
+    mutationFn: () => api.post('/reports/email', { date: selectedDate, report: reportContent }),
+    onSuccess: () => {
+      toast.success('Report berhasil dikirim ke email')
+    },
+    onError: () => {
+      toast.error('Gagal mengirim email')
+    },
+  })
+
+  const copyToClipboard = async () => {
+    if (!reportContent) return
+    try {
+      await navigator.clipboard.writeText(reportContent)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Gagal menyalin')
+    }
+  }
 
   const changeDay = (delta: number) => {
     // Operasi aritmatika tanggal dalam UTC
@@ -235,6 +258,27 @@ export function DailyReportsCard() {
                 <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
                   {reportContent}
                 </p>
+                <div className="flex gap-2 mt-3 pt-3 border-t border-rose-200/50">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={copyToClipboard}
+                    className="border-slate-200 text-slate-600 hover:bg-white text-xs"
+                  >
+                    {copied ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                    {copied ? 'Tersalin' : 'Salin'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={emailMutation.isPending}
+                    onClick={() => emailMutation.mutate()}
+                    className="border-slate-200 text-slate-600 hover:bg-white text-xs"
+                  >
+                    {emailMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Mail className="h-3.5 w-3.5 mr-1" />}
+                    Kirim Email
+                  </Button>
+                </div>
               </div>
             )}
           </div>

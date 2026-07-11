@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Settings as SettingsIcon, XCircle } from 'lucide-react'
 import { api } from '@/lib/api'
@@ -67,12 +68,17 @@ export function SystemConfigCard() {
                   placeholder={env.value || env.key}
                   defaultValue={envEdits[env.key] ?? env.value}
                   onChange={e => setEnvEdits(prev => ({ ...prev, [env.key]: e.target.value }))}
-                  onBlur={e => {
-                    if (e.target.value !== env.value) {
-                      updateMutation.mutate({ key: env.key, value: e.target.value })
-                    }
-                  }}
                 />
+                {envEdits[env.key] !== undefined && envEdits[env.key] !== env.value && (
+                  <Button
+                    size="sm"
+                    className="h-8 px-3 text-xs bg-violet-600 hover:bg-violet-700 text-white shrink-0"
+                    disabled={updateMutation.isPending}
+                    onClick={() => updateMutation.mutate({ key: env.key, value: envEdits[env.key] })}
+                  >
+                    {updateMutation.isPending ? 'Saving...' : 'Save'}
+                  </Button>
+                )}
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge className={`text-[9px] uppercase font-bold tracking-wider rounded-md px-1.5 py-0.5 border ${
                     env.source === 'db'
