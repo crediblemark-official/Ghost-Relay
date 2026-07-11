@@ -30,7 +30,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_DB: ghost_relay
           POSTGRES_USER: ghost
@@ -128,7 +128,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_DB: ghost_relay
           POSTGRES_USER: ghost
