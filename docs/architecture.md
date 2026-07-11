@@ -1,10 +1,10 @@
-# Arsitektur Ghost Relay (Modular Monolith)
+# Ghost Relay Architecture (Modular Monolith)
 
-Arsitektur lengkap Ghost Relay — **Modular Monolith** dalam struktur **Monorepo** dengan Bun workspace.
+This document outlines the complete architecture of Ghost Relay — structured as a **Modular Monolith** within a **Monorepo** using Bun workspaces.
 
 ---
 
-## 1. Gambaran Arsitektur
+## 1. Architectural Overview
 
 ```mermaid
 graph TB
@@ -59,7 +59,7 @@ graph TB
 
 ---
 
-## 2. Struktur Monorepo
+## 2. Monorepo Directory Structure
 
 ```
 Ghost-Team/
@@ -88,22 +88,22 @@ Ghost-Team/
 
 ---
 
-## 3. Komunikasi Antar-Modul (Event-Driven)
+## 3. Inter-Module Communication (Event-Driven)
 
-Backend menggunakan **Event-Driven Architecture** di dalam memori menggunakan `EventBus` (`event-bus.ts`). Modul tetap independen (loose coupling) tanpa memanggil logic modul lain secara langsung.
+The backend employs an **Event-Driven Architecture** in-memory using an `EventBus` (`event-bus.ts`). Modules remain independent (loosely coupled) without invoking each other's logic directly.
 
-**Contoh Alur:**
-1. Pesan baru masuk via Webhook / REST
-2. Modul mengirim event `message:created` melalui `EventBus`
-3. Modul lain (voice, memory, dll.) mendengarkan event dan melakukan aksi di luar HTTP request-response cycle
+**Example Flow:**
+1. A new message is received via Webhook / REST.
+2. The receiving module emits a `message:created` event through the `EventBus`.
+3. Other modules (voice, memory, etc.) listen for this event and perform tasks asynchronously outside the HTTP request-response cycle.
 
 ---
 
-## 4. Rincian Layer Sistem
+## 4. System Layer Details
 
 ### Layer 1: Presentation (Frontend)
 
-| Teknologi | Peran |
+| Technology | Role |
 |-----------|-------|
 | React 19 + TypeScript | UI framework |
 | TanStack Router | Type-safe client-side routing |
@@ -116,39 +116,39 @@ Backend menggunakan **Event-Driven Architecture** di dalam memori menggunakan `E
 
 ### Layer 2: Application (Backend)
 
-| Teknologi | Peran |
+| Technology | Role |
 |-----------|-------|
 | Fastify v5 + Bun | HTTP framework + runtime |
 | Better Auth | Session-based authentication |
 | Socket.io | WebSocket server |
 | Zod (via @ghost/shared) | Request/response validation |
 
-**Modules (12):**
-- `auth` — Registration, login, session management
-- `messages` — Chat sessions, message CRUD, search
-- `voice` — Voice note processing, voice commands
-- `files` — Knowledge Vault upload, semantic search
-- `ai` — Multi-provider LLM chat, streaming
-- `platforms` — WhatsApp/Telegram/Slack connections
-- `notifications` — In-app notification system
-- `reports` — Daily report generation
-- `memory` — Semantic search across all content
-- `settings` — Workspace, providers, invite codes
-- `admin` — User/workspace management (owner only)
-- `webhook` — Inbound webhooks from platforms
+**Domain Modules (12):**
+- `auth` — Registration, login, session management.
+- `messages` — Chat sessions, message CRUD, history search.
+- `voice` — Voice note processing, task decomposition, voice commands.
+- `files` — Knowledge Vault upload, vector parsing, semantic search.
+- `ai` — Multi-provider LLM chat, streaming response.
+- `platforms` — WhatsApp/Telegram/Slack connection configs.
+- `notifications` — In-app notification system.
+- `reports` — Daily report generation.
+- `memory` — Semantic search across all system content.
+- `settings` — Workspace parameters, AI providers, invite codes.
+- `admin` — User/workspace management (owner only).
+- `webhook` — Inbound webhooks from connected platforms.
 
 ---
 
 ### Layer 3: Business Logic & Background Tasks
 
-| Komponen | Peran |
+| Component | Role |
 |----------|-------|
-| **Event Bus** (`event-bus.ts`) | In-process event broker untuk loose coupling |
-| **Task Queue** (`task-queue.ts`) | BullMQ + Redis (fallback: in-memory `setImmediate`) |
-| **AI Client** (`ai-client.ts`) | Multi-provider LLM (OpenAI, Gemini, Anthropic, Qwen, etc.) |
-| **Memory Store** (`memory.ts`) | pgvector-based semantic search |
-| **Workspace Resolver** (`workspace.ts`) | Membership-first workspace resolution |
-| **Encryption** (`encryption.ts`) | AES-256-GCM credential encryption |
+| **Event Bus** (`event-bus.ts`) | In-process event broker for loose coupling. |
+| **Task Queue** (`task-queue.ts`) | BullMQ + Redis (fallback: in-memory `setImmediate`). |
+| **AI Client** (`ai-client.ts`) | Multi-provider LLM SDK interface (OpenAI, Gemini, Anthropic, Qwen, etc.). |
+| **Memory Store** (`memory.ts`) | pgvector-based semantic search. |
+| **Workspace Resolver** (`workspace.ts`) | Membership-first workspace resolution. |
+| **Encryption** (`encryption.ts`) | AES-256-GCM credentials encryption. |
 
 ---
 
@@ -158,16 +158,16 @@ Backend menggunakan **Event-Driven Architecture** di dalam memori menggunakan `E
 
 - **ORM**: Prisma v6
 - **Vector Search**: pgvector native extension (`vector(3072)`)
-- **Embedding Model**: Gemini embedding-001 (3072 dimensions)
-- **Search Method**: Brute-force L2 distance (no HNSW index — 2000-dim limit)
+- **Embedding Model**: Gemini embedding-001 / custom (3072 dimensions)
+- **Search Method**: Brute-force L2 distance (no HNSW index due to 2000-dim limit)
 
-#### Skema Database (Prisma)
+#### Database Schema Highlights (Prisma)
 
 **Key Tables:**
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
-| `User` | User accounts | `id`, `email`, `passwordHash`, `name`, `role` |
+| `User` | User accounts | `id`, `email`, `passwordHash`, `name`, `role`, `position`, `department`, `tonePreference`, `bio` |
 | `Workspace` | Multi-tenant workspaces | `id`, `name`, `inviteCode`, `ownerId` |
 | `WorkspaceMember` | Team membership | `userId`, `workspaceId`, `role` |
 | `ChatSession` | Conversation sessions | `id`, `userId`, `workspaceId`, `title`, `platform` |
@@ -179,32 +179,32 @@ Backend menggunakan **Event-Driven Architecture** di dalam memori menggunakan `E
 | `Notification` | In-app notifications | `id`, `userId`, `title`, `message`, `isRead` |
 | `AutoReplyLog` | Auto-reply history | `id`, `workspaceId`, `triggerMessageId`, `replyMessageId` |
 
-#### Keputusan Arsitektural: Tanpa Foreign Key Constraints
+#### Architectural Decision: No Foreign Key Constraints
 
-15 dari 17 relasi FK dihapus dari schema. Hanya `Session.user` dan `Account.user` yang dipertahankan (wajib untuk Better Auth adapter).
+15 out of 17 relation foreign keys were removed from the schema. Only `Session.user` and `Account.user` are retained (required by the Better Auth adapter).
 
-**Alasan:**
-- Memudahkan dekomposisi microservice di masa depan
-- Referential integrity dijaga di application layer
-- Semua `@@index` dipertahankan untuk query performance
-- Workspace resolution via helper functions (`findWorkspaceByMember`, `findWorkspaceByMemberRole`)
+**Rationale:**
+- Facilitates modular monolith decomposition into microservices in the future.
+- Referential integrity is enforced at the application layer.
+- All `@@index` annotations are preserved for fast query execution.
+- Workspace resolutions are handled via application-level helper functions (`findWorkspaceByMember`, `findWorkspaceByMemberRole`).
 
 ---
 
 ### Layer 5: External Integrations
 
-| Platform | Metode | SDK/Library |
+| Platform | Protocol | SDK/Library |
 |----------|--------|-------------|
-| WhatsApp | WebSocket + webhook | Baileys |
+| WhatsApp | WebSockets + webhook | Baileys |
 | Telegram | Bot API + webhook | grammy / node-telegram-bot-api |
 | Slack | Bolt SDK + Socket Mode | @slack/bolt |
 | LLM Providers | REST API | Vercel AI SDK (`ai` + `@ai-sdk/*`) |
 
 ---
 
-## 5. Alur Data Utama
+## 5. Main Data Flows
 
-### Skenario 1: Voice Note Processing
+### Scenario 1: Voice Note Processing
 
 ```mermaid
 sequenceDiagram
@@ -227,7 +227,7 @@ sequenceDiagram
     B-->>Frontend: WebSocket voice_processed
 ```
 
-### Skenario 2: Semantic Search (Knowledge Vault)
+### Scenario 2: Semantic Search (Knowledge Vault)
 
 ```mermaid
 sequenceDiagram
@@ -246,7 +246,7 @@ sequenceDiagram
     B-->>F: Ranked results with excerpts
 ```
 
-### Skenario 3: Auto-Reply (RAG)
+### Scenario 3: Auto-Reply (RAG)
 
 ```mermaid
 sequenceDiagram
@@ -274,38 +274,37 @@ sequenceDiagram
 
 ## 6. Security Architecture
 
-| Komponen | Implementasi |
+| Component | Implementation |
 |----------|-------------|
 | **Authentication** | Better Auth (session-based, Prisma adapter) |
-| **Credential Encryption** | AES-256-GCM (sebelumnya AES-256-CBC) |
-| **API Key Masking** | Masked di response (e.g., `sk-m***-key`) |
-| **Access Control** | File scope (`workspace` / `private`), workspace membership |
-| **CORS** | Configurable allowed origins |
-| **Body Limit** | 5MB max request size |
+| **Credential Encryption** | AES-256-GCM (utilizing crypto PBKDF2) |
+| **API Key Masking** | Masked in backend responses (e.g., `sk-••••••••1234`) |
+| **Access Control** | File scope (`workspace` / `private`), workspace memberships |
+| **CORS** | Configurable allowed origins in config |
+| **Body Limit** | 5MB maximum request size |
 | **Webhook Auth** | HMAC-SHA256 (Slack), secret token (Telegram) |
-| **Default Secrets** | Fatal error di production jika menggunakan default values |
 
 ---
 
 ## 7. Design Patterns
 
-| Pola | Implementasi | Alasan |
+| Pattern | Implementation | Rationale |
 |------|-------------|--------|
-| **Modular Monolith** | `apps/backend/src/modules/` | Domain logika terpisah dalam satu proses — mudah deploy, siap decompose |
-| **Monorepo** | Bun workspaces + Turborepo | Sharing tipe/skema antar package |
-| **Event-Driven** | In-process `EventBus` | Loose coupling antar modul |
-| **Repository Pattern** | Prisma client per module | Clean data access layer |
+| **Modular Monolith** | `apps/backend/src/modules/` | Domain logic separated inside a single process — easy deployment, ready to decompose |
+| **Monorepo** | Bun workspaces + Turborepo | Type and schema sharing across packages |
+| **Event-Driven** | In-process `EventBus` | Loose coupling between modules |
+| **Repository Pattern** | Prisma client per module | Clean data access abstraction |
 | **Manual Lookups** | No FK, application-level joins | Microservice-ready, independent schema evolution |
-| **Task Queue** | BullMQ + Redis (in-memory fallback) | Background processing tanpa dependency wajib |
-| **Vector Search** | pgvector native | No external service needed (ChromaDB, Pinecone, dll.) |
+| **Task Queue** | BullMQ + Redis (in-memory fallback) | Background processing without hard dependencies |
+| **Vector Search** | pgvector native | No external SaaS vector database dependencies |
 
 ---
 
-## 8. Deployment
+## 8. Deployment Specifications
 
-| Target | Method |
+| Target Environment | Deployment Method |
 |--------|--------|
 | **Local Dev** | `bun dev` (concurrent backend + frontend) |
 | **Docker** | `docker compose up -d` (PostgreSQL + app) |
-| **Cloud** | Alibaba Cloud ECS via SSH (see `DEPLOYMENT.md`) |
+| **Cloud** | Alibaba Cloud ECS via SSH (see `deployment.md`) |
 | **CI/CD** | GitHub Actions (build → typecheck → lint → test → deploy) |
