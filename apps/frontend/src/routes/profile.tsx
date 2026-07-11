@@ -95,7 +95,7 @@ function ProfilePage() {
 
   return (
     <div className="flex flex-1 bg-background text-foreground min-h-screen overflow-y-auto">
-      <div className="flex flex-1 max-w-6xl w-full mx-auto p-8">
+      <div className="flex flex-1 w-full p-8">
         <div className="w-full space-y-6 pb-12">
           {/* Header */}
           <div className="flex items-center gap-4">
