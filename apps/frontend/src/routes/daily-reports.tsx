@@ -124,85 +124,86 @@ function DailyReportsPage() {
   return (
     <div className="flex flex-1 flex-col bg-background min-h-screen">
       {/* Header Banner */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-card/40 backdrop-blur-md px-5 py-2.5">
-        {/* Left Section: Title & Description */}
-        <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4">
-          <h1 className="text-sm font-bold tracking-tight text-foreground flex items-center gap-1.5">
-            Laporan Harian <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold font-sans uppercase">Daily Reports</span>
-          </h1>
-          <div className="hidden md:block h-3.5 w-px bg-border" />
-          <p className="text-[11px] text-muted-foreground">
-            Log data statistik aktivitas platform harian tim dan ringkasan otomatis kecerdasan AI.
-          </p>
-        </div>
-
-        {/* Right Section: Actions */}
-        <div className="flex items-center flex-wrap gap-2">
-          {/* Day Navigation */}
-          <div className="flex items-center gap-1.5 bg-card border border-border rounded-lg p-0.5">
-            <button
-              onClick={() => changeDay(-1)}
-              className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              title="Hari Sebelumnya"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-            <span className="text-xs font-semibold text-foreground px-1">
-              {formatDateID(selectedDate)}
-            </span>
-            <button
-              onClick={() => changeDay(1)}
-              disabled={isToday}
-              className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
-              title="Hari Berikutnya"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
+      <div className="shrink-0 border-b border-border bg-card/40 backdrop-blur-md px-5 py-2.5">
+        <div className="max-w-6xl mx-auto w-full flex flex-wrap items-center justify-between gap-4">
+          {/* Left Section: Title & Description */}
+          <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4">
+            <h1 className="text-sm font-bold tracking-tight text-foreground flex items-center gap-1.5">
+              Laporan Harian <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold font-sans uppercase">Daily Reports</span>
+            </h1>
+            <div className="hidden md:block h-3.5 w-px bg-border" />
+            <p className="text-[11px] text-muted-foreground">
+              Log data statistik aktivitas platform harian tim dan ringkasan otomatis kecerdasan AI.
+            </p>
           </div>
 
-          {!isToday && (
+          {/* Right Section: Actions */}
+          <div className="flex items-center flex-wrap gap-2">
+            {/* Day Navigation */}
+            <div className="flex items-center gap-1.5 bg-card border border-border rounded-lg p-0.5">
+              <button
+                onClick={() => changeDay(-1)}
+                className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                title="Hari Sebelumnya"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+              <span className="text-xs font-semibold text-foreground px-1">
+                {formatDateID(selectedDate)}
+              </span>
+              <button
+                onClick={() => changeDay(1)}
+                disabled={isToday}
+                className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                title="Hari Berikutnya"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {!isToday && (
+              <button
+                onClick={goToday}
+                className="h-8 px-2.5 rounded-lg border border-border bg-card hover:bg-accent text-xs font-semibold text-primary transition-colors"
+              >
+                Hari Ini
+              </button>
+            )}
+
+            <div className="hidden sm:block h-3.5 w-px bg-border" />
+
+            {/* Copy */}
             <button
-              onClick={goToday}
-              className="h-8 px-2.5 rounded-lg border border-border bg-card hover:bg-accent text-xs font-semibold text-primary transition-colors"
+              onClick={copyToClipboard}
+              disabled={!reportContent}
+              className="flex h-8 items-center gap-1.5 px-3 rounded-lg border border-border bg-card hover:bg-accent text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors"
+              title="Salin Ringkasan"
             >
-              Hari Ini
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+              <span>{copied ? 'Tersalin' : 'Salin'}</span>
             </button>
-          )}
 
-          <div className="hidden sm:block h-3.5 w-px bg-border" />
+            {/* Email */}
+            <button
+              onClick={() => emailMutation.mutate()}
+              disabled={!reportContent || emailMutation.isPending}
+              className="flex h-8 items-center gap-1.5 px-3 rounded-lg border border-border bg-card hover:bg-accent text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors"
+              title="Kirim Laporan ke Email"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              <span>Kirim Email</span>
+            </button>
 
-          {/* Copy */}
-          <button
-            onClick={copyToClipboard}
-            disabled={!reportContent}
-            className="flex h-8 items-center gap-1.5 px-3 rounded-lg border border-border bg-card hover:bg-accent text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors"
-            title="Salin Ringkasan"
-          >
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-            <span>{copied ? 'Tersalin' : 'Salin'}
-            </span>
-          </button>
-
-          {/* Email */}
-          <button
-            onClick={() => emailMutation.mutate()}
-            disabled={!reportContent || emailMutation.isPending}
-            className="flex h-8 items-center gap-1.5 px-3 rounded-lg border border-border bg-card hover:bg-accent text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors"
-            title="Kirim Laporan ke Email"
-          >
-            <Mail className="h-3.5 w-3.5" />
-            <span>Kirim Email</span>
-          </button>
-
-          {/* Refresh */}
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
-            title="Muat Ulang"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-          </button>
+            {/* Refresh */}
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+              title="Muat Ulang"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -219,7 +220,7 @@ function DailyReportsPage() {
         </div>
       ) : stats ? (
         <div className="flex-1 p-5 bg-muted/20 overflow-y-auto">
-          <div className="w-full flex flex-col md:flex-row gap-5 items-stretch min-h-[calc(100vh-170px)]">
+          <div className="max-w-6xl w-full mx-auto flex flex-col md:flex-row gap-5 items-stretch min-h-[calc(100vh-170px)]">
             
             {/* Left Column: Stats & Platform Breakdown */}
             <div className="w-full md:w-80 shrink-0 flex flex-col gap-4">

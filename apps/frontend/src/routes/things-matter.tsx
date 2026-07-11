@@ -99,64 +99,66 @@ function ThingsMatterPage() {
   return (
     <div className="flex flex-1 flex-col bg-background min-h-screen">
       {/* Header Banner */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-card/40 backdrop-blur-md px-5 py-2.5">
-        {/* Left Section: Title & Description */}
-        <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4">
-          <h1 className="text-sm font-bold tracking-tight text-foreground flex items-center gap-1.5">
-            Things & Matter <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold">5W1H Report</span>
-          </h1>
-          <div className="hidden md:block h-3.5 w-px bg-border" />
-          <p className="text-[11px] text-muted-foreground">
-            Laporan harian otomatis berformat 5W1H diurai dari log aktivitas koordinasi obrolan tim.
-          </p>
-        </div>
-
-        {/* Right Section: Actions */}
-        <div className="flex items-center flex-wrap gap-2">
-          {/* Calendar Picker */}
-          <div className="relative flex items-center">
-            <Calendar className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="h-8 pl-8 pr-2.5 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all cursor-pointer"
-            />
+      <div className="shrink-0 border-b border-border bg-card/40 backdrop-blur-md px-5 py-2.5">
+        <div className="max-w-6xl mx-auto w-full flex flex-wrap items-center justify-between gap-4">
+          {/* Left Section: Title & Description */}
+          <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4">
+            <h1 className="text-sm font-bold tracking-tight text-foreground flex items-center gap-1.5">
+              Things & Matter <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold">5W1H Report</span>
+            </h1>
+            <div className="hidden md:block h-3.5 w-px bg-border" />
+            <p className="text-[11px] text-muted-foreground">
+              Laporan harian otomatis berformat 5W1H diurai dari log aktivitas koordinasi obrolan tim.
+            </p>
           </div>
 
-          <div className="hidden sm:block h-3.5 w-px bg-border" />
+          {/* Right Section: Actions */}
+          <div className="flex items-center flex-wrap gap-2">
+            {/* Calendar Picker */}
+            <div className="relative flex items-center">
+              <Calendar className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="h-8 pl-8 pr-2.5 rounded-lg border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all cursor-pointer"
+              />
+            </div>
 
-          {/* Copy Button */}
-          <button
-            onClick={handleCopy}
-            disabled={!data?.report || isLoading}
-            className="flex h-8 items-center gap-1.5 px-3 rounded-lg border border-border bg-card hover:bg-accent text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors"
-            title="Salin Laporan"
-          >
-            <Clipboard className="h-3.5 w-3.5" />
-            <span>Salin</span>
-          </button>
+            <div className="hidden sm:block h-3.5 w-px bg-border" />
 
-          {/* Email Button */}
-          <button
-            onClick={handleEmailSend}
-            disabled={!data?.report || isLoading || emailMutation.isPending}
-            className="flex h-8 items-center gap-1.5 px-3 rounded-lg border border-border bg-card hover:bg-accent text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors"
-            title="Kirim ke Email"
-          >
-            <Mail className={`h-3.5 w-3.5 ${emailMutation.isPending ? 'animate-pulse' : ''}`} />
-            <span>Kirim Email</span>
-          </button>
+            {/* Copy Button */}
+            <button
+              onClick={handleCopy}
+              disabled={!data?.report || isLoading}
+              className="flex h-8 items-center gap-1.5 px-3 rounded-lg border border-border bg-card hover:bg-accent text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors"
+              title="Salin Laporan"
+            >
+              <Clipboard className="h-3.5 w-3.5" />
+              <span>Salin</span>
+            </button>
 
-          {/* Regenerate/Refresh */}
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
-            title="Muat Ulang"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-          </button>
+            {/* Email Button */}
+            <button
+              onClick={handleEmailSend}
+              disabled={!data?.report || isLoading || emailMutation.isPending}
+              className="flex h-8 items-center gap-1.5 px-3 rounded-lg border border-border bg-card hover:bg-accent text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors"
+              title="Kirim ke Email"
+            >
+              <Mail className={`h-3.5 w-3.5 ${emailMutation.isPending ? 'animate-pulse' : ''}`} />
+              <span>Kirim Email</span>
+            </button>
+
+            {/* Regenerate/Refresh */}
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+              title="Muat Ulang"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -168,7 +170,7 @@ function ThingsMatterPage() {
         </div>
       ) : (
         <div className="flex-1 p-5 bg-muted/20 overflow-y-auto">
-          <div className="w-full flex flex-col md:flex-row gap-5 items-stretch min-h-[calc(100vh-170px)]">
+          <div className="max-w-6xl w-full mx-auto flex flex-col md:flex-row gap-5 items-stretch min-h-[calc(100vh-170px)]">
             
             {/* Left Column: Summary Info card */}
             <div className="w-full md:w-64 shrink-0 flex flex-col gap-4">
