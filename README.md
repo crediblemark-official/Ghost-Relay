@@ -1,10 +1,37 @@
-# Ghost Relay 👻
+# Ghost Relay
 
-**Multi-platform communication hub + AI.** Satu dashboard untuk mengelola pesan dari WhatsApp, Telegram, Slack, dan Web — dengan AI untuk voice processing, auto-reply berbasis RAG, dan knowledge vault.
+> Pesan masuk dari mana-mana — WhatsApp, Telegram, Slack, Web. Semua ada di satu tempat. AI membantu menjawab, mencari, dan mengingat.
+
+## Masalah yang Diselesaikan
+
+**Bisnis kecil dan tim yang berinteraksi lewat chat punya masalah yang sama:**
+
+- Pesan masuk dari WhatsApp, Telegram, Slack, dan website — masing-masing punya inbox terpisah. Satu pesan terlewat, satu pelanggan kabur.
+- Menjawab pertanyaan yang sama untuk yang ke-50 kalinya. "Berapa harganya?" "Jam berapa buka?" "Gimana cara pesannya?"
+- Voice note menumpuk. Terlalu banyak untuk didengar satu-satu, tapi isinya penting.
+- Dokumen dan file berserakan — di Drive, di chat, di email. Butuh waktu lama untuk menemukan yang dicari.
+- Tidak ada ingatan. AI mulai dari nol setiap percakapan. Tidak tahu konteks, tidak tahu riwayat.
+
+**Ghost Relay mengatasi semuanya.**
+
+## Solusi
+
+Satu dashboard yang menghubungkan semua platform komunikasi — dengan AI yang benar-benar mengerti konteks bisnis Anda.
+
+| Fitur | Apa yang Dilakukan |
+|-------|-------------------|
+| **Universal Inbox** | Semua pesan dari WhatsApp, Telegram, Slack, dan Web dalam satu feed real-time. Tidak ada yang terlewat. |
+| **Auto-Reply RAG** | AI menjawab pertanyaan berulang menggunakan dokumen dan riwayat chat Anda sendiri. Bukan jawaban generik — jawaban yang spesifik untuk bisnis Anda. |
+| **Knowledge Vault** | Upload dokumen, PDF, atau file apapun. Otomatis terindeks dan bisa dicari secara semantik. Tidak perlu ingat di mana file berada. |
+| **Voice Intelligence** | Voice note masuk → otomatis ditranskripsikan, diringkas, dan dijadikan tindakan. Cukup dengar yang penting. |
+| **Voice Command** | Bicara ke mic, pesan terkirim ke WhatsApp/Telegram tanpa buka HP. Ideal untuk di jalan atau sedang sibuk. |
+| **AI Chat** | Chat dengan AI yang sudah mengerti konteks bisnis Anda. Multi-provider — pilih model yang cocok (GPT, Gemini, Claude, Qwen). |
+| **Team Workspace** | Bekerja dalam tim. Satu workspace, beberapa anggota, role-based access. Tanpa ribet sharing akun. |
+| **Daily Reports** | Laporan aktivitas harian otomatis. Tahu apa yang terjadi tanpa harus cek satu per satu. |
 
 ---
 
-## Architecture
+## Arsitektur
 
 ```mermaid
 graph TB
@@ -53,22 +80,6 @@ graph TB
     O --> S
     P --> T
 ```
-
----
-
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| **Universal Inbox** | Chat dari WhatsApp, Telegram, Slack, Web dalam satu feed |
-| **AI Chat** | Streaming chat dengan AI provider pilihan (OpenAI, Gemini, Claude, Qwen, dll) |
-| **Smart Voice** | Voice note → transkripsi → task decomposition otomatis |
-| **Auto-Reply RAG** | Jawab pertanyaan berulang dengan referensi dari knowledge vault + histori chat |
-| **Knowledge Vault** | File otomatis terindeks + semantic search via pgvector |
-| **Voice Command** | Bicara ke mic → pesan terkirim ke platform tanpa buka HP |
-| **Multi-Workspace** | Team workspace dengan invite code + role-based access |
-| **AI Provider Agnostic** | Bebas pilih LLM provider, model, dan base URL |
-| **Real-time** | WebSocket untuk notifikasi, typing indicator, online status |
 
 ---
 
