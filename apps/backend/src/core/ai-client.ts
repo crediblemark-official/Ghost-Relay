@@ -192,8 +192,9 @@ export async function getVisionModel(userId?: string): Promise<{ model: Language
 }
 
 /**
- * Dapatkan TranscriptionModel untuk transkripsi audio (STT).
- * Jatuh ke workspace default jika user tidak punya provider sendiri.
+ * @deprecated Audio transcription now uses the multimodal chat model via getLanguageModel().
+ * This function is kept only for providers that still need a dedicated transcription endpoint.
+ * GPT-4o, Gemini, and Qwen-audio all handle audio natively through the chat model.
  */
 export async function getAudioModel(userId?: string): Promise<{ model: TranscriptionModel; modelId: string } | null> {
   if (!userId) return null

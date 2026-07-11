@@ -16,7 +16,7 @@ import { randomUUID } from 'node:crypto'
 import { resolveWorkspaceId } from '../../core/workspace.js'
 import { eventBus } from '../../core/event-bus.js'
 import { getSetting } from '../../core/db-settings.js'
-import { getActiveProvider } from '../../core/ai-client.js'
+import { getLanguageModel } from '../../core/ai-client.js'
 
 export let socketIO: SocketIOServer
 
@@ -27,14 +27,13 @@ export function setSocketIO(io: SocketIOServer) {
 function isAIConfigError(err: unknown): boolean {
   const msg = (err as Error).message?.toLowerCase() ?? ''
   return msg.includes('no ai provider') || msg.includes('not configured') ||
-    msg.includes('not found for provider') || msg.includes('does not support') ||
-    msg.includes('audio transcription endpoint')
+    msg.includes('not supported') || msg.includes('not found for provider')
 }
 
 export async function handleProcessVoice(req: FastifyRequest, reply: FastifyReply) {
-  const provider = await getActiveProvider('audio', req.userId)
-  if (!provider) {
-    reply.status(422).send({ detail: 'No AI provider configured for audio transcription. Add an audio provider in Settings → AI Providers.' })
+  const model = await getLanguageModel(req.userId)
+  if (!model) {
+    reply.status(422).send({ detail: 'No AI provider configured. Add a provider in Settings → AI Providers (GPT-4o, Gemini, or Qwen-audio all support audio).' })
     return
   }
 
