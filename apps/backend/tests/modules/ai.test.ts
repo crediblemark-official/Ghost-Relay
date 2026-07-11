@@ -156,7 +156,7 @@ describe('AI Provider CRUD', () => {
       expect(res.json()).toEqual([])
     })
 
-    it('returns providers with decrypted api keys', async () => {
+    it('returns providers with masked api keys', async () => {
       mockFindMany.mockResolvedValue([
         makeProvider({ apiKey: 'encrypted:sk-my-key' }),
       ])
@@ -165,8 +165,8 @@ describe('AI Provider CRUD', () => {
       expect(res.statusCode).toBe(200)
       const body = res.json()
       expect(body).toHaveLength(1)
-      // apiKey should be decrypted — encryption module strips "encrypted:" prefix
-      expect(body[0].apiKey).toBe('sk-my-key')
+      // apiKey should be masked for security (first 4 + *** + last 4)
+      expect(body[0].apiKey).toBe('sk-m***-key')
     })
 
     it('calls findMany with the correct userId filter', async () => {
@@ -189,7 +189,7 @@ describe('AI Provider CRUD', () => {
       model_id: 'gpt-4',
     }
 
-    it('creates a provider and returns 201 with decrypted key', async () => {
+    it('creates a provider and returns 201 with masked key', async () => {
       mockInsertChain.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([
@@ -209,7 +209,8 @@ describe('AI Provider CRUD', () => {
 
       expect(res.statusCode).toBe(201)
       const body = res.json()
-      expect(body.apiKey).toBe('sk-raw-key')
+      // apiKey is masked for security (first 4 + *** + last 4)
+      expect(body.apiKey).toBe('sk-r***-key')
       expect(body.name).toBe('My Provider')
     })
 

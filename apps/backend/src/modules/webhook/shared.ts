@@ -93,7 +93,7 @@ export async function triggerAutoReply(
     }
 
     try {
-      socketIO.to(`user:${userId}`).emit('auto_reply', autoReplyData)
+      socketIO?.to(`user:${userId}`).emit('auto_reply', autoReplyData)
     } catch { /* ws skip */ }
 
     if (result.answer) {

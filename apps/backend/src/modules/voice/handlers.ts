@@ -47,7 +47,9 @@ export async function handleProcessVoice(req: FastifyRequest, reply: FastifyRepl
     }
   })
 
-  processVoiceNote(req.userId, msg.id, tmpPath).catch(() => {})
+  processVoiceNote(req.userId, msg.id, tmpPath).catch(() => {}).finally(() => {
+    unlink(tmpPath).catch(() => {})
+  })
 
   reply.status(202).send({ id: msg.id, status: 'processing' })
 }
@@ -182,7 +184,7 @@ export async function processVoiceNote(userId: string, messageId: number, audioP
     })
 
     try {
-      socketIO.to(`user:${userId}`).emit('voice_processed', { id: messageId, status: 'completed', transcription: rawText, summary })
+      socketIO?.to(`user:${userId}`).emit('voice_processed', { id: messageId, status: 'completed', transcription: rawText, summary })
     } catch { /* ws skip */ }
 
     eventBus.emit('voice:processed', { id: messageId, status: 'completed', transcription: rawText, summary })

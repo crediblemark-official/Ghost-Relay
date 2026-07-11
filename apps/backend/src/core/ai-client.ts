@@ -6,23 +6,24 @@ import { db } from '@ghost/database'
 import { decrypt } from './encryption.js'
 import { getAllProviders } from './models-dev.js'
 
-const providerCache = new Map<string, any>()
-const openaiClientCache = new Map<string, OpenAIProvider>()
+const providerCache = new Map<string, { data: any; expiresAt: number }>()
+const openaiClientCache = new Map<string, { data: OpenAIProvider; expiresAt: number }>()
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 
 /**
  * Buat OpenAI-compatible provider (untuk listing models via /v1/models endpoint).
  */
 export function makeOpenAIProvider(apiKey: string, baseURL: string): OpenAIProvider {
   const key = `${apiKey}:${baseURL}`
-  if (!openaiClientCache.has(key)) {
-    const trimmedUrl = (baseURL || '').trim()
-    const p = createOpenAI({
-      apiKey: apiKey || 'no-key',
-      ...(trimmedUrl ? { baseURL: trimmedUrl } : {}),
-    })
-    openaiClientCache.set(key, p)
-  }
-  return openaiClientCache.get(key)!
+  const cached = openaiClientCache.get(key)
+  if (cached && cached.expiresAt > Date.now()) return cached.data
+  const trimmedUrl = (baseURL || '').trim()
+  const p = createOpenAI({
+    apiKey: apiKey || 'no-key',
+    ...(trimmedUrl ? { baseURL: trimmedUrl } : {}),
+  })
+  openaiClientCache.set(key, { data: p, expiresAt: Date.now() + CACHE_TTL_MS })
+  return p
 }
 
 /**
@@ -37,7 +38,7 @@ function createProviderForNpm(
 ): { chat: (modelId: string) => LanguageModel; embedding?: (modelId: string) => EmbeddingModel } {
   const cacheKey = `${npmPackage}:${apiKey}:${userBaseUrl ?? ''}`
   const cached = providerCache.get(cacheKey)
-  if (cached) return cached
+  if (cached && cached.expiresAt > Date.now()) return cached.data
 
   const userSetUrl = (userBaseUrl || '').trim()
 
@@ -66,7 +67,7 @@ function createProviderForNpm(
     }
   }
 
-  providerCache.set(cacheKey, result)
+  providerCache.set(cacheKey, { data: result, expiresAt: Date.now() + CACHE_TTL_MS })
   return result
 }
 

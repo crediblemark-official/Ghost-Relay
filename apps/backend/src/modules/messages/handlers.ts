@@ -9,10 +9,18 @@ import { validate, sendValidationError, ValidationError } from '../../core/valid
 import { messageCreateSchema, messageSearchSchema } from '@ghost/shared'
 import { decrypt } from '../../core/encryption.js'
 import { handleSummarizeSession } from './sessions.js'
-export let socketIO: SocketIOServer
+export let socketIO: SocketIOServer | null = null
 
 export function setSocketIO(io: SocketIOServer) {
   socketIO = io
+}
+
+function emitToUser(userId: string, event: string, data: unknown) {
+  if (!socketIO) {
+    console.warn(`[messages] socketIO not initialized, cannot emit '${event}' to user:${userId}`)
+    return
+  }
+  socketIO.to(`user:${userId}`).emit(event, data)
 }
 
 export async function handleGetMessages(req: FastifyRequest, reply: FastifyReply) {
@@ -78,7 +86,7 @@ export async function handleSendMessage(req: FastifyRequest, reply: FastifyReply
   })
 
   try {
-    socketIO.to(`user:${msg.userId}`).emit('new_message', msg)
+    emitToUser(String(msg.userId), 'new_message', msg)
   } catch { /* ws skip */ }
 
   eventBus.emit('message:created', {
@@ -186,7 +194,7 @@ export async function handleDeleteMessage(req: FastifyRequest, reply: FastifyRep
       where: { id: Number(id) },
     })
     try {
-      socketIO.to(`user:${req.userId}`).emit('message:deleted', { id: Number(id) })
+      emitToUser(String(req.userId), 'message:deleted', { id: Number(id) })
     } catch { /* ws skip */ }
     return { status: 'ok' }
   } catch (err) {

@@ -80,5 +80,7 @@ export async function getTaskQueue(): Promise<TaskQueue> {
   if (redisAvailable && bullQueue) return bullQueue
   const bq = await initBullQueue()
   if (bq) return bq
+  // Warn about in-memory fallback
+  console.warn('[task-queue] Redis not available — using in-memory queue. Tasks will be lost on process restart.')
   return { enqueue }
 }

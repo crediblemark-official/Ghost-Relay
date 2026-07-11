@@ -28,14 +28,16 @@ export async function handleGetFiles(req: FastifyRequest) {
 
   const workspaceIds = await resolveAllWorkspaceIds(req.userId)
 
-  // Workspace files: accessScope='workspace' OR files from other members in same workspace
-  // Private files: only show own files with accessScope='private'
+  // Workspace files: accessScope='workspace' in same workspace
+  // Private files: only own files with accessScope='private'
   const filter: any = {
     OR: [
-      // All workspace files (workspace scope)
+      // Workspace-scoped files visible to all workspace members
       ...(workspaceIds.length > 0 ? [{ workspaceId: { in: workspaceIds }, accessScope: 'workspace' }] : []),
-      // My own files (both workspace and private)
-      { userId: req.userId },
+      // My own files only (both workspace and private — private already limited by userId)
+      { userId: req.userId, accessScope: 'private' },
+      // My own workspace files (deduplicated but needed for correctness)
+      ...(workspaceIds.length > 0 ? [{ userId: req.userId, accessScope: 'workspace' }] : []),
     ],
   }
   if (folder) filter.folder = folder
@@ -48,22 +50,19 @@ export async function handleGetFiles(req: FastifyRequest) {
     include: { user: { select: { id: true, name: true, email: true } } },
   })
 
-  // For private files, only show own
-  return rows
-    .filter(r => r.accessScope === 'private' ? r.userId === req.userId : true)
-    .map(r => ({
-      id: r.id,
-      userId: r.userId,
-      uploaderName: r.user?.name || r.user?.email || 'Unknown',
-      originalName: r.originalName,
-      storageUrl: r.storageUrl,
-      fileType: r.fileType,
-      folder: r.folder,
-      sizeBytes: Number(r.sizeBytes),
-      uploadedAt: r.uploadedAt,
-      extractedText: r.extractedText,
-      accessScope: r.accessScope || 'workspace',
-    }))
+  return rows.map(r => ({
+    id: r.id,
+    userId: r.userId,
+    uploaderName: r.user?.name || r.user?.email || 'Unknown',
+    originalName: r.originalName,
+    storageUrl: r.storageUrl,
+    fileType: r.fileType,
+    folder: r.folder,
+    sizeBytes: Number(r.sizeBytes),
+    uploadedAt: r.uploadedAt,
+    extractedText: r.extractedText,
+    accessScope: r.accessScope || 'workspace',
+  }))
 }
 
 export async function handleUploadFile(req: FastifyRequest, reply: FastifyReply) {
@@ -288,7 +287,7 @@ export async function indexFileInBackground(fileId: number): Promise<void> {
       ...(file.workspaceId ? { workspaceId: file.workspaceId } : {}),
     })
     try {
-      socketIO.to(`user:${file.userId}`).emit('file_indexed', { fileId, status: 'completed', folder })
+      socketIO?.to(`user:${file.userId}`).emit('file_indexed', { fileId, status: 'completed', folder })
     } catch { /* ws skip */ }
     eventBus.emit('file:indexed', { fileId, status: 'completed', folder })
   } catch (err) {

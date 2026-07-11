@@ -42,7 +42,58 @@ export function useSendMessage() {
       content: string
       session_id?: string
     }) => api.post<Message>('/messages/send', data),
+
+    // Optimistic update: langsung tampilkan pesan di UI
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['messages'] })
+
+      const previous = queryClient.getQueriesData({ queryKey: ['messages'] })
+
+      // Buat temporary message
+      const tempMsg: Message = {
+        id: `temp-${Date.now()}`,
+        userId: '',
+        sessionId: data.session_id,
+        platform: data.platform,
+        senderId: '',
+        senderName: '',
+        content: data.content,
+        messageType: 'text',
+        timestamp: new Date(),
+        isOutgoing: true,
+      }
+
+      // Insert ke cache (page 1, urutan terbaru di atas)
+      queryClient.setQueriesData<any>({ queryKey: ['messages'] }, (old: any) => {
+        if (!old?.pages?.length) return old
+        const firstPage = old.pages[0]
+        return {
+          ...old,
+          pages: [
+            {
+              ...firstPage,
+              messages: [tempMsg, ...firstPage.messages],
+              total: firstPage.total + 1,
+            },
+            ...old.pages.slice(1),
+          ],
+        }
+      })
+
+      return { previous }
+    },
+
+    onError: (_err, _data, context) => {
+      // Rollback ke data sebelumnya
+      if (context?.previous) {
+        for (const [key, data] of context.previous) {
+          queryClient.setQueryData(key, data)
+        }
+      }
+    },
+
     onSuccess: () => {
+      // Invalidate untuk dapat data real dari server
       queryClient.invalidateQueries({ queryKey: ['messages'] })
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },

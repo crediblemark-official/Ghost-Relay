@@ -95,7 +95,7 @@ export async function handleSlackWebhook(req: FastifyRequest, reply: FastifyRepl
     } catch { /* memory skip */ }
 
     try {
-      socketIO.to(`user:${userId}`).emit('new_message', message)
+      socketIO?.to(`user:${userId}`).emit('new_message', message)
     } catch { /* ws skip */ }
 
     if (text && !slackFiles.length) {

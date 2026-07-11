@@ -333,7 +333,7 @@ Gunakan tool yang tepat sesuai perintah user. Jangan ragu menggunakan tool — i
   } catch (err) {
     console.error('[stream] Error:', err)
     if (!reply.raw.headersSent) {
-      reply.status(500).send({ detail: String(err) })
+      reply.status(500).send({ detail: 'AI request failed. Please try again.' })
     }
   }
 }

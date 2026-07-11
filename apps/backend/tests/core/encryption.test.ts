@@ -23,16 +23,16 @@ describe('encryption', () => {
     expect(decrypt('')).toBe('')
   })
 
-  it('should return empty string for invalid ciphertext', () => {
-    expect(decrypt('not-a-valid-ciphertext')).toBe('')
+  it('should throw for invalid ciphertext', () => {
+    expect(() => decrypt('not-a-valid-ciphertext')).toThrow()
   })
 
-  it('should return empty string for tampered ciphertext', () => {
+  it('should throw for tampered ciphertext', () => {
     const encrypted = encrypt('sensitive-key')
     // Tamper with the ciphertext portion
     const parts = encrypted.split(':')
     const tampered = `${parts[0]}:${parts[1]}:deadbeef${parts[2]!.slice(8)}`
-    expect(decrypt(tampered)).toBe('')
+    expect(() => decrypt(tampered)).toThrow()
   })
 
   it('should produce different ciphertexts for the same plaintext (random IV)', () => {

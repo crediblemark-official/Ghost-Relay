@@ -131,7 +131,7 @@ export async function handleTelegramWebhook(req: FastifyRequest, reply: FastifyR
 
                     // Kirim update via WebSocket
                     try {
-                      socketIO.to(`user:${userId}`).emit('voice_processed', {
+                      socketIO?.to(`user:${userId}`).emit('voice_processed', {
                         id: msg.id,
                         status: 'completed',
                         transcription,
@@ -160,7 +160,7 @@ export async function handleTelegramWebhook(req: FastifyRequest, reply: FastifyR
   } catch { /* memory skip */ }
 
   try {
-    socketIO.to(`user:${userId}`).emit('new_message', {
+    socketIO?.to(`user:${userId}`).emit('new_message', {
       ...msg,
       fileId: msg.fileId
     })
