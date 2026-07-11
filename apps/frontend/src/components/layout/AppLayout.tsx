@@ -8,11 +8,12 @@ export function AppLayout() {
   const isLanding = useMatch({ from: '/', shouldThrow: false }) !== undefined
   const isInvite = useMatch({ from: '/invite/$code', shouldThrow: false }) !== undefined
   const isReset = useMatch({ from: '/reset-password', shouldThrow: false }) !== undefined
+  const isOnboarding = useMatch({ from: '/onboarding', shouldThrow: false }) !== undefined
 
   // Socket events harus aktif di semua halaman (notifikasi, real-time, etc.)
   useSocketEvents()
 
-  if (isLogin || isRegister || isLanding || isInvite || isReset) {
+  if (isLogin || isRegister || isLanding || isInvite || isReset || isOnboarding) {
     return <Outlet />
   }
 
