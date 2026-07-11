@@ -66,8 +66,11 @@ export async function handleVoiceCommand(req: FastifyRequest, reply: FastifyRepl
         const ext = data.filename?.split('.').pop() ?? 'webm'
         const tmpPath = join(tmpdir(), `${randomUUID()}.${ext}`)
         await writeFile(tmpPath, buffer)
-        text = await transcribeAudio(tmpPath, req.userId)
-        await unlink(tmpPath).catch(() => {})
+        try {
+          text = await transcribeAudio(tmpPath, req.userId)
+        } finally {
+          await unlink(tmpPath).catch(() => {})
+        }
       }
     } else if (contentType.includes('json')) {
       const body = req.body as { text?: string }
@@ -94,8 +97,9 @@ export async function handleVoiceCommand(req: FastifyRequest, reply: FastifyRepl
 
     reply.send({ status: 'ok', intent, original_text: text })
   } catch (err) {
-    console.error(`[VOICE] Command error:`, err)
-    reply.status(500).send({ detail: 'Voice command processing failed' })
+    const msg = (err as Error).message ?? String(err)
+    console.error(`[VOICE] Command error: ${msg}`)
+    reply.status(500).send({ detail: `Voice command failed: ${msg}` })
   }
 }
 
@@ -126,8 +130,9 @@ export async function handleVoiceCommandText(req: FastifyRequest, reply: Fastify
     }
     reply.send({ status: 'ok', intent, original_text: text })
   } catch (err) {
-    console.error(`[VOICE] Command text error:`, err)
-    reply.status(500).send({ detail: 'Voice command processing failed' })
+    const msg = (err as Error).message ?? String(err)
+    console.error(`[VOICE] Command text error: ${msg}`)
+    reply.status(500).send({ detail: `Voice command failed: ${msg}` })
   }
 }
 
