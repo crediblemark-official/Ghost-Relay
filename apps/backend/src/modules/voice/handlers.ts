@@ -26,7 +26,9 @@ export function setSocketIO(io: SocketIOServer) {
 
 function isAIConfigError(err: unknown): boolean {
   const msg = (err as Error).message?.toLowerCase() ?? ''
-  return msg.includes('no ai provider') || msg.includes('not configured') || msg.includes('provider')
+  return msg.includes('no ai provider') || msg.includes('not configured') ||
+    msg.includes('not found for provider') || msg.includes('does not support') ||
+    msg.includes('audio transcription endpoint')
 }
 
 export async function handleProcessVoice(req: FastifyRequest, reply: FastifyReply) {
