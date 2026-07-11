@@ -5,7 +5,27 @@ export async function extractText(filePath: string, filename: string): Promise<s
   try {
     if (lower.endsWith('.pdf')) return extractPdf(filePath)
     if (lower.endsWith('.docx') || lower.endsWith('.doc')) return extractDocx(filePath)
-    if (lower.endsWith('.txt') || lower.endsWith('.md')) {
+    if (
+      lower.endsWith('.txt') ||
+      lower.endsWith('.md') ||
+      lower.endsWith('.json') ||
+      lower.endsWith('.yaml') ||
+      lower.endsWith('.yml') ||
+      lower.endsWith('.js') ||
+      lower.endsWith('.ts') ||
+      lower.endsWith('.tsx') ||
+      lower.endsWith('.jsx') ||
+      lower.endsWith('.py') ||
+      lower.endsWith('.go') ||
+      lower.endsWith('.java') ||
+      lower.endsWith('.cpp') ||
+      lower.endsWith('.c') ||
+      lower.endsWith('.h') ||
+      lower.endsWith('.css') ||
+      lower.endsWith('.html') ||
+      lower.endsWith('.sh') ||
+      lower.endsWith('.sql')
+    ) {
       return await readFile(filePath, 'utf-8')
     }
     return filename
